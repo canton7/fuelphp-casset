@@ -311,7 +311,7 @@ class Casset {
 		}
 
 		$filepath = DOCROOT.static::$cache_path.'/'.$filename;
-		$needs_update = (!file_exists($filepath) || filemtime($filepath) < $last_mod);
+		$needs_update = (!file_exists($filepath) || ($mtime = filemtime($filepath)) < $last_mod);
 
 		if ($needs_update)
 		{
@@ -332,8 +332,9 @@ class Casset {
 				}
 			}
 			file_put_contents($filepath, $content);
+			$mtime = time();
 		}
-		return $filename;
+		return $filename.'?mtime='.$mtime;
 	}
 }
 
