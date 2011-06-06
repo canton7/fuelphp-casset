@@ -1,4 +1,19 @@
 <?php
+/**
+ * Fuel is a fast, lightweight, community driven PHP5 framework.
+ *
+ * This library provides an alternative to the built-in Asset library.
+ * This library has been based on the original Asset library, although
+ * extensive modifications and additions have been made.
+ *
+ * @package    Casset
+ * @version    1.0
+ * @author     Antony Male
+ * @license    MIT License
+ * @copyright  2011 Antony Male
+ * @link       http://github.com/canton7/fuelphp-casset
+ */
+
 
 class Casset {
 
