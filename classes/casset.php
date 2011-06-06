@@ -207,6 +207,28 @@ class Casset {
 	}
 
 	/**
+	 * Enables both js and css groups of the given name.
+	 *
+	 * @param string $group The group to enable.
+	 */
+	public static function enable($group)
+	{
+		static::asset_enabled('js', $group, true);
+		static::asset_enabled('css', $group, true);
+	}
+
+	/**
+	 * Disables both js and css groups of the given name.
+	 *
+	 * @param string $group The group to disable.
+	 */
+	public static function disable($group)
+	{
+		static::asset_enabled('js', $group, false);
+		static::asset_enabled('css', $group, false);
+	}
+
+	/**
 	 * Enable a group of javascript assets.
 	 *
 	 * @param string $group The group to enable.
@@ -263,7 +285,7 @@ class Casset {
 	/**
 	 * Add a javascript asset.
 	 *
-	 * @param string $script The script to add
+	 * @param string $script The script to add.
 	 * @param string $script_min If given, will be used when $min = true
 	 *        If omitted, $script will be minified internally
 	 * @param string $group The group to add this asset to. Defaults to 'global'
