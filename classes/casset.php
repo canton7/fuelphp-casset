@@ -13,8 +13,8 @@ class Casset {
 	);
 
 	protected static $groups = array(
-		'css' => array('global' => array('files' => array(), 'enabled' => true)),
-		'js' => array('global' => array('files' => array(), 'enabled' => true)),
+		'css' => array('global' => array('files' => array(), 'enabled' => true, 'const' => false)),
+		'js' => array('global' => array('files' => array(), 'enabled' => true, 'const' => false)),
 	);
 
 	protected static $min = false;
@@ -52,7 +52,7 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				static::add_group($group_type, $group_name, $group);
+				static::add_group($group_type, $group_name, $group['files'], true, $group['enabled']);
 			}
 		}
 
@@ -74,9 +74,13 @@ class Casset {
 		}
 	}
 
-	public static function add_group($group_type, $group_name, $group)
+	public static function add_group($group_type, $group_name, $files, $const = false, $enabled = true)
 	{
-		static::$groups[$group_type][$group_name] = $group;
+		static::$groups[$group_type][$group_name] = array(
+			'files' => $files,
+			'enabled' => $enabled,
+			'const' => $const,
+		);
 	}
 
 	public function find_file($file, $asset_type)
@@ -209,15 +213,9 @@ class Casset {
 	private static function files_to_render($type, $group, $min)
 	{
 		if ($group == false)
-		{
 			$group_names = array_keys(static::$groups[$type]);
-		}
 		else
-		{
 			$group_names = array($group);
-			// If they're specificially asked to render a group, enable it
-			static::$groups[$type][$group]['enabled'] = true;
-		}
 
 		$files = array();
 
