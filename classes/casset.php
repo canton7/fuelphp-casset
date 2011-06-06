@@ -336,22 +336,22 @@ class Casset {
 			$content = '';
 			foreach ($file_group as $file)
 			{
+				if (static::$show_files_inline)
+					$content .= '/* '.$file['file'].' */'.PHP_EOL;
 				if ($file['minified'])
 					$content .= file_get_contents($file['file']).PHP_EOL;
 				else
 				{
 					if ($type == 'js')
 					{
-						$content = Casset_JSMin::minify(file_get_contents($file['file'])).PHP_EOL;
+						$content .= Casset_JSMin::minify(file_get_contents($file['file'])).PHP_EOL;
 					}
 					elseif ($type == 'css')
 					{
-						$content = Casset_Csscompressor::process(file_get_contents($file['file']).PHP_EOL);
-						$content = Casset_Cssurirewriter::rewrite($content, dirname($file['file']));
+						$css = Casset_Csscompressor::process(file_get_contents($file['file'])).PHP_EOL;
+						$content .= Casset_Cssurirewriter::rewrite($css, dirname($file['file']));
 					}
 				}
-				if (static::$show_files_inline)
-					$content = '/* '.$file['file'].' */'.PHP_EOL.$content;
 			}
 			file_put_contents($filepath, $content);
 			$mtime = time();
