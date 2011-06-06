@@ -24,6 +24,7 @@ class Casset {
 	protected static $folders = array(
 		'css' => 'css/',
 		'js' => 'js/',
+		'img' => 'img/',
 	);
 
 	protected static $cache_path = 'assets/cache/';
@@ -67,6 +68,7 @@ class Casset {
 		static::$folders = array(
 			'css' => Config::get('casset.css_dir', static::$folders['css']),
 			'js' => Config::get('casset.js_dir', static::$folders['js']),
+			'img' => Config::get('casset.img_dir', static::$folders['img']),
 		);
 
 		static::$cache_path = Config::get('casset.cache_path', static::$cache_path);
@@ -407,6 +409,19 @@ class Casset {
 		foreach (static::$inline_assets['css'] as $content)
 		{
 			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+		}
+		return $ret;
+	}
+
+	public static function img($images, $attr = array())
+	{
+		if (!is_array($images))
+			$images = array($images);
+		$ret = '';
+		foreach ($images as $image)
+		{
+			$attr['src'] = static::$asset_url.static::find_file($image, 'img');
+			$ret .= html_tag('img', $attr);
 		}
 		return $ret;
 	}

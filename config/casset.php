@@ -38,14 +38,15 @@ return array(
 	 *
 	 * Examples:
 	 *
-	 * img/
 	 * js/
 	 * css/
+	 * img/
 	 *
 	 * This MUST include the trailing slash ('/')
 	 */
-	'img_dir' => 'img/',
 	'js_dir' => 'js/',
+	'css_dir' => 'css/',
+	'img_dir' => 'img/',
 
 	/**
 	 * When minifying, the minified, combined files are cached.
