@@ -309,7 +309,9 @@ class Casset {
 			if ($mod > $last_mod)
 				$last_mod = $mod;
 		}
-		$needs_update = (!file_exists(DOCROOT.$filename) || filemtime(DOCROOT.$filename) < $last_mod);
+
+		$filepath = DOCROOT.static::$cache_path.'/'.$filename;
+		$needs_update = (!file_exists($filepath) || filemtime($filepath) < $last_mod);
 
 		if ($needs_update)
 		{
@@ -329,7 +331,7 @@ class Casset {
 					}
 				}
 			}
-			file_put_contents(DOCROOT.static::$cache_path.'/'.$filename, $content);
+			file_put_contents($filepath, $content);
 		}
 		return $filename;
 	}
