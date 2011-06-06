@@ -25,8 +25,8 @@ class Casset {
 
 	protected static $min = true;
 
-	protected static $show_files = true;
-	protected static $show_files_inline = true;
+	protected static $show_files = false;
+	protected static $show_files_inline = false;
 
 	public static $initialized = false;
 
