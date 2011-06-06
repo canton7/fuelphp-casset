@@ -353,7 +353,6 @@ class Casset {
 			file_put_contents($filepath, $content);
 			$mtime = time();
 		}
-		var_dump($needs_update);
 		return $filename.'?'.$mtime;
 	}
 }
