@@ -17,35 +17,73 @@
 
 class Casset {
 
+	/**
+	 * @var array Array of paths in which the css, js, img directory structure
+	 *            can be found, relative to $asset_url
+	 */
 	protected static $asset_paths = array();
 
+	/**
+	 * @var string The URL to be prepanded to all assets.
+	 */
 	protected static $asset_url = '/';
 
+	/**
+	 * @var array The folders in which css, js, and images can be found.
+	 */
 	protected static $folders = array(
 		'css' => 'css/',
 		'js' => 'js/',
 		'img' => 'img/',
 	);
 
+	/**
+	 * @var string The directory, relative to public/, where cached minified failes
+	 *             are stored.
+	 */
 	protected static $cache_path = 'assets/cache/';
 
+	/**
+	 * @var array Holds groups of assets. Is documenented fully in the config file.
+	 */
 	protected static $groups = array(
 		'css' => array('global' => array('files' => array(), 'enabled' => true)),
 		'js' => array('global' => array('files' => array(), 'enabled' => true)),
 	);
 
+	/**
+	 * @var array Holds inline js and css.
+	 */
 	protected static $inline_assets = array(
 		'css' => array(),
 		'js' => array(),
 	);
 
+	/**
+	 * @var bool Whether to minfy.
+	 */
 	protected static $min = true;
 
+	/**
+	 * @var bool Whether to show comments above the <script>/<link> tags showing
+	 *           which files have been minified into that file.
+	 */
 	protected static $show_files = false;
+
+	/**
+	 * @var bool Whether to show comments inside minified files showing which
+	 *           original file is where.
+	 */
 	protected static $show_files_inline = false;
 
+	/**
+	 * @var bool Wether we've been initialized.
+	 */
 	public static $initialized = false;
 
+	/**
+	* Loads in the config and sets the variables
+	*/
 	public static function _init()
 	{
 		// Prevent multiple initializations
@@ -91,11 +129,21 @@ class Casset {
 		static::$initialized = true;
 	}
 
+	/**
+	 * Adds a path to the asset paths array.
+	 *
+	 * @param string $path the path to add.
+	 */
 	public static function add_path($path)
 	{
 		array_unshift(static::$asset_paths, str_replace('../', '', $path));
 	}
 
+	/**
+	 * Removes a path from the asset paths array.
+	 *
+	 * @param string $path the path to remove.
+	 */
 	public static function remove_path($path)
 	{
 		if (($key = array_search(str_replace('../', '', $path), static::$_asset_paths)) !== false)
@@ -104,6 +152,17 @@ class Casset {
 		}
 	}
 
+	/**
+	 * Adds a group of assets. If a group of this name exists, it will be
+	 * overwritten.
+	 *
+	 * @param string $group_type 'js' or 'css'
+	 * @param string $group_name The name of the group
+	 * @param array $files The files to add to the group. Takes the form
+	 *        array('file1', array('file2', 'file2.min'))
+	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
+	 *        rendered with render_js / render_css
+	 */
 	public static function add_group($group_type, $group_name, $files, $enabled = true)
 	{
 		foreach ($files as &$file)
@@ -117,6 +176,14 @@ class Casset {
 		);
 	}
 
+	/**
+	 * Searches the asset paths to locate a file.
+	 * Throws an exception if the asset can't be found.
+	 *
+	 * @param string $file The name of the asset to search for
+	 * @param string $asset_type 'css', 'js' or 'img'
+	 * @return string The path to the asset, relative to $asset_url
+	 */
 	public function find_file($file, $asset_type)
 	{
 		if (strpos($file, '//') === false)
@@ -139,26 +206,53 @@ class Casset {
 		}
 	}
 
+	/**
+	 * Enable a group of javascript assets.
+	 *
+	 * @param string $group The group to enable.
+	 */
 	public static function enable_js($group)
 	{
 		static::asset_enabled('js', $group, true);
 	}
 
+	/**
+	 * Disable a group of javascript assets.
+	 *
+	 * @param string $group The group to disable.
+	 */
 	public static function disable_js($group)
 	{
 		static::asset_enabled('js', $group, false);
 	}
 
+	/**
+	 * Enable a group of css assets.
+	 *
+	 * @param string $group The group to enable.
+	 */
 	public static function enable_css($group)
 	{
 		static::asset_enabled('css', $group, true);
 	}
 
+	/**
+	 * Disable a group of css assets.
+	 *
+	 * @param string $group The group to disable.
+	 */
 	public static function disable_css($group)
 	{
 		static::asset_enabled('css', $group, false);
 	}
 
+	/**
+	 * Enables / disables an asset.
+	 *
+	 * @param string $type 'css' / 'js'
+	 * @param string $group The group to enable/disable
+	 * @param bool $enabled True to enabel to group, false odisable
+	 */
 	private static function asset_enabled($type, $group, $enabled)
 	{
 		if (!array_key_exists($group, static::$groups[$type]))
@@ -166,16 +260,41 @@ class Casset {
 		static::$groups[$type][$group]['enabled'] = $enabled;
 	}
 
+	/**
+	 * Add a javascript asset.
+	 *
+	 * @param string $script The script to add
+	 * @param string $script_min If given, will be used when $min = true
+	 *        If omitted, $script will be minified internally
+	 * @param string $group The group to add this asset to. Defaults to 'global'
+	 */
 	public static function js($script, $script_min = false, $group = 'global')
 	{
 		static::add_asset('js', $script, $script_min, $group);
 	}
 
+	/**
+	 * Add a css asset.
+	 *
+	 * @param string $sheet The script to add
+	 * @param string $sheet_min If given, will be used when $min = true
+	 *        If omitted, $script will be minified internally
+	 * @param string $group The group to add this asset to. Defaults to 'global'
+	 */
 	public static function css($sheet, $sheet_min = false, $group = 'global')
 	{
 		static::add_asset('css', $sheet, $sheet_min, $group);
 	}
 
+	/**
+	 * Abstraction of js() and css().
+	 *
+	 * @param string $type 'css' / 'js'
+	 * @param string $script The script to add.
+	 * @param string $script_min If given, will be used when $min = true
+	 *        If omitted, $script will be minified internally
+	 * @param string $group The group to add this asset to
+	 */
 	private static function add_asset($type, $script, $script_min, $group)
 	{
 		if (!array_key_exists($group, static::$groups[$type]))
@@ -192,21 +311,49 @@ class Casset {
 		}
 	}
 
+	/**
+	 * Add a string containing javascript, which can be printed inline with
+	 * js_render_inline().
+	 *
+	 * @param string $content The javascript to add
+	 */
 	public static function js_inline($content)
 	{
 		static::add_asset_inline('js', $content);
 	}
 
+	/**
+	 * Add a string containing css, which can be printed inline with
+	 * css_render_inline().
+	 *
+	 * @param string $content The css to add
+	 */
 	public static function css_inline($content)
 	{
 		static::add_asset_inline('css', $content);
 	}
 
+	/**
+	 * Abstraction of js_inline() and css_inline().
+	 *
+	 * @param string $type 'css' / 'js'
+	 * @param string $content The css / js to add
+	 */
 	private static function add_asset_inline($type, $content)
 	{
 		array_push(static::$inline_assets[$type], $content);
 	}
 
+	/**
+	 * Renders the specific javascript group, or all groups if no group specified.
+	 *
+	 * @param string $group Which group to render. If omitted renders all groups
+	 * @param bool $inline If true, the result is printed inline. If false, is
+	 *        written to a file and linked to. In fact, $inline = true also causes
+	 *        a cache file to be written for speed purposes
+	 * @param bool $min True to minify the javascript files. null to use the config value
+	 * @return string The javascript tags to be written to the page
+	 */
 	public function render_js($group = false, $inline = false, $min = null)
 	{
 		// Very simple minimisation for now
@@ -221,7 +368,7 @@ class Casset {
 		{
 			if ($min)
 			{
-				$filename = static::combine_and_minify('js', $group_name, $file_group);
+				$filename = static::combine_and_minify('js', $file_group);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -254,6 +401,16 @@ class Casset {
 		return $ret;
 	}
 
+	/**
+	 * Renders the specific css group, or all groups if no group specified.
+	 *
+	 * @param string $group Which group to render. If omitted renders all groups
+	 * @param bool $inline If true, the result is printed inline. If false, is
+	 *        written to a file and linked to. In fact, $inline = true also causes
+	 *        a cache file to be written for speed purposes
+	 * @param bool $min True to minify the css files. null to use the config value
+	 * @return string The css tags to be written to the page
+	 */
 	public function render_css($group = false, $inline = false, $min = null)
 	{
 		if ($min === null)
@@ -267,7 +424,7 @@ class Casset {
 		{
 			if ($min)
 			{
-				$filename = static::combine_and_minify('css', $group_name, $file_group);
+				$filename = static::combine_and_minify('css', $file_group);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -302,6 +459,15 @@ class Casset {
 		return $ret;
 	}
 
+	/**
+	 * Determines the list of files to be rendered, along with whether they
+	 * have been minified already.
+	 *
+	 * @param string $type 'css' / 'js'
+	 * @param array $group The groups to render. If false, takes all groups
+	 * @param bool $min Whether to minify
+	 * @return array An array of array('file' => file_name, 'minified' => whether_minified)
+	 */
 	private static function files_to_render($type, $group, $min)
 	{
 		if ($group == false)
@@ -347,7 +513,17 @@ class Casset {
 		return $files;
 	}
 
-	private static function combine_and_minify($type, $group_name, $file_group)
+	/**
+	 * Takes a list of files, and combines them into a single minified file.
+	 * Doesn't bother if none of the files have been modified since the cache
+	 * file was written.
+	 *
+	 * @param string $type 'css' / 'js'
+	 * @param array $file_group Array of ('file' => filename, 'minified' => is_minified)
+	 *        to combine and minify.
+	 * @return string The path to the cache file which was written.
+	 */
+	private static function combine_and_minify($type, $file_group)
 	{
 		$ext = '.'.$type;
 		$filename = md5(implode('', array_map(function($a) {
@@ -393,6 +569,11 @@ class Casset {
 		return $filename.'?'.$mtime;
 	}
 
+	/**
+	 * Renders the javascript added through js_inline().
+	 *
+	 * @return string <script> tags containing the inline javascript
+	 */
 	public static function render_js_inline()
 	{
 		$ret = '';
@@ -403,6 +584,11 @@ class Casset {
 		return $ret;
 	}
 
+	/**
+	 * Renders the css added through css_inline().
+	 *
+	 * @return string <style> tags containing the inline css
+	 */
 	public static function render_css_inline()
 	{
 		$ret = '';
@@ -413,6 +599,13 @@ class Casset {
 		return $ret;
 	}
 
+	/**
+	 * Locates the given image(s), and returns the resulting <img> tag.
+	 *
+	 * @param mixed $images Image(s) to print. Can be string or array of strings
+	 * @param array $attr Attributes to apply to each image (eg alt)
+	 * @return string The resulting <img> tag(s)
+	 */
 	public static function img($images, $attr = array())
 	{
 		if (!is_array($images))
