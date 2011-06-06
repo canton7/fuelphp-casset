@@ -269,7 +269,9 @@ class Casset {
 	private static function files_to_render($type, $group, $min)
 	{
 		if ($group == false)
-			$group_names = array_keys(static::$groups[$type]);
+			$group_names = array_keys(array_filter(static::$groups[$type], function($a){
+				return count($a['files']) > 0;
+			}));
 		else
 			$group_names = array($group);
 
