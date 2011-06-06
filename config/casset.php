@@ -1,0 +1,130 @@
+<?php
+/**
+ * Fuel is a fast, lightweight, community driven PHP5 framework.
+ *
+ * This library provides an alternative to the built-in Asset library.
+ * This library has been based on the original Asset library, although
+ * extensive modifications and additions have been made.
+ *
+ * @package    Casset
+ * @version    1.0
+ * @author     Antony Male
+ * @license    MIT License
+ * @copyright  2011 Antony Male
+ * @link       http://github.com/canton7/fuelphp-casset
+ */
+return array(
+
+	/**
+	 * An array of paths that will be searched for assets. Each asset is a
+	 * RELATIVE path from the base_url WITH a trailing slash:
+	 *
+	 * array('assets/')
+	 */
+	'paths' => array('assets/'),
+
+	/**
+	 * URL to your Fuel root. Typically this will be your base URL,
+	 * WITH a trailing slash:
+	 *
+	 * Config::get('base_url')
+	 */
+	'url' => Config::get('base_url'),
+
+	/**
+	 * Asset Sub-folders
+	 *
+	 * Names for the js and css folders (inside the asset path).
+	 *
+	 * Examples:
+	 *
+	 * img/
+	 * js/
+	 * css/
+	 *
+	 * This MUST include the trailing slash ('/')
+	 */
+	'img_dir' => 'img/',
+	'js_dir' => 'js/',
+
+	/**
+	 * When minifying, the minified, combined files are cached.
+	 * This value specifies the location of those files, relative to public/
+	 *
+	 * This MUST include the trailing slash ('/')
+	 */
+	'cache_path' => 'assets/cache/',
+
+	/**
+	 * Whether to minify (and combine) files.
+	 */
+	'min' => true,
+
+	/**
+	 * When minifying, whether to show the files names in each combined
+	 * file in a comment before the tag to the file.
+	 */
+	'show_files' => false,
+
+	/**
+	 * When minifying, whether to put comments in each minified file showing
+	 * the origin location of each part of the file.
+	 */
+	'show_files_inline' => false,
+
+	/**
+	 * Groups of scripts.
+	 * You can predefine groups of js and css scripts which can be enabled/disabled
+	 * and rendered.
+	 * There isn't much flexibility in this syntax, and no error-checking is performed,
+	 * so please be careful!
+	 *
+	 * The groups array follows the following structure:
+	 * array(
+	 *    'js' => array(
+	 *       'group_name' => array(
+	 *          'files' => array(
+	 *             array('file1.js', 'file1.min.js'),
+	 *             'file2.js'
+	 *          ),
+	 *          'enabled' => true,
+	 *       ),
+	 *       'group_name_2' => array(.....),
+	 *    ),
+	 *    'css' => aarray(
+	 *       'group_name' => array(
+	 *          'files' => array(
+	 *             array('file1.css', 'file1.min.css'),
+	 *             'file2.css',
+	 *          ),
+	 *          'enabled' => true,
+	 *       ),
+	 *       'group_name_2' => array(.....),
+	 *    ),
+	 * ),
+	 *
+	 * - 'js' and 'css' are special keys, used by functions like render_js and
+	 *    render_css. Either can happily be omitted.
+	 * - 'group_name' is a user-defined group name. Files can be added to a
+	 *    particular group using the third argument of css() or js().
+	 *    Similarly, individual groups can be rendered by passing the group
+	 *    name to render_css() or render_js().
+	 *    Another point to note is that each group is minified into its own
+	 *    distinct cache file. This is a compromise between allowing the
+	 *    browser to cache files, and flooding it with too many files.
+	 * - 'files' is a list of the files present in the group.
+	 *    Each file can either be defined by a string, or by an array of 2 elements.
+	 *    If the string form is used, the file will be minified using an internal
+	 *    library when 'min' = true.
+	 *    If the array form is used, the second element in the array is used
+	 *    when 'min' = true. This is useful when a library also provided a minified
+	 *    version of itself (eg jquery).
+	 * - 'enabled': whether the group will be rendered when render_css() or
+	 *    render_js() is called.
+	 *    Using this,
+	 */
+	'groups' => array(
+	),
+);
+
+/* End of file config/casset.php */
