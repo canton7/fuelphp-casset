@@ -354,7 +354,7 @@ class Casset {
 			$mtime = time();
 		}
 		var_dump($needs_update);
-		return $filename.'?mtime='.$mtime;
+		return $filename.'?'.$mtime;
 	}
 }
 
