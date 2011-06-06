@@ -312,3 +312,5 @@ class Casset_JSMin {
 class JSMin_UnterminatedStringException extends Exception {}
 class JSMin_UnterminatedCommentException extends Exception {}
 class JSMin_UnterminatedRegExpException extends Exception {}
+
+/* End of file casset/jsmin.php */
