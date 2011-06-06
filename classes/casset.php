@@ -14,8 +14,8 @@ class Casset {
 	protected static $cache_path = 'assets/cache/';
 
 	protected static $groups = array(
-		'css' => array('global' => array('files' => array(), 'enabled' => true, 'const' => false)),
-		'js' => array('global' => array('files' => array(), 'enabled' => true, 'const' => false)),
+		'css' => array('global' => array('files' => array(), 'enabled' => true)),
+		'js' => array('global' => array('files' => array(), 'enabled' => true)),
 	);
 
 	protected static $min = true;
@@ -57,7 +57,7 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				static::add_group($group_type, $group_name, $group['files'], true, $group['enabled']);
+				static::add_group($group_type, $group_name, $group['files'], $group['enabled']);
 			}
 		}
 
@@ -82,7 +82,7 @@ class Casset {
 		}
 	}
 
-	public static function add_group($group_type, $group_name, $files, $const = false, $enabled = true)
+	public static function add_group($group_type, $group_name, $files, $enabled = true)
 	{
 		foreach ($files as &$file)
 		{
@@ -92,7 +92,6 @@ class Casset {
 		static::$groups[$group_type][$group_name] = array(
 			'files' => $files,
 			'enabled' => $enabled,
-			'const' => $const,
 		);
 	}
 
@@ -188,7 +187,7 @@ class Casset {
 				$filename = static::combine_and_minify('js', $group_name, $file_group);
 				if (!$inline && static::$show_files)
 				{
-					$ret .= '<!--'.PHP_EOL.implode('', array_map(function($a){
+					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
 						return "\t".$a['file'].PHP_EOL;
 					}, $file_group)).'-->'.PHP_EOL;
 				}
@@ -234,7 +233,7 @@ class Casset {
 				$filename = static::combine_and_minify('css', $group_name, $file_group);
 				if (!$inline && static::$show_files)
 				{
-					$ret .= '<!--'.PHP_EOL.implode('', array_map(function($a){
+					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
 						return "\t".$a['file'].PHP_EOL;
 					}, $file_group)).'-->'.PHP_EOL;
 				}
@@ -275,8 +274,6 @@ class Casset {
 		else
 			$group_names = array($group);
 
-		// All const groups get their own key in this array
-		// All non-const groups get munged into the 'global' group
 		$files = array();
 
 		$minified = false;
@@ -286,9 +283,8 @@ class Casset {
 			if (static::$groups[$type][$group_name]['enabled'] == false)
 				continue;
 
-			$file_group_name = static::$groups[$type][$group_name]['const'] ? $group_name : 'global';
-			if (!array_key_exists($file_group_name, $files))
-				$files[$file_group_name] = array();
+			if (!array_key_exists($group_name, $files))
+				$files[$group_name] = array();
 
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
@@ -301,13 +297,13 @@ class Casset {
 				{
 					$file = static::find_file($file_set[0], $type);
 				}
-				array_push($files[$file_group_name], array(
+				array_push($files[$group_name], array(
 					'file' => $file,
 					'minified' => $minified,
 				));
 			}
 			// If minifying, sort by filename
-			uasort($files[$file_group_name], function($a, $b) {
+			uasort($files[$group_name], function($a, $b) {
 				return ($a['file'] > $b['file']) ? 1 : -1;
 			});
 		}
@@ -316,16 +312,10 @@ class Casset {
 
 	private static function combine_and_minify($type, $group_name, $file_group)
 	{
-		// Generate combined filename
-		// The 'global' group is non-const, and needs an md5 as the filename
-		// Other groups are const, and filename can be derived from the group name
 		$ext = '.'.$type;
-		if ($group_name == 'global')
-			$filename = md5(implode('', array_map(function($a) {
-				return $a['file'];
-			}, $file_group))).$ext;
-		else
-			$filename = 'group_'.$group_name.$ext;
+		$filename = md5(implode('', array_map(function($a) {
+			return $a['file'];
+		}, $file_group))).$ext;
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
 		foreach ($file_group as $file)
@@ -363,6 +353,7 @@ class Casset {
 			file_put_contents($filepath, $content);
 			$mtime = time();
 		}
+		var_dump($needs_update);
 		return $filename.'?mtime='.$mtime;
 	}
 }
