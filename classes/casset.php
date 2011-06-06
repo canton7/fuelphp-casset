@@ -84,6 +84,11 @@ class Casset {
 
 	public static function add_group($group_type, $group_name, $files, $const = false, $enabled = true)
 	{
+		foreach ($files as &$file)
+		{
+			if (!is_array($file))
+				$file = array($file, false);
+		}
 		static::$groups[$group_type][$group_name] = array(
 			'files' => $files,
 			'enabled' => $enabled,
