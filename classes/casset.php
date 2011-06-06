@@ -181,7 +181,7 @@ class Casset {
 					$ret .= html_tag('script', array(
 						'type' => 'text/javascript',
 						'src' => static::$asset_url.static::$cache_path.$filename,
-					)).PHP_EOL;
+					), '').PHP_EOL;
 			}
 			else
 			{
@@ -193,7 +193,7 @@ class Casset {
 						$ret .= html_tag('script', array(
 							'type' => 'text/javascript',
 							'src' => $file['file'],
-						)).PHP_EOL;
+						), '').PHP_EOL;
 				}
 			}
 
