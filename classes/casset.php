@@ -18,6 +18,11 @@ class Casset {
 		'js' => array('global' => array('files' => array(), 'enabled' => true)),
 	);
 
+	protected static $inline_assets = array(
+		'css' => array(),
+		'js' => array(),
+	);
+
 	protected static $min = true;
 
 	protected static $show_files = true;
@@ -168,6 +173,21 @@ class Casset {
 		{
 			array_push(static::$groups[$type][$group]['files'], array($script, $script_min));
 		}
+	}
+
+	public static function js_inline($content)
+	{
+		static::add_asset_inline('js', $content);
+	}
+
+	public static function css_inline($content)
+	{
+		static::add_asset_inline('css', $content);
+	}
+
+	private static function add_asset_inline($type, $content)
+	{
+		array_push(static::$inline_assets[$type], $content);
 	}
 
 	public function render_js($group = false, $inline = false, $min = null)
@@ -354,6 +374,26 @@ class Casset {
 			$mtime = time();
 		}
 		return $filename.'?'.$mtime;
+	}
+
+	public static function render_js_inline()
+	{
+		$ret = '';
+		foreach (static::$inline_assets['js'] as $content)
+		{
+			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+		}
+		return $ret;
+	}
+
+	public static function render_css_inline()
+	{
+		$ret = '';
+		foreach (static::$inline_assets['css'] as $content)
+		{
+			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+		}
+		return $ret;
 	}
 }
 
