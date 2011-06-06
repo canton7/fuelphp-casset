@@ -146,9 +146,9 @@ class Casset {
 	 */
 	public static function remove_path($path)
 	{
-		if (($key = array_search(str_replace('../', '', $path), static::$_asset_paths)) !== false)
+		if (($key = array_search(str_replace('../', '', $path), static::$asset_paths)) !== false)
 		{
-			unset(static::$_asset_paths[$key]);
+			unset(static::$asset_paths[$key]);
 		}
 	}
 
