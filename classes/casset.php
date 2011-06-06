@@ -174,37 +174,7 @@ class Casset {
 		{
 			if ($min)
 			{
-				// Generate combined filename
-				// The 'global' group is non-const, and needs an md5 as the filename
-				// Other groups are const, and filename can be derived from the group name
-				if ($group_name == 'global')
-					$filename = md5(implode('', array_map(function($a) {
-						return $a['file'];
-					}, $file_group)));
-				else
-					$filename = 'group_'.$group_name.'.js';
-				// Get the last modified time of all of the component files
-				$last_mod = 0;
-				foreach ($file_group as $file)
-				{
-					$mod = filemtime(DOCROOT.$file['file']);
-					if ($mod > $last_mod)
-						$last_mod = $mod;
-				}
-				$needs_update = (!file_exists(DOCROOT.$filename) || filemtime(DOCROOT.$filename) < $last_mod);
-
-				if ($needs_update)
-				{
-					$content = '';
-					foreach ($file_group as $file)
-					{
-						if ($file['minified'])
-							$content .= file_get_contents($file['file']).PHP_EOL;
-						else
-							$content = Casset_JSMin::minify(file_get_contents($file['file'])).PHP_EOL;
-					}
-					file_put_contents(DOCROOT.static::$cache_path.'/'.$filename, $content);
-				}
+				$filename = static::combine_and_minify('js', $group_name, $file_group);
 				if ($inline)
 					$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
 				else
@@ -236,23 +206,39 @@ class Casset {
 		if ($min === null)
 			$min = static::$min;
 
-		$files = static::files_to_render('css', $group, $min);
+		$file_groups = static::files_to_render('css', $group, $min);
 
 		$ret = '';
 
-		foreach ($files as $file)
+		foreach ($file_groups as $group_name => $file_group)
 		{
-			if (!$min)
+			if ($min)
 			{
+				$filename = static::combine_and_minify('css', $group_name, $file_group);
 				if ($inline)
-					$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents($file).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
 				else
-					$ret .= html_tag('link', array(
+					$ret .= html_tag('script', array(
 						'rel' => 'stylesheet',
 						'type' => 'text/css',
-						'href' => $file,
+						'href' => static::$asset_url.static::$cache_path.$filename,
 					)).PHP_EOL;
 			}
+			else
+			{
+				foreach ($file_group as $file)
+				{
+					if ($inline)
+						$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+					else
+						$ret .= html_tag('script', array(
+							'rel' => 'stylesheet',
+							'type' => 'text/css',
+							'href' => $file['file'],
+						)).PHP_EOL;
+				}
+			}
+
 		}
 		return $ret;
 	}
@@ -301,6 +287,51 @@ class Casset {
 			});
 		}
 		return $files;
+	}
+
+	private static function combine_and_minify($type, $group_name, $file_group)
+	{
+		// Generate combined filename
+		// The 'global' group is non-const, and needs an md5 as the filename
+		// Other groups are const, and filename can be derived from the group name
+		$ext = '.'.$type;
+		if ($group_name == 'global')
+			$filename = md5(implode('', array_map(function($a) {
+				return $a['file'];
+			}, $file_group))).$ext;
+		else
+			$filename = 'group_'.$group_name.$ext;
+		// Get the last modified time of all of the component files
+		$last_mod = 0;
+		foreach ($file_group as $file)
+		{
+			$mod = filemtime(DOCROOT.$file['file']);
+			if ($mod > $last_mod)
+				$last_mod = $mod;
+		}
+		$needs_update = (!file_exists(DOCROOT.$filename) || filemtime(DOCROOT.$filename) < $last_mod);
+
+		if ($needs_update)
+		{
+			$content = '';
+			foreach ($file_group as $file)
+			{
+				if ($file['minified'])
+					$content .= file_get_contents($file['file']).PHP_EOL;
+				else
+				{
+					if ($type == 'js')
+						$content = Casset_JSMin::minify(file_get_contents($file['file'])).PHP_EOL;
+					elseif ($type == 'css')
+					{
+						$content = Casset_Csscompressor::process(file_get_contents($file['file']).PHP_EOL);
+						$content = Casset_Cssurirewriter::rewrite($content, dirname($file['file']));
+					}
+				}
+			}
+			file_put_contents(DOCROOT.static::$cache_path.'/'.$filename, $content);
+		}
+		return $filename;
 	}
 }
 
