@@ -218,7 +218,7 @@ class Casset {
 				if ($inline)
 					$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
 				else
-					$ret .= html_tag('script', array(
+					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
 						'type' => 'text/css',
 						'href' => static::$asset_url.static::$cache_path.$filename,
@@ -231,7 +231,7 @@ class Casset {
 					if ($inline)
 						$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
-						$ret .= html_tag('script', array(
+						$ret .= html_tag('link', array(
 							'rel' => 'stylesheet',
 							'type' => 'text/css',
 							'href' => $file['file'],
