@@ -20,6 +20,9 @@ class Casset {
 
 	protected static $min = true;
 
+	protected static $show_files = true;
+	protected static $show_files_inline = true;
+
 	public static $initialized = false;
 
 	public static function _init()
@@ -59,6 +62,9 @@ class Casset {
 		}
 
 		static::$min = Config::get('casset.min', static::$min);
+
+		static::$show_files = Config::get('casset.show_files', static::$show_files);
+		static::$show_files_inline = Config::get('casset.show_files', static::$show_files_inline);
 
 		static::$initialized = true;
 	}
@@ -175,6 +181,12 @@ class Casset {
 			if ($min)
 			{
 				$filename = static::combine_and_minify('js', $group_name, $file_group);
+				if (!$inline && static::$show_files)
+				{
+					$ret .= '<!--'.PHP_EOL.implode('', array_map(function($a){
+						return "\t".$a['file'].PHP_EOL;
+					}, $file_group)).'-->'.PHP_EOL;
+				}
 				if ($inline)
 					$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
 				else
@@ -215,6 +227,12 @@ class Casset {
 			if ($min)
 			{
 				$filename = static::combine_and_minify('css', $group_name, $file_group);
+				if (!$inline && static::$show_files)
+				{
+					$ret .= '<!--'.PHP_EOL.implode('', array_map(function($a){
+						return "\t".$a['file'].PHP_EOL;
+					}, $file_group)).'-->'.PHP_EOL;
+				}
 				if ($inline)
 					$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
 				else
@@ -323,13 +341,17 @@ class Casset {
 				else
 				{
 					if ($type == 'js')
+					{
 						$content = Casset_JSMin::minify(file_get_contents($file['file'])).PHP_EOL;
+					}
 					elseif ($type == 'css')
 					{
 						$content = Casset_Csscompressor::process(file_get_contents($file['file']).PHP_EOL);
 						$content = Casset_Cssurirewriter::rewrite($content, dirname($file['file']));
 					}
 				}
+				if (static::$show_files_inline)
+					$content = '/* '.$file['file'].' */'.PHP_EOL.$content;
 			}
 			file_put_contents($filepath, $content);
 			$mtime = time();
