@@ -257,3 +257,10 @@ Casset::css('file_2.css');
 Casset::enable('jquery-ui');
 ...
 ```
+
+Contributing
+------------
+
+Pull requests are gladly accepted!
+
+This project uses [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so please base your work on the tip of the `develop` branch, and rebase onto `develop` again before submitting the pull request.
