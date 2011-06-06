@@ -103,50 +103,64 @@ class Casset {
 
 	public static function enable_js($group)
 	{
-		if (!array_key_exists($group, static::$groups['js']))
-				return;
-		static::$groups['js'][$group]['enabled'] = true;
+		static::asset_enabled('js', $group, true);
 	}
 
 	public static function disable_js($group)
 	{
-		if (!array_key_exists($group, static::$groups['js']))
+		static::asset_enabled('js', $group, false);
+	}
+
+	public static function enable_css($group)
+	{
+		static::asset_enabled('css', $group, true);
+	}
+
+	public static function disable_css($group)
+	{
+		static::asset_enabled('css', $group, false);
+	}
+
+	private static function asset_enabled($type, $group, $enabled)
+	{
+		if (!array_key_exists($group, static::$groups[$type]))
 				return;
-		static::$groups['js'][$group]['enabled'] = false;
+		static::$groups[$type][$group]['enabled'] = $enabled;
 	}
 
-	public static function js($script, $script_min = false)
+	public static function js($script, $script_min = false, $group = 'global')
 	{
-		array_push(static::$groups['js']['global']['files'], array($script, $script_min));
+		static::add_asset('js', $script, $script_min, $group);
 	}
 
-	public function render_js($group = false, $inline = false, $min = false)
+	public static function css($sheet, $sheet_min = false, $group = 'global')
 	{
-		// Very simple minimisation for now
-		$min = $min || static::$min;
-		if ($group == false)
+		static::add_asset('css', $sheet, $sheet_min, $group);
+	}
+
+	private static function add_asset($type, $script, $script_min, $group)
+	{
+		if (!array_key_exists($group, static::$groups[$type]))
 		{
-			$group_names = array_keys(static::$groups['js']);
+			// Assume they want the group enabled
+			static::add_group($type, $group, array(
+				'files' => array(array($script, $script_min)),
+				'enabled' => true
+			));
 		}
 		else
 		{
-			$group_names = array($group);
-			// If they're specificially asked to render a group, enable it
-			static::$groups['js'][$group]['enabled'] = true;
+			array_push(static::$groups[$type][$group]['files'], array($script, $script_min));
 		}
+	}
 
-		$files = array();
+	public function render_js($group = false, $inline = false, $min = null)
+	{
+		// Very simple minimisation for now
+		if ($min === null)
+			$min = static::$min;
 
-		foreach ($group_names as $group_name)
-		{
-			if (static::$groups['js'][$group_name]['enabled'] == false)
-				continue;
-
-			foreach (static::$groups['js'][$group_name]['files'] as $file_set)
-			{
-				array_push($files, static::find_file(($min) ? $file_set[1] : $file_set[0], 'js'));
-			}
-		}
+		$files = static::files_to_render('js', $group, $min);
 
 		$ret = '';
 
@@ -154,22 +168,71 @@ class Casset {
 		{
 			if (!$min)
 			{
-				if ($inline) {
+				if ($inline)
 					$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.file_get_contents($file).PHP_EOL).PHP_EOL;
-				}
 				else
-				{
 					$ret .= html_tag('script', array(
 						'type' => 'text/javascript',
 						'src' => $file,
 					)).PHP_EOL;
-				}
 			}
 		}
 		return $ret;
 	}
 
+	public function render_css($group = false, $inline = false, $min = null)
+	{
+		if ($min === null)
+			$min = static::$min;
 
+		$files = static::files_to_render('css', $group, $min);
+
+		$ret = '';
+
+		foreach ($files as $file)
+		{
+			if (!$min)
+			{
+				if ($inline)
+					$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents($file).PHP_EOL).PHP_EOL;
+				else
+					$ret .= html_tag('link', array(
+						'rel' => 'stylesheet',
+						'type' => 'text/css',
+						'href' => $file,
+					)).PHP_EOL;
+			}
+		}
+		return $ret;
+	}
+
+	private static function files_to_render($type, $group, $min)
+	{
+		if ($group == false)
+		{
+			$group_names = array_keys(static::$groups[$type]);
+		}
+		else
+		{
+			$group_names = array($group);
+			// If they're specificially asked to render a group, enable it
+			static::$groups[$type][$group]['enabled'] = true;
+		}
+
+		$files = array();
+
+		foreach ($group_names as $group_name)
+		{
+			if (static::$groups[$type][$group_name]['enabled'] == false)
+				continue;
+
+			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
+			{
+				array_push($files, static::find_file(($min) ? $file_set[1] : $file_set[0], $type));
+			}
+		}
+		return $files;
+	}
 }
 
 /* End of file casset.php */
