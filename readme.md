@@ -2,7 +2,8 @@ Casset
 ======
 
 Casset is an alternative to fuelphp's Asset class.  
-Casset supports minifying and combining scripts, in order to reduce the number and size of http requests need to load a given page.
+Casset supports minifying and combining scripts, in order to reduce the number and size of http requests need to load a given page. Grouping syntax has been made cleaner, and the ability to render all groups, and enable/disable specific groups, added.  
+There are are some other changes too, please read on!
 
 Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libraries, stolen from http://code.google.com/p/minify/.
 
