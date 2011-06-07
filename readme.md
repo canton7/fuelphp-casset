@@ -118,7 +118,8 @@ Casset::js('myfile.js', 'myfile.min.js', 'group_name');
 Casset::css('myfile.css', false, 'group_name');
 ```
 
-Groups can also be declared on the fly, as shown below. I can't think of why you'd want to do this, which is why the syntax is a little messy.
+Groups can also be declared on the fly, by specifying a group name which doesn't yet exist. The group is assumed to be enabled.  
+You can also use a slightly more involved syntax for creating groups, which allows you to specify multiple files and whether the group is enabled, as shown below:
 
 ```php
 Casset::add_group('js', 'group_name', array('file1.js', array('file2.js', 'file2.min.js')), $enabled);
