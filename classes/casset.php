@@ -506,8 +506,10 @@ class Casset {
 			if (count(static::$groups[$type][$group_name]['files']) == 0)
 				continue;
 
-			if (!array_key_exists($group_name, $files))
-				$files[$group_name] = array();
+			$files[$group_name] = array();
+
+			// Mark the group as disabled to avoid the same group being printed twice
+			static::asset_enabled($type, $group_name, false);
 
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
