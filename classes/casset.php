@@ -124,7 +124,7 @@ class Casset {
 		static::$min = Config::get('casset.min', static::$min);
 
 		static::$show_files = Config::get('casset.show_files', static::$show_files);
-		static::$show_files_inline = Config::get('casset.show_files', static::$show_files_inline);
+		static::$show_files_inline = Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$initialized = true;
 	}
