@@ -375,7 +375,6 @@ class Casset {
 	 */
 	public function render_js($group = false, $inline = false, $min = null)
 	{
-		// Very simple minimisation for now
 		if ($min === null)
 			$min = static::$min;
 
@@ -489,10 +488,9 @@ class Casset {
 	 */
 	private static function files_to_render($type, $group, $min)
 	{
+		// If no group specified, print all groups.
 		if ($group == false)
-			$group_names = array_keys(array_filter(static::$groups[$type], function($a){
-				return count($a['files']) > 0;
-			}));
+			$group_names = array_keys(static::$groups[$type]);
 		else
 			$group_names = array($group);
 
@@ -503,6 +501,9 @@ class Casset {
 		foreach ($group_names as $group_name)
 		{
 			if (static::$groups[$type][$group_name]['enabled'] == false)
+				continue;
+			// If there are no files in the group, there's no point in printing it.
+			if (count(static::$groups[$type][$group_name]['files']) == 0)
 				continue;
 
 			if (!array_key_exists($group_name, $files))
