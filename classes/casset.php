@@ -569,7 +569,7 @@ class Casset {
 			foreach ($file_group as $file)
 			{
 				if (static::$show_files_inline)
-					$content .= '/* '.$file['file'].' */'.PHP_EOL;
+					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'])
 					$content .= file_get_contents($file['file']).PHP_EOL;
 				else
