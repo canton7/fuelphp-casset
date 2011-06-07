@@ -238,6 +238,7 @@ In the config file:
 			'files' => array(
 				'jquery-ui.css',
 			),
+			'endabled' => false,
 		),
 	),
 ),
