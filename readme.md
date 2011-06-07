@@ -109,7 +109,8 @@ array element.
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they exist.
 
-Specific groups can be rendered using `Casset::render_js('group_name')`. If no group name is passed, *all* groups will be rendered.
+Specific groups can be rendered using eg `Casset::render_js('group_name')`. If no group name is passed, *all* groups will be rendered.  
+Note that when a group is rendered, it is disabled. See the "Extra attributes" section for an application of this functionality.
 
 Files can be added to a group by passing the group name as the third argument to `Casset::js` / `Casset::css`, eg:
 
@@ -118,7 +119,8 @@ Casset::js('myfile.js', 'myfile.min.js', 'group_name');
 Casset::css('myfile.css', false, 'group_name');
 ```
 
-Groups can also be declared on the fly, as shown below. I can't think of why you'd want to do this, which is why the syntax is a little messy.
+Groups can also be declared on the fly, by specifying a group name which doesn't yet exist. The group is assumed to be enabled.  
+You can also use a slightly more involved syntax for creating groups, which allows you to specify multiple files and whether the group is enabled, as shown below:
 
 ```php
 Casset::add_group('js', 'group_name', array('file1.js', array('file2.js', 'file2.min.js')), $enabled);
@@ -167,6 +169,25 @@ Will output:
 
 Similarly, `Casset::css_inline()` and `Casset::render_css_inline()` exist.
 
+Extra attributes
+----------------
+
+`Casset::render_js()` and `Casset::render_css()` support an optional third argument which allows the user to define extra attributes to be applied to the script/link tag.  
+This can be combined with the fact that one a group has been rendered, it is disabled, allowing the following to be done:
+
+```php
+Casset::css('main.css');
+Casset::css('screen.css', false, 'screen');
+
+// Render the 'screen' group
+echo Casset::render_css('screen', false, array('media' => 'screen');
+// <link rel="stylesheet" type="text/css" href="http://...screen.css" media="screen" />
+
+// Render everything else, except the 'screen' group
+echo Casset::render_css();
+// <link rel="stylesheet" type="text/css" href="http://...main.css" media="screen" />
+```
+
 Minification
 ------------
 
@@ -179,11 +200,11 @@ The assumption is that each group is likely to appear fairly independantly, so c
 You can choose to include a comment above each `<script>` and `<link>` tag saying which group is contained with that file by setting the "show_files" key to true in the config file.
 Similarly, you can choose to put comments inside each minified file, saying which origin file has ended up where -- set "show_files_inline" to true.
 
-`Casset::render_js()` and `Casset::render_css()` take an optional third argument, allowing you to control minification on a per-group basis if you need.
+`Casset::render_js()` and `Casset::render_css()` take an optional fourth argument, allowing you to control minification on a per-group basis if you need.
 The following will minify the 'group_name' group, even if minification is turned off in the config file.
 
 ```php
-echo Casset::render_js('group_name', false, true);
+echo Casset::render_js('group_name', false, array(), true);
 ```
 
 NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (Casset doesn't know if you've got a single page where you add an extra file to a group).
@@ -217,6 +238,7 @@ In the config file:
 			'files' => array(
 				'jquery-ui.css',
 			),
+			'endabled' => false,
 		),
 	),
 ),

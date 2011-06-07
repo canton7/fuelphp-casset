@@ -124,7 +124,7 @@ class Casset {
 		static::$min = Config::get('casset.min', static::$min);
 
 		static::$show_files = Config::get('casset.show_files', static::$show_files);
-		static::$show_files_inline = Config::get('casset.show_files', static::$show_files_inline);
+		static::$show_files_inline = Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$initialized = true;
 	}
@@ -322,10 +322,7 @@ class Casset {
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group($type, $group, array(
-				'files' => array(array($script, $script_min)),
-				'enabled' => true
-			));
+			static::add_group($type, $group, array(array($script, $script_min)), true);
 		}
 		else
 		{
@@ -376,9 +373,8 @@ class Casset {
 	 * @param bool $min True to minify the javascript files. null to use the config value
 	 * @return string The javascript tags to be written to the page
 	 */
-	public function render_js($group = false, $inline = false, $min = null)
+	public function render_js($group = false, $inline = false, $attr = array(), $min = null)
 	{
-		// Very simple minimisation for now
 		if ($min === null)
 			$min = static::$min;
 
@@ -398,24 +394,24 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('script', array(
 						'type' => 'text/javascript',
 						'src' => static::$asset_url.static::$cache_path.$filename,
-					), '').PHP_EOL;
+					)+$attr, '').PHP_EOL;
 			}
 			else
 			{
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+						$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 						$ret .= html_tag('script', array(
 							'type' => 'text/javascript',
 							'src' => static::$asset_url.$file['file'],
-						), '').PHP_EOL;
+						)+$attr, '').PHP_EOL;
 				}
 			}
 
@@ -433,7 +429,7 @@ class Casset {
 	 * @param bool $min True to minify the css files. null to use the config value
 	 * @return string The css tags to be written to the page
 	 */
-	public function render_css($group = false, $inline = false, $min = null)
+	public function render_css($group = false, $inline = false, $attr = array(), $min = null)
 	{
 		if ($min === null)
 			$min = static::$min;
@@ -454,26 +450,26 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
 						'type' => 'text/css',
 						'href' => static::$asset_url.static::$cache_path.$filename,
-					)).PHP_EOL;
+					)+$attr).PHP_EOL;
 			}
 			else
 			{
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+						$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 						$ret .= html_tag('link', array(
 							'rel' => 'stylesheet',
 							'type' => 'text/css',
 							'href' => static::$asset_url.$file['file'],
-						)).PHP_EOL;
+						)+$attr).PHP_EOL;
 				}
 			}
 
@@ -492,10 +488,9 @@ class Casset {
 	 */
 	private static function files_to_render($type, $group, $min)
 	{
+		// If no group specified, print all groups.
 		if ($group == false)
-			$group_names = array_keys(array_filter(static::$groups[$type], function($a){
-				return count($a['files']) > 0;
-			}));
+			$group_names = array_keys(static::$groups[$type]);
 		else
 			$group_names = array($group);
 
@@ -507,9 +502,14 @@ class Casset {
 		{
 			if (static::$groups[$type][$group_name]['enabled'] == false)
 				continue;
+			// If there are no files in the group, there's no point in printing it.
+			if (count(static::$groups[$type][$group_name]['files']) == 0)
+				continue;
 
-			if (!array_key_exists($group_name, $files))
-				$files[$group_name] = array();
+			$files[$group_name] = array();
+
+			// Mark the group as disabled to avoid the same group being printed twice
+			static::asset_enabled($type, $group_name, false);
 
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
