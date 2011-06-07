@@ -322,10 +322,7 @@ class Casset {
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group($type, $group, array(
-				'files' => array(array($script, $script_min)),
-				'enabled' => true
-			));
+			static::add_group($type, $group, array(array($script, $script_min)), true);
 		}
 		else
 		{
