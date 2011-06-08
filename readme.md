@@ -52,16 +52,16 @@ Images
 
 Although the original Asset library provided groups, etc, for dealing with images, I couldn't see the point.
 
-Therefore image handling is somewhat simpler, and can be summed up by the following line:
+Therefore image handling is somewhat simpler, and can be summed up by the following line, where the third argument is an optional array of attributes:
 
 ```php
-echo Casset::img('test.jpg', array('alt' => 'This is an image'));
+echo Casset::img('test.jpg', 'alt text', array('width' => 200));
 ```
 
 You can also pass an array of images (which will all have to same attributes applied to them), eg:
 
 ```php
-echo Casset::img(array('test.jpg', 'test2.jpg'));
+echo Casset::img(array('test.jpg', 'test2.jpg'), 'Some thumbnails');
 ```
 
 Groups
