@@ -192,7 +192,7 @@ echo Casset::render_css('screen', false, array('media' => 'screen');
 
 // Render everything else, except the 'screen' group
 echo Casset::render_css();
-// <link rel="stylesheet" type="text/css" href="http://...main.css" media="screen" />
+// <link rel="stylesheet" type="text/css" href="http://...main.css" />
 ```
 
 Minification
