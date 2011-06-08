@@ -625,13 +625,15 @@ class Casset {
 	 * Locates the given image(s), and returns the resulting <img> tag.
 	 *
 	 * @param mixed $images Image(s) to print. Can be string or array of strings
+	 * @param string $alt The alternate text
 	 * @param array $attr Attributes to apply to each image (eg alt)
 	 * @return string The resulting <img> tag(s)
 	 */
-	public static function img($images, $attr = array())
+	public static function img($images, $alt, $attr = array())
 	{
 		if (!is_array($images))
 			$images = array($images);
+		$attr['alt'] = $alt;
 		$ret = '';
 		foreach ($images as $image)
 		{
