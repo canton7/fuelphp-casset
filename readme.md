@@ -29,7 +29,7 @@ Casset::js('myfile.js');
 Casset::js('myfile2.js');
 ```
 
-By default, Casset will minify both of these files and combine them into a single file (which is written to public/assets/cache/<md5 hash>.js).
+By default, Casset will minify both of these files and combine them into a single file (which is written to public/assets/cache/\<md5 hash\>.js).
 To include this file in your page, use the following:
 
 ```php
@@ -38,6 +38,13 @@ echo Casset::render_js();
 Returns something like
 <script type="text/javascript" src="http://localhost/site/assets/cache/d148a723c710760bc62ca3ecc8c50206.js?1307384477"></script>
 */
+```
+
+If you've got minification turned off (see the section at the bottom of this readme), you'll instead get:
+
+```php
+<script type="text/javascript" src="http://localhost/site/assets/js/myfile.js"></script>
+<script type="text/javascript" src="http://localhost/site/assets/js/myfile2.js"></script>
 ```
 
 If you have a specific file ("myfile.min.js") which you want Casset to use, rather than generating its own minified version, you
