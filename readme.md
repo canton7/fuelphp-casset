@@ -200,7 +200,7 @@ Minification
 
 Minification uses libraries from Stephen Clay's [Minify library](http://code.google.com/p/minify/).
 
-When minification is enabled (see the "min" key in the config file), when an enabled group is rendered, it is combined, minified, and stored in a file in public/assets/cache/.
+When an enabled group is rendered (and minification is turned on), the files in that group are minified combined, and stored in a file in public/assets/cache/.
 This is an attempt to achieve a balance between spamming the browser with lots of files, and allowing the browser to cache files.
 The assumption is that each group is likely to appear fairly independantly, so combining groups isn't worth it.
 
@@ -214,7 +214,9 @@ The following will minify the 'group_name' group, even if minification is turned
 echo Casset::render_js('group_name', false, array(), true);
 ```
 
-NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (Casset doesn't know if you've got a single page where you add an extra file to a group).
+When minifying CSS files, urls are rewritten to take account of the fact that your css file has effectively moved into `public/assets/cache`.
+
+NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
 Therefore an occasional clearout of `public/assets/cache/` is recommended.
 
 Examples
@@ -265,6 +267,7 @@ In our template file:
 	echo Casset::render_js();
 	echo Casset::render_js_inline();
 ?>
+</body>
 ```
 
 We can then turn the jquery-ui group on as we please.
@@ -291,6 +294,6 @@ Casset::enable('jquery-ui');
 Contributing
 ------------
 
-Pull requests are gladly accepted!
+If you've got any issues/complaints/suggestions, please tell me and I'll do my best!
 
-This project uses [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so please base your work on the tip of the `develop` branch, and rebase onto `develop` again before submitting the pull request.
+Pull requests are also gladly accepted. This project uses [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so please base your work on the tip of the `develop` branch, and rebase onto `develop` again before submitting the pull request.
