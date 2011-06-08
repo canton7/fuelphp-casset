@@ -50,7 +50,7 @@ Casset::js('myfile.js', 'myfile.min.js');
 Images
 ------
 
-Although the origin Asset library provided groups, etc, for dealing with images, I couldn't see the point.
+Although the original Asset library provided groups, etc, for dealing with images, I couldn't see the point.
 
 Therefore image handling is somewhat simpler, and can be summed up by the following line:
 
