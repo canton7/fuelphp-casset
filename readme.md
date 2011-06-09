@@ -115,7 +115,8 @@ array element.
 **enabled**: Whether a group is enabled. A group will only be rendered when it is enabled.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
-The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they exist.
+The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they exist.  
+You can also pass an array of groups to enable/disable.
 
 Specific groups can be rendered using eg `Casset::render_js('group_name')`. If no group name is passed, *all* groups will be rendered.  
 Note that when a group is rendered, it is disabled. See the "Extra attributes" section for an application of this functionality.
