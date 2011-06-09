@@ -1,15 +1,21 @@
 <?php
 /**
- * Class Minify_CSS_UriRewriter
- * @package Minify
- */
-
-/**
  * Rewrite file-relative URIs as root-relative in CSS files
  *
  * @package Minify
  * @author Stephen Clay <steve@mrclay.org>
  */
+
+/**
+ * This library is used as part of Casset.
+ *
+ * @package    Casset
+ * @version    v1.1
+ * @author     Antony Male
+ * @license    MIT License
+ * @link       http://github.com/canton7/fuelphp-casset
+ */
+
 
 namespace Casset;
 

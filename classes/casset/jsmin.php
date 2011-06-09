@@ -40,7 +40,6 @@
  * SOFTWARE.
  * --
  *
- * @package JSMin
  * @author Ryan Grove <ryan@wonko.com> (PHP port)
  * @author Steve Clay <steve@mrclay.org> (modifications + cleanup)
  * @author Andrea Giammarchi <http://www.3site.eu> (spaceBeforeRegExp)
@@ -49,6 +48,16 @@
  * @license http://opensource.org/licenses/mit-license.php MIT License
  * @link http://code.google.com/p/jsmin-php/
  */
+
+/**
+ * This library is used as part of Casset.
+ * @package    Casset
+ * @version    v1.1
+ * @author     Antony Male
+ * @license    MIT License
+ * @link       http://github.com/canton7/fuelphp-casset
+ */
+
 
 namespace Casset;
 
