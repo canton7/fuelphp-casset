@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.1
+ * @version    v1.2
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
