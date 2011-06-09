@@ -648,6 +648,58 @@ class Casset {
 		}
 		return $ret;
 	}
+
+	/**
+	 * Cleares all cache files last modified before $before.
+	 *
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	public static function clear_cache($before = 'now')
+	{
+		static::clear_cache_base('*', $before);
+	}
+
+	/**
+	 * Cleares all JS cache files last modified before $before.
+	 *
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	public static function clear_js_cache($before = 'now')
+	{
+		static::clear_cache_base('*.js', $before);
+	}
+
+	/**
+	 * Cleares CSS all cache files last modified before $before.
+	 *
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	public static function clear_css_cache($before = 'now')
+	{
+		static::clear_cache_base('*.css', $before);
+	}
+
+	/**
+	 * Base cache clear function.
+	 *
+	 * @param type $filter Glob filter to use when selecting files to delete.
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	private static function clear_cache_base($filter = '*', $before = 'now')
+	{
+		$before = strtotime($before);
+		$files = glob(DOCROOT.static::$cache_path.$filter);
+		foreach ($files as $file)
+		{
+			if (filemtime($file) < $before)
+				unlink($file);
+		}
+	}
+
 }
 
 /* End of file casset.php */

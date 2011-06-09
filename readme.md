@@ -224,7 +224,23 @@ Bear this in mind when adding files to groups dynamically -- if you're changing 
 the browser to properly use its cache.
 
 NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
-Therefore an occasional clearout of `public/assets/cache/` is recommended.
+Therefore an occasional clearout of `public/assets/cache/` is recommended. See  the section below on clearing the cache.
+
+Clearing the cache
+------------------
+Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be neede again), a few method have been provided to remove cache files.
+
+`Casset::clear_cache()` will clear all cache files, while `Casset::clear_js_cache()` and `Casset::clear_css_cache()` will remote just JS and CSS files respectively.  
+All of the above functions optionally accept an argument allowing you to only delete cache files last modified before a certain time. This time is specified as a
+[strtotime](http://php.net/strtotime)-formatted string, for example "2 hours ago", "last Tuesday", or "20110609". For example:
+
+```php
+Casset::clear_js_cache('2 hours ago');
+// Removes all js cache files last modified more than 2 hours ago
+
+Casset::clear_cache('yesterday');
+// Removes all cache files last modified yesterday
+```
 
 Examples
 --------
