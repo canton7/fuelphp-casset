@@ -10,9 +10,10 @@ Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libr
 Installation
 ------------
 
-1. Clone / download
-2. Copy classes/casset.php and classes/casset into app/classes/
-3. Copy config/casset.php into app/config/ (optional, casset has sensible defaults)
+### Manual
+1. Clone / [download](https://github.com/canton7/fuelphp-casset/zipball/master)
+2. Stick in fuel/packages/
+3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
 4. Create public/assets/cache
 5. Enjoy
 

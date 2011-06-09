@@ -7,6 +7,7 @@
  * @version    v1.1
  * @author     Antony Male
  * @license    MIT License
+ * @copyright  2011 Antony Male
  * @link       http://github.com/canton7/fuelphp-casset
  */
 
