@@ -18,6 +18,9 @@
  * @author Stephen Clay <steve@mrclay.org>
  * @author http://code.google.com/u/1stvamp/ (Issue 64 patch)
  */
+
+namespace Casset;
+
 class Casset_Csscompressor {
 
     /**

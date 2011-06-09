@@ -10,6 +10,9 @@
  * @package Minify
  * @author Stephen Clay <steve@mrclay.org>
  */
+
+namespace Casset;
+
 class Casset_Cssurirewriter {
 
     /**

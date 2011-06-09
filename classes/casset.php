@@ -14,6 +14,7 @@
  * @link       http://github.com/canton7/fuelphp-casset
  */
 
+namespace Casset;
 
 class Casset {
 
@@ -92,26 +93,26 @@ class Casset {
 			return;
 		}
 
-		Config::load('casset', true);
+		\Config::load('casset', true);
 
-		$paths = Config::get('casset.paths', array('assets/'));
+		$paths = \Config::get('casset.paths', array('assets/'));
 
 		foreach($paths as $path)
 		{
 			static::add_path($path);
 		}
 
-		static::$asset_url = Config::get('casset.url', Config::get('base_url'));
+		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
 
 		static::$folders = array(
-			'css' => Config::get('casset.css_dir', static::$folders['css']),
-			'js' => Config::get('casset.js_dir', static::$folders['js']),
-			'img' => Config::get('casset.img_dir', static::$folders['img']),
+			'css' => \Config::get('casset.css_dir', static::$folders['css']),
+			'js' => \Config::get('casset.js_dir', static::$folders['js']),
+			'img' => \Config::get('casset.img_dir', static::$folders['img']),
 		);
 
-		static::$cache_path = Config::get('casset.cache_path', static::$cache_path);
+		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
 
-		$group_sets = Config::get('casset.groups', array());
+		$group_sets = \Config::get('casset.groups', array());
 
 		foreach ($group_sets as $group_type => $groups)
 		{
@@ -121,10 +122,10 @@ class Casset {
 			}
 		}
 
-		static::$min = Config::get('casset.min', static::$min);
+		static::$min = \Config::get('casset.min', static::$min);
 
-		static::$show_files = Config::get('casset.show_files', static::$show_files);
-		static::$show_files_inline = Config::get('casset.show_files_inline', static::$show_files_inline);
+		static::$show_files = \Config::get('casset.show_files', static::$show_files);
+		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$initialized = true;
 	}

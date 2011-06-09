@@ -50,6 +50,8 @@
  * @link http://code.google.com/p/jsmin-php/
  */
 
+namespace Casset;
+
 class Casset_JSMin {
     const ORD_LF            = 10;
     const ORD_SPACE         = 32;
