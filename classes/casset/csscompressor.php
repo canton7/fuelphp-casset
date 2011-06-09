@@ -1,10 +1,5 @@
 <?php
 /**
- * Class Minify_CSS_Compressor
- * @package Minify
- */
-
-/**
  * Compress CSS
  *
  * This is a heavy regex-based removal of whitespace, unnecessary
@@ -14,10 +9,22 @@
  * hacks involving comment tokens in 'content' value strings to break
  * minimization badly. A test suite is available.
  *
- * @package Minify
  * @author Stephen Clay <steve@mrclay.org>
  * @author http://code.google.com/u/1stvamp/ (Issue 64 patch)
  */
+
+/**
+ * This library is used as part of Casset.
+ *
+ * @package    Casset
+ * @version    v1.2
+ * @author     Antony Male
+ * @license    MIT License
+ * @link       http://github.com/canton7/fuelphp-casset
+ */
+
+namespace Casset;
+
 class Casset_Csscompressor {
 
     /**

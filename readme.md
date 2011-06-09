@@ -10,9 +10,10 @@ Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libr
 Installation
 ------------
 
-1. Clone / download
-2. Copy classes/casset.php and classes/casset into app/classes/
-3. Copy config/casset.php into app/config/ (optional, casset has sensible defaults)
+### Manual
+1. Clone / [download](https://github.com/canton7/fuelphp-casset/zipball/master)
+2. Stick in fuel/packages/
+3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
 4. Create public/assets/cache
 5. Enjoy
 
@@ -29,7 +30,7 @@ Casset::js('myfile.js');
 Casset::js('myfile2.js');
 ```
 
-By default, Casset will minify both of these files and combine them into a single file (which is written to public/assets/cache/<md5 hash>.js).
+By default, Casset will minify both of these files and combine them into a single file (which is written to public/assets/cache/\<md5 hash\>.js).
 To include this file in your page, use the following:
 
 ```php
@@ -38,6 +39,13 @@ echo Casset::render_js();
 Returns something like
 <script type="text/javascript" src="http://localhost/site/assets/cache/d148a723c710760bc62ca3ecc8c50206.js?1307384477"></script>
 */
+```
+
+If you've got minification turned off (see the section at the bottom of this readme), you'll instead get:
+
+```php
+<script type="text/javascript" src="http://localhost/site/assets/js/myfile.js"></script>
+<script type="text/javascript" src="http://localhost/site/assets/js/myfile2.js"></script>
 ```
 
 If you have a specific file ("myfile.min.js") which you want Casset to use, rather than generating its own minified version, you
@@ -50,18 +58,18 @@ Casset::js('myfile.js', 'myfile.min.js');
 Images
 ------
 
-Although the origin Asset library provided groups, etc, for dealing with images, I couldn't see the point.
+Although the original Asset library provided groups, etc, for dealing with images, I couldn't see the point.
 
-Therefore image handling is somewhat simpler, and can be summed up by the following line:
+Therefore image handling is somewhat simpler, and can be summed up by the following line, where the third argument is an optional array of attributes:
 
 ```php
-echo Casset::img('test.jpg', array('alt' => 'This is an image'));
+echo Casset::img('test.jpg', 'alt text', array('width' => 200));
 ```
 
 You can also pass an array of images (which will all have to same attributes applied to them), eg:
 
 ```php
-echo Casset::img(array('test.jpg', 'test2.jpg'));
+echo Casset::img(array('test.jpg', 'test2.jpg'), 'Some thumbnails');
 ```
 
 Groups
@@ -107,7 +115,8 @@ array element.
 **enabled**: Whether a group is enabled. A group will only be rendered when it is enabled.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
-The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they exist.
+The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they exist.  
+You can also pass an array of groups to enable/disable.
 
 Specific groups can be rendered using eg `Casset::render_js('group_name')`. If no group name is passed, *all* groups will be rendered.  
 Note that when a group is rendered, it is disabled. See the "Extra attributes" section for an application of this functionality.
@@ -185,7 +194,7 @@ echo Casset::render_css('screen', false, array('media' => 'screen');
 
 // Render everything else, except the 'screen' group
 echo Casset::render_css();
-// <link rel="stylesheet" type="text/css" href="http://...main.css" media="screen" />
+// <link rel="stylesheet" type="text/css" href="http://...main.css" />
 ```
 
 Minification
@@ -193,7 +202,7 @@ Minification
 
 Minification uses libraries from Stephen Clay's [Minify library](http://code.google.com/p/minify/).
 
-When minification is enabled (see the "min" key in the config file), when an enabled group is rendered, it is combined, minified, and stored in a file in public/assets/cache/.
+When an enabled group is rendered (and minification is turned on), the files in that group are minified combined, and stored in a file in public/assets/cache/.
 This is an attempt to achieve a balance between spamming the browser with lots of files, and allowing the browser to cache files.
 The assumption is that each group is likely to appear fairly independantly, so combining groups isn't worth it.
 
@@ -207,8 +216,31 @@ The following will minify the 'group_name' group, even if minification is turned
 echo Casset::render_js('group_name', false, array(), true);
 ```
 
-NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (Casset doesn't know if you've got a single page where you add an extra file to a group).
-Therefore an occasional clearout of `public/assets/cache/` is recommended.
+When minifying CSS files, urls are rewritten to take account of the fact that your css file has effectively moved into `public/assets/cache`.
+
+With JS files, changing the order in which files were added to the group will re-generate the cache file, with the files in their new positions. However with CSS, it will not.
+This is because the order of JS files can be important, as dependancies may need to be satisfied. In CSS, no such dependancies exist.  
+Bear this in mind when adding files to groups dynamically -- if you're changing the order of files in an otherwise identical group, you're not allowing
+the browser to properly use its cache.
+
+NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
+Therefore an occasional clearout of `public/assets/cache/` is recommended. See  the section below on clearing the cache.
+
+Clearing the cache
+------------------
+Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be neede again), a few method have been provided to remove cache files.
+
+`Casset::clear_cache()` will clear all cache files, while `Casset::clear_js_cache()` and `Casset::clear_css_cache()` will remote just JS and CSS files respectively.  
+All of the above functions optionally accept an argument allowing you to only delete cache files last modified before a certain time. This time is specified as a
+[strtotime](http://php.net/strtotime)-formatted string, for example "2 hours ago", "last Tuesday", or "20110609". For example:
+
+```php
+Casset::clear_js_cache('2 hours ago');
+// Removes all js cache files last modified more than 2 hours ago
+
+Casset::clear_cache('yesterday');
+// Removes all cache files last modified yesterday
+```
 
 Examples
 --------
@@ -238,7 +270,7 @@ In the config file:
 			'files' => array(
 				'jquery-ui.css',
 			),
-			'endabled' => false,
+			'enabled' => false,
 		),
 	),
 ),
@@ -258,6 +290,7 @@ In our template file:
 	echo Casset::render_js();
 	echo Casset::render_js_inline();
 ?>
+</body>
 ```
 
 We can then turn the jquery-ui group on as we please.
@@ -284,6 +317,6 @@ Casset::enable('jquery-ui');
 Contributing
 ------------
 
-Pull requests are gladly accepted!
+If you've got any issues/complaints/suggestions, please tell me and I'll do my best!
 
-This project uses [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so please base your work on the tip of the `develop` branch, and rebase onto `develop` again before submitting the pull request.
+Pull requests are also gladly accepted. This project uses [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so please base your work on the tip of the `develop` branch, and rebase onto `develop` again before submitting the pull request.

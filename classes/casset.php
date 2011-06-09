@@ -1,19 +1,17 @@
 <?php
+
 /**
- * Fuel is a fast, lightweight, community driven PHP5 framework.
- *
- * This library provides an alternative to the built-in Asset library.
- * This library has been based on the original Asset library, although
- * extensive modifications and additions have been made.
+ * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    1.0
+ * @version    v1.2
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
  * @link       http://github.com/canton7/fuelphp-casset
  */
 
+namespace Casset;
 
 class Casset {
 
@@ -92,26 +90,26 @@ class Casset {
 			return;
 		}
 
-		Config::load('casset', true);
+		\Config::load('casset', true);
 
-		$paths = Config::get('casset.paths', array('assets/'));
+		$paths = \Config::get('casset.paths', array('assets/'));
 
 		foreach($paths as $path)
 		{
 			static::add_path($path);
 		}
 
-		static::$asset_url = Config::get('casset.url', Config::get('base_url'));
+		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
 
 		static::$folders = array(
-			'css' => Config::get('casset.css_dir', static::$folders['css']),
-			'js' => Config::get('casset.js_dir', static::$folders['js']),
-			'img' => Config::get('casset.img_dir', static::$folders['img']),
+			'css' => \Config::get('casset.css_dir', static::$folders['css']),
+			'js' => \Config::get('casset.js_dir', static::$folders['js']),
+			'img' => \Config::get('casset.img_dir', static::$folders['img']),
 		);
 
-		static::$cache_path = Config::get('casset.cache_path', static::$cache_path);
+		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
 
-		$group_sets = Config::get('casset.groups', array());
+		$group_sets = \Config::get('casset.groups', array());
 
 		foreach ($group_sets as $group_type => $groups)
 		{
@@ -121,10 +119,10 @@ class Casset {
 			}
 		}
 
-		static::$min = Config::get('casset.min', static::$min);
+		static::$min = \Config::get('casset.min', static::$min);
 
-		static::$show_files = Config::get('casset.show_files', static::$show_files);
-		static::$show_files_inline = Config::get('casset.show_files_inline', static::$show_files_inline);
+		static::$show_files = \Config::get('casset.show_files', static::$show_files);
+		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$initialized = true;
 	}
@@ -209,77 +207,83 @@ class Casset {
 	/**
 	 * Enables both js and css groups of the given name.
 	 *
-	 * @param string $group The group to enable.
+	 * @param mixed $group The group to enable, or array of groups
 	 */
-	public static function enable($group)
+	public static function enable($groups)
 	{
-		static::asset_enabled('js', $group, true);
-		static::asset_enabled('css', $group, true);
+		static::asset_enabled('js', $groups, true);
+		static::asset_enabled('css', $groups, true);
 	}
 
 	/**
 	 * Disables both js and css groups of the given name.
 	 *
-	 * @param string $group The group to disable.
+	 * @param string $group The group to disable, or array of groups
 	 */
-	public static function disable($group)
+	public static function disable($groups)
 	{
-		static::asset_enabled('js', $group, false);
-		static::asset_enabled('css', $group, false);
+		static::asset_enabled('js', $groups, false);
+		static::asset_enabled('css', $groups, false);
 	}
 
 	/**
 	 * Enable a group of javascript assets.
 	 *
-	 * @param string $group The group to enable.
+	 * @param string $group The group to enable, or array of groups
 	 */
-	public static function enable_js($group)
+	public static function enable_js($groups)
 	{
-		static::asset_enabled('js', $group, true);
+		static::asset_enabled('js', $groups, true);
 	}
 
 	/**
 	 * Disable a group of javascript assets.
 	 *
-	 * @param string $group The group to disable.
+	 * @param string $group The group to disable, or array of groups
 	 */
-	public static function disable_js($group)
+	public static function disable_js($groups)
 	{
-		static::asset_enabled('js', $group, false);
+		static::asset_enabled('js', $groups, false);
 	}
 
 	/**
 	 * Enable a group of css assets.
 	 *
-	 * @param string $group The group to enable.
+	 * @param string $group The group to enable, or array of groups
 	 */
-	public static function enable_css($group)
+	public static function enable_css($groups)
 	{
-		static::asset_enabled('css', $group, true);
+		static::asset_enabled('css', $groups, true);
 	}
 
 	/**
 	 * Disable a group of css assets.
 	 *
-	 * @param string $group The group to disable.
+	 * @param string $group The group to disable, or array of groups
 	 */
-	public static function disable_css($group)
+	public static function disable_css($groups)
 	{
-		static::asset_enabled('css', $group, false);
+		static::asset_enabled('css', $groups, false);
 	}
 
 	/**
 	 * Enables / disables an asset.
 	 *
 	 * @param string $type 'css' / 'js'
-	 * @param string $group The group to enable/disable
+	 * @param string $group The group to enable/disable, or array of groups
 	 * @param bool $enabled True to enabel to group, false odisable
 	 */
-	private static function asset_enabled($type, $group, $enabled)
+	private static function asset_enabled($type, $groups, $enabled)
 	{
-		if (!array_key_exists($group, static::$groups[$type]))
-				return;
-		static::$groups[$type][$group]['enabled'] = $enabled;
+		if (!is_array($groups))
+			$groups = array($groups);
+		foreach ($groups as $group)
+		{
+			// If the group doesn't exist it's of no consequence
+			if (!array_key_exists($group, static::$groups[$type]))
+				continue;
+			static::$groups[$type][$group]['enabled'] = $enabled;
+		}
 	}
 
 	/**
@@ -527,10 +531,13 @@ class Casset {
 					'minified' => $minified,
 				));
 			}
-			// If minifying, sort by filename
-			uasort($files[$group_name], function($a, $b) {
-				return ($a['file'] > $b['file']) ? 1 : -1;
-			});
+			// In javascript, file order is important (as there might be deps)
+			// However in CSS it isn't, so we can safely take any order of css files
+			// and stick them into the same cache file
+			if ($type == 'css')
+				uasort($files[$group_name], function($a, $b) {
+					return ($a['file'] > $b['file']) ? 1 : -1;
+				});
 		}
 		return $files;
 	}
@@ -547,10 +554,9 @@ class Casset {
 	 */
 	private static function combine_and_minify($type, $file_group)
 	{
-		$ext = '.'.$type;
 		$filename = md5(implode('', array_map(function($a) {
 			return $a['file'];
-		}, $file_group))).$ext;
+		}, $file_group))).'.'.$type;
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
 		foreach ($file_group as $file)
@@ -569,7 +575,7 @@ class Casset {
 			foreach ($file_group as $file)
 			{
 				if (static::$show_files_inline)
-					$content .= '/* '.$file['file'].' */'.PHP_EOL;
+					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'])
 					$content .= file_get_contents($file['file']).PHP_EOL;
 				else
@@ -625,13 +631,15 @@ class Casset {
 	 * Locates the given image(s), and returns the resulting <img> tag.
 	 *
 	 * @param mixed $images Image(s) to print. Can be string or array of strings
+	 * @param string $alt The alternate text
 	 * @param array $attr Attributes to apply to each image (eg alt)
 	 * @return string The resulting <img> tag(s)
 	 */
-	public static function img($images, $attr = array())
+	public static function img($images, $alt, $attr = array())
 	{
 		if (!is_array($images))
 			$images = array($images);
+		$attr['alt'] = $alt;
 		$ret = '';
 		foreach ($images as $image)
 		{
@@ -640,6 +648,58 @@ class Casset {
 		}
 		return $ret;
 	}
+
+	/**
+	 * Cleares all cache files last modified before $before.
+	 *
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	public static function clear_cache($before = 'now')
+	{
+		static::clear_cache_base('*', $before);
+	}
+
+	/**
+	 * Cleares all JS cache files last modified before $before.
+	 *
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	public static function clear_js_cache($before = 'now')
+	{
+		static::clear_cache_base('*.js', $before);
+	}
+
+	/**
+	 * Cleares CSS all cache files last modified before $before.
+	 *
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	public static function clear_css_cache($before = 'now')
+	{
+		static::clear_cache_base('*.css', $before);
+	}
+
+	/**
+	 * Base cache clear function.
+	 *
+	 * @param type $filter Glob filter to use when selecting files to delete.
+	 * @param type $before Time before which to delete files. Defaults to 'now'.
+	 *        Uses strtotime.
+	 */
+	private static function clear_cache_base($filter = '*', $before = 'now')
+	{
+		$before = strtotime($before);
+		$files = glob(DOCROOT.static::$cache_path.$filter);
+		foreach ($files as $file)
+		{
+			if (filemtime($file) < $before)
+				unlink($file);
+		}
+	}
+
 }
 
 /* End of file casset.php */

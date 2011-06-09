@@ -40,7 +40,6 @@
  * SOFTWARE.
  * --
  *
- * @package JSMin
  * @author Ryan Grove <ryan@wonko.com> (PHP port)
  * @author Steve Clay <steve@mrclay.org> (modifications + cleanup)
  * @author Andrea Giammarchi <http://www.3site.eu> (spaceBeforeRegExp)
@@ -49,6 +48,18 @@
  * @license http://opensource.org/licenses/mit-license.php MIT License
  * @link http://code.google.com/p/jsmin-php/
  */
+
+/**
+ * This library is used as part of Casset.
+ * @package    Casset
+ * @version    v1.2
+ * @author     Antony Male
+ * @license    MIT License
+ * @link       http://github.com/canton7/fuelphp-casset
+ */
+
+
+namespace Casset;
 
 class Casset_JSMin {
     const ORD_LF            = 10;
@@ -309,8 +320,8 @@ class Casset_JSMin {
     }
 }
 
-class JSMin_UnterminatedStringException extends Exception {}
-class JSMin_UnterminatedCommentException extends Exception {}
-class JSMin_UnterminatedRegExpException extends Exception {}
+class JSMin_UnterminatedStringException extends \Exception {}
+class JSMin_UnterminatedCommentException extends \Exception {}
+class JSMin_UnterminatedRegExpException extends \Exception {}
 
 /* End of file casset/jsmin.php */
