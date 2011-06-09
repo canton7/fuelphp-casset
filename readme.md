@@ -218,6 +218,11 @@ echo Casset::render_js('group_name', false, array(), true);
 
 When minifying CSS files, urls are rewritten to take account of the fact that your css file has effectively moved into `public/assets/cache`.
 
+With JS files, changing the order in which files were added to the group will re-generate the cache file, with the files in their new positions. However with CSS, it will not.
+This is because the order of JS files can be important, as dependancies may need to be satisfied. In CSS, no such dependancies exist.  
+Bear this in mind when adding files to groups dynamically -- if you're changing the order of files in an otherwise identical group, you're not allowing
+the browser to properly use its cache.
+
 NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
 Therefore an occasional clearout of `public/assets/cache/` is recommended.
 
