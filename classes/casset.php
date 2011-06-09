@@ -207,77 +207,83 @@ class Casset {
 	/**
 	 * Enables both js and css groups of the given name.
 	 *
-	 * @param string $group The group to enable.
+	 * @param mixed $group The group to enable, or array of groups
 	 */
-	public static function enable($group)
+	public static function enable($groups)
 	{
-		static::asset_enabled('js', $group, true);
-		static::asset_enabled('css', $group, true);
+		static::asset_enabled('js', $groups, true);
+		static::asset_enabled('css', $groups, true);
 	}
 
 	/**
 	 * Disables both js and css groups of the given name.
 	 *
-	 * @param string $group The group to disable.
+	 * @param string $group The group to disable, or array of groups
 	 */
-	public static function disable($group)
+	public static function disable($groups)
 	{
-		static::asset_enabled('js', $group, false);
-		static::asset_enabled('css', $group, false);
+		static::asset_enabled('js', $groups, false);
+		static::asset_enabled('css', $groups, false);
 	}
 
 	/**
 	 * Enable a group of javascript assets.
 	 *
-	 * @param string $group The group to enable.
+	 * @param string $group The group to enable, or array of groups
 	 */
-	public static function enable_js($group)
+	public static function enable_js($groups)
 	{
-		static::asset_enabled('js', $group, true);
+		static::asset_enabled('js', $groups, true);
 	}
 
 	/**
 	 * Disable a group of javascript assets.
 	 *
-	 * @param string $group The group to disable.
+	 * @param string $group The group to disable, or array of groups
 	 */
-	public static function disable_js($group)
+	public static function disable_js($groups)
 	{
-		static::asset_enabled('js', $group, false);
+		static::asset_enabled('js', $groups, false);
 	}
 
 	/**
 	 * Enable a group of css assets.
 	 *
-	 * @param string $group The group to enable.
+	 * @param string $group The group to enable, or array of groups
 	 */
-	public static function enable_css($group)
+	public static function enable_css($groups)
 	{
-		static::asset_enabled('css', $group, true);
+		static::asset_enabled('css', $groups, true);
 	}
 
 	/**
 	 * Disable a group of css assets.
 	 *
-	 * @param string $group The group to disable.
+	 * @param string $group The group to disable, or array of groups
 	 */
-	public static function disable_css($group)
+	public static function disable_css($groups)
 	{
-		static::asset_enabled('css', $group, false);
+		static::asset_enabled('css', $groups, false);
 	}
 
 	/**
 	 * Enables / disables an asset.
 	 *
 	 * @param string $type 'css' / 'js'
-	 * @param string $group The group to enable/disable
+	 * @param string $group The group to enable/disable, or array of groups
 	 * @param bool $enabled True to enabel to group, false odisable
 	 */
-	private static function asset_enabled($type, $group, $enabled)
+	private static function asset_enabled($type, $groups, $enabled)
 	{
-		if (!array_key_exists($group, static::$groups[$type]))
-				return;
-		static::$groups[$type][$group]['enabled'] = $enabled;
+		if (!is_array($groups))
+			$groups = array($groups);
+		foreach ($groups as $group)
+		{
+			// If the group doesn't exist it's of no consequence
+			if (!array_key_exists($group, static::$groups[$type]))
+				continue;
+			static::$groups[$type][$group]['enabled'] = $enabled;
+		}
 	}
 
 	/**
