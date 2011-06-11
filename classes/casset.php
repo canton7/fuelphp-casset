@@ -196,7 +196,7 @@ class Casset {
 					return $path.$folder.$file;
 				}
 			}
-			throw new Fuel_Exception('Coult not find asset: '.$file);
+			throw new \Fuel_Exception('Coult not find asset: '.$file);
 		}
 		else
 		{

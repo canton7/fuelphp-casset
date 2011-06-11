@@ -19,7 +19,7 @@ return array(
 	 *
 	 * array('assets/')
 	 */
-	'paths' => array('assets/'),
+	'paths' => array('assets/', 'assets/test/'),
 
 	/**
 	 * URL to your Fuel root. Typically this will be your base URL,
@@ -63,7 +63,7 @@ return array(
 	 * When minifying, whether to show the files names in each combined
 	 * file in a comment before the tag to the file.
 	 */
-	'show_files' => false,
+	'show_files' => true,
 
 	/**
 	 * When minifying, whether to put comments in each minified file showing
