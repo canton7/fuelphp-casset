@@ -323,6 +323,10 @@ class Casset {
 	 */
 	private static function add_asset($type, $script, $script_min, $group)
 	{
+		// Don't force the user to remember that 'false' is used when not supplying
+		// a pre-minified file.
+		if (!is_string($script_min))
+			$script_min = false;
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
@@ -379,6 +383,11 @@ class Casset {
 	 */
 	public function render_js($group = false, $inline = false, $attr = array(), $min = null)
 	{
+		// Don't force the user to remember that false is used for ommitted non-bool arguments
+		if (!is_string($group))
+			$group = false;
+		if (!is_array($attr))
+			$attr = array();
 		if ($min === null)
 			$min = static::$min;
 
@@ -435,6 +444,11 @@ class Casset {
 	 */
 	public function render_css($group = false, $inline = false, $attr = array(), $min = null)
 	{
+		// Don't force the user to remember that false is used for ommitted non-bool arguments
+		if (!is_string($group))
+			$group = false;
+		if (!is_array($attr))
+			$attr = array();
 		if ($min === null)
 			$min = static::$min;
 
