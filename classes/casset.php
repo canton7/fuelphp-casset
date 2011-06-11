@@ -398,7 +398,7 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('script', array(
 						'type' => 'text/javascript',
@@ -454,7 +454,7 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
