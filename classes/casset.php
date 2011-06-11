@@ -390,7 +390,7 @@ class Casset {
 		{
 			if ($min)
 			{
-				$filename = static::combine_and_minify('js', $file_group);
+				$filename = static::combine_and_minify('js', $file_group, $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -446,7 +446,7 @@ class Casset {
 		{
 			if ($min)
 			{
-				$filename = static::combine_and_minify('css', $file_group);
+				$filename = static::combine_and_minify('css', $file_group, $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -552,7 +552,7 @@ class Casset {
 	 *        to combine and minify.
 	 * @return string The path to the cache file which was written.
 	 */
-	private static function combine_and_minify($type, $file_group)
+	private static function combine_and_minify($type, $file_group, $inline)
 	{
 		$filename = md5(implode('', array_map(function($a) {
 			return $a['file'];
@@ -594,7 +594,9 @@ class Casset {
 			file_put_contents($filepath, $content);
 			$mtime = time();
 		}
-		return $filename.'?'.$mtime;
+		if (!$inline)
+			$filename .= '?'.$mtime;
+		return $filename;
 	}
 
 	/**
