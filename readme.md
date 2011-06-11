@@ -140,6 +140,11 @@ You can also use a slightly more involved syntax for creating groups, which allo
 Casset::add_group('js', 'group_name', array('file1.js', array('file2.js', 'file2.min.js')), $enabled);
 ```
 
+When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
+Similarly (for JS files only), the order in which files appear is determined by the order in which they were added.
+This allows you a degree of control over what order your files are included in your page, which may be necessary when satisfying dependancies.
+If this isn't working for you, or you want something a bit more explicit, try this: If file A depends on B, add B to its own group and explicitely render it first.
+
 NOTE: Calling ``Casset::js('file.js')`` will add that file to the "global" group. Use / abuse as you need!
 
 
