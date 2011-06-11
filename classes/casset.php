@@ -21,6 +21,11 @@ class Casset {
 	 */
 	protected static $asset_paths = array();
 
+	/*
+	 * @var string The key in $asset_paths to use if no key is given
+	 */
+	protected static $core_path_key = 'core';
+
 	/**
 	 * @var string The URL to be prepanded to all assets.
 	 */
@@ -183,15 +188,21 @@ class Casset {
 	{
 		if (strpos($file, '//') === false)
 		{
+			$parts = explode('::', $file, 2);
+			if (count($parts) == 2)
+			{
+				$path = static::$asset_paths[$parts[0]];
+				$file = $parts[1];
+			}
+			else
+				$path = static::$asset_paths[static::$core_path_key];
+
 			$folder = static::$folders[$asset_type];
 			$file = ltrim($file, '/');
 
-			foreach (static::$asset_paths as $path)
+			if (is_file($path.$folder.$file))
 			{
-				if (is_file($path.$folder.$file))
-				{
-					return $path.$folder.$file;
-				}
+				return $path.$folder.$file;
 			}
 			throw new \Fuel_Exception('Coult not find asset: '.$file);
 		}
