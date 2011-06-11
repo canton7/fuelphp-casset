@@ -372,6 +372,23 @@ class Casset {
 	}
 
 	/**
+	 * Shortcut to render_js() and render_css().
+	 *
+	 * @param string $group Which group to render. If omitted renders all groups
+	 * @param bool $inline If true, the result is printed inline. If false, is
+	 *        written to a file and linked to. In fact, $inline = true also causes
+	 *        a cache file to be written for speed purposes
+	 * @param bool $min True to minify the javascript files. null to use the config value
+	 * @return string The javascript tags to be written to the page
+	 */
+	public static function render($group = false, $inline = false, $attr = array(), $min = null)
+	{
+		$r = static::render_css($group, $inline, $attr, $min);
+		$r.= static::render_js($group, $inline, $attr, $min);
+		return $r;
+	}
+
+	/**
 	 * Renders the specific javascript group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
