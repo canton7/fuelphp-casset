@@ -94,9 +94,9 @@ class Casset {
 
 		$paths = \Config::get('casset.paths', array('assets/'));
 
-		foreach($paths as $path)
+		foreach($paths as $key => $path)
 		{
-			static::add_path($path);
+			static::add_path($key, $path);
 		}
 
 		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
@@ -132,9 +132,9 @@ class Casset {
 	 *
 	 * @param string $path the path to add.
 	 */
-	public static function add_path($path)
+	public static function add_path($key, $path)
 	{
-		array_unshift(static::$asset_paths, str_replace('../', '', $path));
+		static::$asset_paths[$key] = str_replace('../', '', $path);
 	}
 
 	/**
@@ -142,12 +142,9 @@ class Casset {
 	 *
 	 * @param string $path the path to remove.
 	 */
-	public static function remove_path($path)
+	public static function remove_path($key)
 	{
-		if (($key = array_search(str_replace('../', '', $path), static::$asset_paths)) !== false)
-		{
-			unset(static::$asset_paths[$key]);
-		}
+		unset(static::$asset_paths[$key]);
 	}
 
 	/**
