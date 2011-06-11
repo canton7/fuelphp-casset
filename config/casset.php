@@ -14,12 +14,21 @@
 return array(
 
 	/**
-	 * An array of paths that will be searched for assets. Each asset is a
-	 * RELATIVE path from the base_url WITH a trailing slash:
+	 * An array of paths that will be searched for assets.
+	 * Each path is assigned a name, which is used when referring to that asset.
+	 * See the js() and css() docs for more info.
+	 * Each asset is a RELATIVE path from the base_url WITH a trailing slash.
+	 * There must be an entry with the key 'core'. This is used when no path
+	 * is specified.
 	 *
-	 * array('assets/')
+	 * array(
+	 *		'core' => 'assets/'
+	 * )
 	 */
-	'paths' => array('assets/', 'assets/test/'),
+	'paths' => array(
+		'core' => 'assets/',
+		'test' => 'assets/test/'
+	),
 
 	/**
 	 * URL to your Fuel root. Typically this will be your base URL,
