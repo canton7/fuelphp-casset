@@ -128,6 +128,8 @@ Casset::js('myfile.js', 'myfile.min.js', 'group_name');
 Casset::css('myfile.css', false, 'group_name');
 ```
 
+(As an aside, you can pass any non-string value instead of 'false' in the second example, and Casset will behave the same: generate your minified file for you.)
+
 Groups can also be declared on the fly, by specifying a group name which doesn't yet exist. The group is assumed to be enabled.  
 You can also use a slightly more involved syntax for creating groups, which allows you to specify multiple files and whether the group is enabled, as shown below:
 
@@ -213,8 +215,10 @@ Similarly, you can choose to put comments inside each minified file, saying whic
 The following will minify the 'group_name' group, even if minification is turned off in the config file.
 
 ```php
-echo Casset::render_js('group_name', false, array(), true);
+echo Casset::render_js(false, false, array(), true);
 ```
+
+(Again, you can pass any non-string value for the first argument, and any non-array value for the third, and Casset will treat them the same as if the default argument (false and array() respectively) had been passed.)
 
 When minifying CSS files, urls are rewritten to take account of the fact that your css file has effectively moved into `public/assets/cache`.
 
