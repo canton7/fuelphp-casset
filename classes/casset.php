@@ -153,6 +153,18 @@ class Casset {
 	}
 
 	/**
+	 * Set the current default path
+	 *
+	 * @param $path_key the path key to set the default to.
+	 */
+	public static function set_path($path_key = 'core')
+	{
+		if (!array_key_exists($path_key, static::$asset_paths))
+			throw new \Fuel_Exception("Asset path key $path_key doesn't exist");
+		static::$default_path_key = $path_key;
+	}
+
+	/**
 	 * Adds a group of assets. If a group of this name exists, it will be
 	 * overwritten.
 	 *
