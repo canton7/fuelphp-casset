@@ -24,7 +24,7 @@ class Casset {
 	/*
 	 * @var string The key in $asset_paths to use if no key is given
 	 */
-	protected static $core_path_key = 'core';
+	protected static $default_path_key = 'core';
 
 	/**
 	 * @var string The URL to be prepanded to all assets.
@@ -189,13 +189,8 @@ class Casset {
 		if (strpos($file, '//') === false)
 		{
 			$parts = explode('::', $file, 2);
-			if (count($parts) == 2)
-			{
-				$path = static::$asset_paths[$parts[0]];
-				$file = $parts[1];
-			}
-			else
-				$path = static::$asset_paths[static::$core_path_key];
+			$path = static::$asset_paths[$parts[0]];
+			$file = $parts[1];
 
 			$folder = static::$folders[$asset_type];
 			$file = ltrim($file, '/');
@@ -204,7 +199,7 @@ class Casset {
 			{
 				return $path.$folder.$file;
 			}
-			throw new \Fuel_Exception('Coult not find asset: '.$file);
+			throw new \Fuel_Exception('Could not find asset: '.$path.$folder.$file);
 		}
 		else
 		{
@@ -335,14 +330,22 @@ class Casset {
 		// a pre-minified file.
 		if (!is_string($script_min))
 			$script_min = false;
+		$files = array($script, $script_min);
+		// If the user hasn't specified a path key, add $default_path_key
+		foreach ($files as &$file)
+		{
+			if ($file != false && strpos($file, '::') === false)
+				$file = static::$default_path_key.'::'.$file;
+		}
+
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group($type, $group, array(array($script, $script_min)), true);
+			static::add_group($type, $group, array($files), true);
 		}
 		else
 		{
-			array_push(static::$groups[$type][$group]['files'], array($script, $script_min));
+			array_push(static::$groups[$type][$group]['files'], $files);
 		}
 	}
 
