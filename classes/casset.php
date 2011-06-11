@@ -45,8 +45,8 @@ class Casset {
 	 * @var array Holds groups of assets. Is documenented fully in the config file.
 	 */
 	protected static $groups = array(
-		'css' => array('global' => array('files' => array(), 'enabled' => true)),
-		'js' => array('global' => array('files' => array(), 'enabled' => true)),
+		'css' => array(),
+		'js' => array(),
 	);
 
 	/**
