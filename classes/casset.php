@@ -182,7 +182,7 @@ class Casset {
 	 * @param string $asset_type 'css', 'js' or 'img'
 	 * @return string The path to the asset, relative to $asset_url
 	 */
-	public function find_file($file, $asset_type)
+	public static function find_file($file, $asset_type)
 	{
 		if (strpos($file, '//') === false)
 		{
@@ -381,7 +381,7 @@ class Casset {
 	 * @param bool $min True to minify the javascript files. null to use the config value
 	 * @return string The javascript tags to be written to the page
 	 */
-	public function render_js($group = false, $inline = false, $attr = array(), $min = null)
+	public static function render_js($group = false, $inline = false, $attr = array(), $min = null)
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
@@ -442,7 +442,7 @@ class Casset {
 	 * @param bool $min True to minify the css files. null to use the config value
 	 * @return string The css tags to be written to the page
 	 */
-	public function render_css($group = false, $inline = false, $attr = array(), $min = null)
+	public static function render_css($group = false, $inline = false, $attr = array(), $min = null)
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
