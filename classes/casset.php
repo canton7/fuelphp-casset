@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.2
+ * @version    v1.3
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -45,8 +45,8 @@ class Casset {
 	 * @var array Holds groups of assets. Is documenented fully in the config file.
 	 */
 	protected static $groups = array(
-		'css' => array('global' => array('files' => array(), 'enabled' => true)),
-		'js' => array('global' => array('files' => array(), 'enabled' => true)),
+		'css' => array(),
+		'js' => array(),
 	);
 
 	/**
@@ -182,7 +182,7 @@ class Casset {
 	 * @param string $asset_type 'css', 'js' or 'img'
 	 * @return string The path to the asset, relative to $asset_url
 	 */
-	public function find_file($file, $asset_type)
+	public static function find_file($file, $asset_type)
 	{
 		if (strpos($file, '//') === false)
 		{
@@ -323,6 +323,10 @@ class Casset {
 	 */
 	private static function add_asset($type, $script, $script_min, $group)
 	{
+		// Don't force the user to remember that 'false' is used when not supplying
+		// a pre-minified file.
+		if (!is_string($script_min))
+			$script_min = false;
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
@@ -368,6 +372,23 @@ class Casset {
 	}
 
 	/**
+	 * Shortcut to render_js() and render_css().
+	 *
+	 * @param string $group Which group to render. If omitted renders all groups
+	 * @param bool $inline If true, the result is printed inline. If false, is
+	 *        written to a file and linked to. In fact, $inline = true also causes
+	 *        a cache file to be written for speed purposes
+	 * @param bool $min True to minify the javascript files. null to use the config value
+	 * @return string The javascript tags to be written to the page
+	 */
+	public static function render($group = false, $inline = false, $attr = array(), $min = null)
+	{
+		$r = static::render_css($group, $inline, $attr, $min);
+		$r.= static::render_js($group, $inline, $attr, $min);
+		return $r;
+	}
+
+	/**
 	 * Renders the specific javascript group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
@@ -377,8 +398,13 @@ class Casset {
 	 * @param bool $min True to minify the javascript files. null to use the config value
 	 * @return string The javascript tags to be written to the page
 	 */
-	public function render_js($group = false, $inline = false, $attr = array(), $min = null)
+	public static function render_js($group = false, $inline = false, $attr = array(), $min = null)
 	{
+		// Don't force the user to remember that false is used for ommitted non-bool arguments
+		if (!is_string($group))
+			$group = false;
+		if (!is_array($attr))
+			$attr = array();
 		if ($min === null)
 			$min = static::$min;
 
@@ -390,7 +416,7 @@ class Casset {
 		{
 			if ($min)
 			{
-				$filename = static::combine_and_minify('js', $file_group);
+				$filename = static::combine_and_minify('js', $file_group, $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -398,7 +424,7 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('script', array(
 						'type' => 'text/javascript',
@@ -433,8 +459,13 @@ class Casset {
 	 * @param bool $min True to minify the css files. null to use the config value
 	 * @return string The css tags to be written to the page
 	 */
-	public function render_css($group = false, $inline = false, $attr = array(), $min = null)
+	public static function render_css($group = false, $inline = false, $attr = array(), $min = null)
 	{
+		// Don't force the user to remember that false is used for ommitted non-bool arguments
+		if (!is_string($group))
+			$group = false;
+		if (!is_array($attr))
+			$attr = array();
 		if ($min === null)
 			$min = static::$min;
 
@@ -446,7 +477,7 @@ class Casset {
 		{
 			if ($min)
 			{
-				$filename = static::combine_and_minify('css', $file_group);
+				$filename = static::combine_and_minify('css', $file_group, $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -454,7 +485,7 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.'/'.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
@@ -552,7 +583,7 @@ class Casset {
 	 *        to combine and minify.
 	 * @return string The path to the cache file which was written.
 	 */
-	private static function combine_and_minify($type, $file_group)
+	private static function combine_and_minify($type, $file_group, $inline)
 	{
 		$filename = md5(implode('', array_map(function($a) {
 			return $a['file'];
@@ -594,7 +625,9 @@ class Casset {
 			file_put_contents($filepath, $content);
 			$mtime = time();
 		}
-		return $filename.'?'.$mtime;
+		if (!$inline)
+			$filename .= '?'.$mtime;
+		return $filename;
 	}
 
 	/**

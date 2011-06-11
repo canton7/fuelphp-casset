@@ -15,7 +15,8 @@ Installation
 2. Stick in fuel/packages/
 3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
 4. Create public/assets/cache
-5. Enjoy
+5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
+6. Enjoy :)
 
 Basic usage
 -----------
@@ -54,6 +55,8 @@ can pass this as the second argument, eg:
 ```php
 Casset::js('myfile.js', 'myfile.min.js');
 ```
+
+Some folks like css and js tags to be together. `Casset::render()` is a shortcut which calls `Casset::render_css()` then `Casset::render_js()`.
 
 Images
 ------
@@ -128,12 +131,19 @@ Casset::js('myfile.js', 'myfile.min.js', 'group_name');
 Casset::css('myfile.css', false, 'group_name');
 ```
 
+(As an aside, you can pass any non-string value instead of 'false' in the second example, and Casset will behave the same: generate your minified file for you.)
+
 Groups can also be declared on the fly, by specifying a group name which doesn't yet exist. The group is assumed to be enabled.  
 You can also use a slightly more involved syntax for creating groups, which allows you to specify multiple files and whether the group is enabled, as shown below:
 
 ```php
 Casset::add_group('js', 'group_name', array('file1.js', array('file2.js', 'file2.min.js')), $enabled);
 ```
+
+When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
+Similarly (for JS files only), the order in which files appear is determined by the order in which they were added.
+This allows you a degree of control over what order your files are included in your page, which may be necessary when satisfying dependancies.
+If this isn't working for you, or you want something a bit more explicit, try this: If file A depends on B, add B to its own group and explicitely render it first.
 
 NOTE: Calling ``Casset::js('file.js')`` will add that file to the "global" group. Use / abuse as you need!
 
@@ -213,8 +223,10 @@ Similarly, you can choose to put comments inside each minified file, saying whic
 The following will minify the 'group_name' group, even if minification is turned off in the config file.
 
 ```php
-echo Casset::render_js('group_name', false, array(), true);
+echo Casset::render_js(false, false, array(), true);
 ```
+
+(Again, you can pass any non-string value for the first argument, and any non-array value for the third, and Casset will treat them the same as if the default argument (false and array() respectively) had been passed.)
 
 When minifying CSS files, urls are rewritten to take account of the fact that your css file has effectively moved into `public/assets/cache`.
 
@@ -241,6 +253,17 @@ Casset::clear_js_cache('2 hours ago');
 Casset::clear_cache('yesterday');
 // Removes all cache files last modified yesterday
 ```
+
+Comparison to Assetic
+---------------------
+
+A frequent question is how Casset differs from kriswallsmith's [Assetic](https://github.com/fuel-packages/fuel-assetic). InCasset and Assetic have completely different goals.
+
+* Assetic is a very powerful asset mangement framework. It allows you to perform minification, compression and compilation on your assets, although learning it will take time.
+* Casset is designed to make assets very easy to handle. You call `Casset::js()` then `Casset::render_js()`, and everything is taken care of.
+
+If you're a developer tasked with fully optimising your site's page load time, for example, go with Assetic. If you want a very easy way to manage your assets, with some minification
+thrown in for free, (and have no need for Assetic's complex features), go with Casset.
 
 Examples
 --------
