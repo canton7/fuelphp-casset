@@ -242,6 +242,17 @@ Casset::clear_cache('yesterday');
 // Removes all cache files last modified yesterday
 ```
 
+Comparison to Assetic
+---------------------
+
+A frequent question is how Casset differs from kriswallsmith's [Assetic](https://github.com/fuel-packages/fuel-assetic). InCasset and Assetic have completely different goals.
+
+* Assetic is a very powerful asset mangement framework. It allows you to perform minification, compression and compilation on your assets, although learning it will take time.
+* Casset is designed to make assets very easy to handle. You call `Casset::js()` then `Casset::render_js()`, and everything is taken care of.
+
+If you're a developer tasked with fully optimising your site's page load time, for example, go with Assetic. If you want a very easy way to manage your assets, with some minification
+thrown in for free, (and have no need for Assetic's complex features), go with Casset.
+
 Examples
 --------
 
