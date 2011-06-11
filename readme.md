@@ -56,6 +56,8 @@ can pass this as the second argument, eg:
 Casset::js('myfile.js', 'myfile.min.js');
 ```
 
+Some folks like css and js tags to be together. `Casset::render()` is a shortcut which calls `Casset::render_css()` then `Casset::render_js()`.
+
 Images
 ------
 
