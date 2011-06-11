@@ -15,7 +15,8 @@ Installation
 2. Stick in fuel/packages/
 3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
 4. Create public/assets/cache
-5. Enjoy
+5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
+6. Enjoy :)
 
 Basic usage
 -----------
