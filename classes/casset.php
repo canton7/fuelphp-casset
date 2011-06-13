@@ -639,7 +639,7 @@ class Casset {
 					}
 				}
 			}
-			file_put_contents($filepath, $content);
+			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
 		if (!$inline)
