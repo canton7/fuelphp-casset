@@ -143,16 +143,6 @@ class Casset {
 	}
 
 	/**
-	 * Removes a path from the asset paths array.
-	 *
-	 * @param string $path the path to remove.
-	 */
-	public static function remove_path($key)
-	{
-		unset(static::$asset_paths[$key]);
-	}
-
-	/**
 	 * Set the current default path
 	 *
 	 * @param $path_key the path key to set the default to.
