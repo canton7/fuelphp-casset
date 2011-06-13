@@ -425,9 +425,9 @@ class Casset {
 
 		$ret = '';
 
-		foreach ($file_groups as $group_name => $file_group)
+		if ($min)
 		{
-			if ($min)
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				$filename = static::combine_and_minify('js', $file_group, $inline);
 				if (!$inline && static::$show_files)
@@ -444,7 +444,10 @@ class Casset {
 						'src' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr, '').PHP_EOL;
 			}
-			else
+		}
+		else
+		{
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				foreach ($file_group as $file)
 				{
@@ -457,7 +460,6 @@ class Casset {
 						)+$attr, '').PHP_EOL;
 				}
 			}
-
 		}
 		return $ret;
 	}
@@ -486,9 +488,9 @@ class Casset {
 
 		$ret = '';
 
-		foreach ($file_groups as $group_name => $file_group)
+		if ($min)
 		{
-			if ($min)
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				$filename = static::combine_and_minify('css', $file_group, $inline);
 				if (!$inline && static::$show_files)
@@ -506,7 +508,10 @@ class Casset {
 						'href' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr).PHP_EOL;
 			}
-			else
+		}
+		else
+		{
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				foreach ($file_group as $file)
 				{
@@ -520,7 +525,6 @@ class Casset {
 						)+$attr).PHP_EOL;
 				}
 			}
-
 		}
 		return $ret;
 	}
