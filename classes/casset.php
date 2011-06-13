@@ -197,11 +197,7 @@ class Casset {
 			$folder = static::$folders[$asset_type];
 			$file = ltrim($file, '/');
 
-			if (is_file($path.$folder.$file))
-			{
-				return $path.$folder.$file;
-			}
-			throw new \Fuel_Exception('Could not find asset: '.$path.$folder.$file);
+			return $path.$folder.$file;
 		}
 		else
 		{
