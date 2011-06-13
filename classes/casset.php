@@ -139,7 +139,7 @@ class Casset {
 	 */
 	public static function add_path($key, $path)
 	{
-		static::$asset_paths[$key] = str_replace('../', '', $path);
+		static::$asset_paths[$key] = $path;
 	}
 
 	/**
