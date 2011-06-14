@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.3
+ * @version    v1.4
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -20,6 +20,11 @@ class Casset {
 	 *            can be found, relative to $asset_url
 	 */
 	protected static $asset_paths = array();
+
+	/*
+	 * @var string The key in $asset_paths to use if no key is given
+	 */
+	protected static $default_path_key = 'core';
 
 	/**
 	 * @var string The URL to be prepanded to all assets.
@@ -94,9 +99,9 @@ class Casset {
 
 		$paths = \Config::get('casset.paths', array('assets/'));
 
-		foreach($paths as $path)
+		foreach($paths as $key => $path)
 		{
-			static::add_path($path);
+			static::add_path($key, $path);
 		}
 
 		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
@@ -132,22 +137,21 @@ class Casset {
 	 *
 	 * @param string $path the path to add.
 	 */
-	public static function add_path($path)
+	public static function add_path($key, $path)
 	{
-		array_unshift(static::$asset_paths, str_replace('../', '', $path));
+		static::$asset_paths[$key] = $path;
 	}
 
 	/**
-	 * Removes a path from the asset paths array.
+	 * Set the current default path
 	 *
-	 * @param string $path the path to remove.
+	 * @param $path_key the path key to set the default to.
 	 */
-	public static function remove_path($path)
+	public static function set_path($path_key = 'core')
 	{
-		if (($key = array_search(str_replace('../', '', $path), static::$asset_paths)) !== false)
-		{
-			unset(static::$asset_paths[$key]);
-		}
+		if (!array_key_exists($path_key, static::$asset_paths))
+			throw new \Fuel_Exception("Asset path key $path_key doesn't exist");
+		static::$default_path_key = $path_key;
 	}
 
 	/**
@@ -186,17 +190,14 @@ class Casset {
 	{
 		if (strpos($file, '//') === false)
 		{
+			$parts = explode('::', $file, 2);
+			$path = static::$asset_paths[$parts[0]];
+			$file = $parts[1];
+
 			$folder = static::$folders[$asset_type];
 			$file = ltrim($file, '/');
 
-			foreach (static::$asset_paths as $path)
-			{
-				if (is_file($path.$folder.$file))
-				{
-					return $path.$folder.$file;
-				}
-			}
-			throw new Fuel_Exception('Coult not find asset: '.$file);
+			return $path.$folder.$file;
 		}
 		else
 		{
@@ -327,14 +328,22 @@ class Casset {
 		// a pre-minified file.
 		if (!is_string($script_min))
 			$script_min = false;
+		$files = array($script, $script_min);
+		// If the user hasn't specified a path key, add $default_path_key
+		foreach ($files as &$file)
+		{
+			if ($file != false && strpos($file, '::') === false)
+				$file = static::$default_path_key.'::'.$file;
+		}
+
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group($type, $group, array(array($script, $script_min)), true);
+			static::add_group($type, $group, array($files), true);
 		}
 		else
 		{
-			array_push(static::$groups[$type][$group]['files'], array($script, $script_min));
+			array_push(static::$groups[$type][$group]['files'], $files);
 		}
 	}
 
@@ -412,9 +421,9 @@ class Casset {
 
 		$ret = '';
 
-		foreach ($file_groups as $group_name => $file_group)
+		if ($min)
 		{
-			if ($min)
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				$filename = static::combine_and_minify('js', $file_group, $inline);
 				if (!$inline && static::$show_files)
@@ -431,7 +440,10 @@ class Casset {
 						'src' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr, '').PHP_EOL;
 			}
-			else
+		}
+		else
+		{
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				foreach ($file_group as $file)
 				{
@@ -444,7 +456,6 @@ class Casset {
 						)+$attr, '').PHP_EOL;
 				}
 			}
-
 		}
 		return $ret;
 	}
@@ -473,9 +484,9 @@ class Casset {
 
 		$ret = '';
 
-		foreach ($file_groups as $group_name => $file_group)
+		if ($min)
 		{
-			if ($min)
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				$filename = static::combine_and_minify('css', $file_group, $inline);
 				if (!$inline && static::$show_files)
@@ -493,7 +504,10 @@ class Casset {
 						'href' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr).PHP_EOL;
 			}
-			else
+		}
+		else
+		{
+			foreach ($file_groups as $group_name => $file_group)
 			{
 				foreach ($file_group as $file)
 				{
@@ -507,7 +521,6 @@ class Casset {
 						)+$attr).PHP_EOL;
 				}
 			}
-
 		}
 		return $ret;
 	}
@@ -622,7 +635,7 @@ class Casset {
 					}
 				}
 			}
-			file_put_contents($filepath, $content);
+			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
 		if (!$inline)

@@ -18,13 +18,25 @@ Installation
 5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
 6. Enjoy :)
 
+Introduction
+------------
+
+Casset is an easy-to-use asset management library. It boasts the following features:
+
+- Speficy which assets to use for a particular page in your view/controller, and print them in your template.
+- Collect your assets into groups, either pre-defined or on-the-fly.
+- Enable/disable specific groups from your view/controller.
+- Minify your groups and combine into single files to reduce browser requests and loading times.
+- Define JS/CSS in your view/controller to be included in your template.
+- Namespace your assets.
+
 Basic usage
 -----------
 
 JS and CSS files are handled the same way, so we'll just consider JS. Just substitude 'js' with 'css' for css-related functions.
 
 Javascript files can be added using the following, where "myfile.js" and "myfile2.js" are the javascript files you want to include,
-and are located at public/assets/js/myfile.js and public/assets/js/myfile2.js.
+and are located at public/assets/js/myfile.js and public/assets/js/myfile2.js (configurable).
 
 ```php
 Casset::js('myfile.js');
@@ -75,6 +87,8 @@ You can also pass an array of images (which will all have to same attributes app
 echo Casset::img(array('test.jpg', 'test2.jpg'), 'Some thumbnails');
 ```
 
+This function has more power when you consider namespacing, detailed later.
+
 Groups
 ------
 
@@ -122,7 +136,7 @@ The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')`
 You can also pass an array of groups to enable/disable.
 
 Specific groups can be rendered using eg `Casset::render_js('group_name')`. If no group name is passed, *all* groups will be rendered.  
-Note that when a group is rendered, it is disabled. See the "Extra attributes" section for an application of this functionality.
+Note that when a group is rendered, it is disabled. See the "Extra attributes" section for an application of this behaviour.
 
 Files can be added to a group by passing the group name as the third argument to `Casset::js` / `Casset::css`, eg:
 
@@ -133,7 +147,7 @@ Casset::css('myfile.css', false, 'group_name');
 
 (As an aside, you can pass any non-string value instead of 'false' in the second example, and Casset will behave the same: generate your minified file for you.)
 
-Groups can also be declared on the fly, by specifying a group name which doesn't yet exist. The group is assumed to be enabled.  
+If the group name doesn't exist, the group is created, and enabled. 
 You can also use a slightly more involved syntax for creating groups, which allows you to specify multiple files and whether the group is enabled, as shown below:
 
 ```php
@@ -162,7 +176,7 @@ echo Casset::render_css(false, true);
 ```
 
 Occasionally it can be useful to declare a bit of javascript in your view, but have it included in your template. Casset allows for this, although it doesn't support groups and minification
-(as I don't see a need for those features in this context).
+(as I don't see a need for those features in this context -- give me a shout if you find an application for them, and I'll enhance).
 
 In your view:
 
@@ -196,13 +210,13 @@ This can be combined with the fact that one a group has been rendered, it is dis
 
 ```php
 Casset::css('main.css');
-Casset::css('screen.css', false, 'screen');
+Casset::css('print.css', false, 'print');
 
-// Render the 'screen' group
-echo Casset::render_css('screen', false, array('media' => 'screen');
-// <link rel="stylesheet" type="text/css" href="http://...screen.css" media="screen" />
+// Render the 'print' group
+echo Casset::render_css('print', false, array('media' => 'print');
+// <link rel="stylesheet" type="text/css" href="http://...print.css" media="print />
 
-// Render everything else, except the 'screen' group
+// Render everything else, except the 'print' group
 echo Casset::render_css();
 // <link rel="stylesheet" type="text/css" href="http://...main.css" />
 ```
@@ -212,7 +226,7 @@ Minification
 
 Minification uses libraries from Stephen Clay's [Minify library](http://code.google.com/p/minify/).
 
-When an enabled group is rendered (and minification is turned on), the files in that group are minified combined, and stored in a file in public/assets/cache/.
+When an enabled group is rendered (and minification is turned on), the files in that group are minified combined, and stored in a file in public/assets/cache/ (configurable).
 This is an attempt to achieve a balance between spamming the browser with lots of files, and allowing the browser to cache files.
 The assumption is that each group is likely to appear fairly independantly, so combining groups isn't worth it.
 
@@ -238,11 +252,63 @@ the browser to properly use its cache.
 NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
 Therefore an occasional clearout of `public/assets/cache/` is recommended. See  the section below on clearing the cache.
 
+Paths and namespacing
+---------------------
+
+The Asset library searches through all of the items in the 'paths' config key until it finds the first matching file.
+However, this approach was undesirable, as it means that if you had the directory structure below, and tried to include 'index.js', the file that was included would be determined by the order of the
+entries in the paths array.
+
+```
+assets/
+   css/
+   js/
+      index.js
+   img/
+   admin/
+      css/
+      js/
+	     index.js
+      img/
+```
+
+Casset brings decent namespacing to the rescue!
+For the above example, you can specify the following in your config file:
+
+```
+'paths' => array(
+	'core' => 'assets/',
+	'admin' => 'assets/admin',
+),
+```
+
+Which path to use is then decided by prefixing the asset filename with the key of the path to use. Note that if you omit the path key, the current default path key (initially 'core') is used.
+
+```php
+Casset::js('index.js');
+// Or
+Casset::js('core::index.js');
+// Will add assets/js/index.js
+
+Casset::js('admin::index.js');
+// Will add assets/admin/js/index.js
+```
+
+If you wish, you can change the current default path key using `Casset::set_path('path_key')`. This can be useful if you know that all of the assets in a given file will be from a given path. For example:
+
+```php
+Casset::set_path('admin);
+Casset::js('index.js');
+// Will add assets/admin/js/index.js
+```
+
+The "core" path can be restored by calling `Casset::set_path()` with no arguments.
+
 Clearing the cache
 ------------------
-Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be neede again), a few method have been provided to remove cache files.
+Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few method have been provided to remove cache files.
 
-`Casset::clear_cache()` will clear all cache files, while `Casset::clear_js_cache()` and `Casset::clear_css_cache()` will remote just JS and CSS files respectively.  
+`Casset::clear_cache()` will clear all cache files, while `Casset::clear_js_cache()` and `Casset::clear_css_cache()` will remove just JS and CSS files respectively.  
 All of the above functions optionally accept an argument allowing you to only delete cache files last modified before a certain time. This time is specified as a
 [strtotime](http://php.net/strtotime)-formatted string, for example "2 hours ago", "last Tuesday", or "20110609". For example:
 

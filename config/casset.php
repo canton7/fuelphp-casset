@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.3
+ * @version    v1.4
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -14,12 +14,21 @@
 return array(
 
 	/**
-	 * An array of paths that will be searched for assets. Each asset is a
-	 * RELATIVE path from the base_url WITH a trailing slash:
+	 * An array of paths that will be searched for assets.
+	 * Each path is assigned a name, which is used when referring to that asset.
+	 * See the js() and css() docs for more info.
+	 * Each asset is a RELATIVE path from the base_url WITH a trailing slash.
+	 * There must be an entry with the key 'core'. This is used when no path
+	 * is specified.
 	 *
-	 * array('assets/')
+	 * array(
+	 *		'core' => 'assets/'
+	 * )
 	 */
-	'paths' => array('assets/'),
+	'paths' => array(
+		'core' => 'assets/',
+		'test' => 'assets/test/'
+	),
 
 	/**
 	 * URL to your Fuel root. Typically this will be your base URL,
@@ -63,7 +72,7 @@ return array(
 	 * When minifying, whether to show the files names in each combined
 	 * file in a comment before the tag to the file.
 	 */
-	'show_files' => false,
+	'show_files' => true,
 
 	/**
 	 * When minifying, whether to put comments in each minified file showing
