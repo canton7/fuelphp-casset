@@ -27,7 +27,6 @@ return array(
 	 */
 	'paths' => array(
 		'core' => 'assets/',
-		'test' => 'assets/test/'
 	),
 
 	/**
