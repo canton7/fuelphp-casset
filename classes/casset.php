@@ -166,8 +166,6 @@ class Casset {
 	 *
 	 * @param string $group_type 'js' or 'css'
 	 * @param string $group_name The name of the group
-	 * @param array $files The files to add to the group. Takes the form
-	 *        array('file1', array('file2', 'file2.min'))
 	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
 	 *        rendered with render_js / render_css
 	 */
