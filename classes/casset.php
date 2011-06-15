@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.4
+ * @version    v1.5
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -120,7 +120,13 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				static::add_group($group_type, $group_name, $group['files'], $group['enabled']);
+				static::add_group($group_type, $group_name, $group['enabled']);
+				foreach ($group['files'] as $files)
+				{
+					if (!is_array($files))
+						$files = array($files, false);
+					static::add_asset($group_type, $files[0], $files[1], $group_name);
+				}
 			}
 		}
 
@@ -160,20 +166,13 @@ class Casset {
 	 *
 	 * @param string $group_type 'js' or 'css'
 	 * @param string $group_name The name of the group
-	 * @param array $files The files to add to the group. Takes the form
-	 *        array('file1', array('file2', 'file2.min'))
 	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
 	 *        rendered with render_js / render_css
 	 */
-	public static function add_group($group_type, $group_name, $files, $enabled = true)
+	public static function add_group($group_type, $group_name, $enabled = true)
 	{
-		foreach ($files as &$file)
-		{
-			if (!is_array($file))
-				$file = array($file, false);
-		}
 		static::$groups[$group_type][$group_name] = array(
-			'files' => $files,
+			'files' => array(),
 			'enabled' => $enabled,
 		);
 	}

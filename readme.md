@@ -304,6 +304,9 @@ Casset::js('index.js');
 
 The "core" path can be restored by calling `Casset::set_path()` with no arguments.
 
+You can also namespace the files listed in the config file's 'groups' section, in the same manner.
+Note that these are loaded before the namespace is changed from 'core', so any files not in the core namespace will have to by explicitely prepended with the namespace name.
+
 Clearing the cache
 ------------------
 Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few method have been provided to remove cache files.
