@@ -677,7 +677,7 @@ class Casset {
 	 *
 	 * @param mixed $images Image(s) to print. Can be string or array of strings
 	 * @param string $alt The alternate text
-	 * @param array $attr Attributes to apply to each image (eg alt)
+	 * @param array $attr Attributes to apply to each image (eg width)
 	 * @return string The resulting <img> tag(s)
 	 */
 	public static function img($images, $alt, $attr = array())
