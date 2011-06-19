@@ -292,6 +292,12 @@ Casset::js('core::index.js');
 
 Casset::js('admin::index.js');
 // Will add assets/admin/js/index.js
+
+echo Casset::img('test.png', 'An image');
+// <img src="...assets/img/test.png" alt="An image" />
+
+echo Casset::img('admin::test.png', 'An image');
+// <img src="...assets/admin/img/test.png" alt="An image" />
 ```
 
 If you wish, you can change the current default path key using `Casset::set_path('path_key')`. This can be useful if you know that all of the assets in a given file will be from a given path. For example:
