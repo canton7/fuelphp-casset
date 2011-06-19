@@ -688,6 +688,8 @@ class Casset {
 		$ret = '';
 		foreach ($images as $image)
 		{
+			if (strpos($image, '::') === false)
+			$image = static::$default_path_key.'::'.$image;
 			$attr['src'] = static::$asset_url.static::find_file($image, 'img');
 			$ret .= html_tag('img', $attr);
 		}
