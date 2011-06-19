@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.5
+ * @version    v1.6
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -677,7 +677,7 @@ class Casset {
 	 *
 	 * @param mixed $images Image(s) to print. Can be string or array of strings
 	 * @param string $alt The alternate text
-	 * @param array $attr Attributes to apply to each image (eg alt)
+	 * @param array $attr Attributes to apply to each image (eg width)
 	 * @return string The resulting <img> tag(s)
 	 */
 	public static function img($images, $alt, $attr = array())
@@ -688,6 +688,8 @@ class Casset {
 		$ret = '';
 		foreach ($images as $image)
 		{
+			if (strpos($image, '::') === false)
+			$image = static::$default_path_key.'::'.$image;
 			$attr['src'] = static::$asset_url.static::find_file($image, 'img');
 			$ret .= html_tag('img', $attr);
 		}
