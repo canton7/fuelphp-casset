@@ -338,12 +338,9 @@ class Casset {
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group($type, $group, array($files), true);
+			static::add_group($type, $group, true);
 		}
-		else
-		{
-			array_push(static::$groups[$type][$group]['files'], $files);
-		}
+		array_push(static::$groups[$type][$group]['files'], $files);
 	}
 
 	/**
