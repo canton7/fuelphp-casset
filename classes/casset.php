@@ -171,6 +171,9 @@ class Casset {
 	 */
 	private static function add_group($group_type, $group_name, $enabled = true)
 	{
+		// If it already exists, don't overwrite it
+		if (array_key_exists($group_name, static::$groups[$group_type]))
+			return;
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
 			'enabled' => $enabled,
