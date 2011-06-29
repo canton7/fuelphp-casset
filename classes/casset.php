@@ -179,7 +179,6 @@ class Casset {
 
 	/**
 	 * Searches the asset paths to locate a file.
-	 * Throws an exception if the asset can't be found.
 	 *
 	 * @param string $file The name of the asset to search for
 	 * @param string $asset_type 'css', 'js' or 'img'
@@ -559,17 +558,22 @@ class Casset {
 			{
 				if ($min)
 				{
-					$file = static::find_file(($file_set[1]) ? $file_set[1] : $file_set[0], $type);
+					$file_pattern = static::find_file(($file_set[1]) ? $file_set[1] : $file_set[0], $type);
 					$minified = ($file_set[1] != false);
 				}
 				else
 				{
-					$file = static::find_file($file_set[0], $type);
+					$file_pattern = static::find_file($file_set[0], $type);
 				}
-				array_push($files[$group_name], array(
-					'file' => $file,
-					'minified' => $minified,
-				));
+				$glob_files = glob($file_pattern);
+				if (!$glob_files || !count($glob_files))
+					throw new \Fuel_Exception("Found no files matching $file_pattern");
+				foreach ($glob_files as $file) {
+					array_push($files[$group_name], array(
+						'file' => $file,
+						'minified' => $minified,
+					));
+				}
 			}
 			// In javascript, file order is important (as there might be deps)
 			// However in CSS it isn't, so we can safely take any order of css files
