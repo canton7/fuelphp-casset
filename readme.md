@@ -132,7 +132,7 @@ array element.
 **enabled**: Whether a group is enabled. A group will only be rendered when it is enabled.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
-The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they exist.  
+The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
 You can also pass an array of groups to enable/disable.
 
 Specific groups can be rendered using eg `Casset::render_js('group_name')`. If no group name is passed, *all* groups will be rendered.  
@@ -217,7 +217,7 @@ Casset::js('index.js');
 // Will add assets/admin/js/index.js
 ```
 
-The "core" path can be restored by calling `Casset::set_path()` with no arguments.
+The "core" path can be restored by calling `Casset::set_path()` with no arguments (or calling `Casset::set_path('core')`).
 
 You can also namespace the files listed in the config file's 'groups' section, in the same manner.
 Note that these are loaded before the namespace is changed from 'core', so any files not in the core namespace will have to by explicitely prepended with the namespace name.
@@ -334,11 +334,12 @@ Therefore an occasional clearout of `public/assets/cache/` is recommended. See  
 
 Clearing the cache
 ------------------
-Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few method have been provided to remove cache files.
+Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few methods have been provided to remove cache files.
 
 `Casset::clear_cache()` will clear all cache files, while `Casset::clear_js_cache()` and `Casset::clear_css_cache()` will remove just JS and CSS files respectively.  
 All of the above functions optionally accept an argument allowing you to only delete cache files last modified before a certain time. This time is specified as a
-[strtotime](http://php.net/strtotime)-formatted string, for example "2 hours ago", "last Tuesday", or "20110609". For example:
+[strtotime](http://php.net/strtotime)-formatted string, for example "2 hours ago", "last Tuesday", or "20110609".  
+For example:
 
 ```php
 Casset::clear_js_cache('2 hours ago');
