@@ -19,7 +19,9 @@ class Casset {
 	 * @var array Array of paths in which the css, js, img directory structure
 	 *            can be found, relative to $asset_url
 	 */
-	protected static $asset_paths = array();
+	protected static $asset_paths = array(
+		'core' => 'assets/',
+	);
 
 	/*
 	 * @var string The key in $asset_paths to use if no key is given
@@ -29,7 +31,7 @@ class Casset {
 	/**
 	 * @var string The URL to be prepanded to all assets.
 	 */
-	protected static $asset_url = '/';
+	protected static $asset_url = null;
 
 	/**
 	 * @var array The folders in which css, js, and images can be found.
@@ -97,7 +99,7 @@ class Casset {
 
 		\Config::load('casset', true);
 
-		$paths = \Config::get('casset.paths', array('assets/'));
+		$paths = \Config::get('casset.paths', static::$asset_paths);
 
 		foreach($paths as $key => $path)
 		{
