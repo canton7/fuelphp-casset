@@ -278,7 +278,7 @@ For the above example, you can specify the following in your config file:
 ```
 'paths' => array(
 	'core' => 'assets/',
-	'admin' => 'assets/admin',
+	'admin' => 'assets/admin/',
 ),
 ```
 
