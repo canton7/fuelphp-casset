@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.6
+ * @version    v1.7
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -169,8 +169,11 @@ class Casset {
 	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
 	 *        rendered with render_js / render_css
 	 */
-	public static function add_group($group_type, $group_name, $enabled = true)
+	private static function add_group($group_type, $group_name, $enabled = true)
 	{
+		// If it already exists, don't overwrite it
+		if (array_key_exists($group_name, static::$groups[$group_type]))
+			return;
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
 			'enabled' => $enabled,
@@ -179,7 +182,6 @@ class Casset {
 
 	/**
 	 * Searches the asset paths to locate a file.
-	 * Throws an exception if the asset can't be found.
 	 *
 	 * @param string $file The name of the asset to search for
 	 * @param string $asset_type 'css', 'js' or 'img'
@@ -338,12 +340,9 @@ class Casset {
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group($type, $group, array($files), true);
+			static::add_group($type, $group, true);
 		}
-		else
-		{
-			array_push(static::$groups[$type][$group]['files'], $files);
-		}
+		array_push(static::$groups[$type][$group]['files'], $files);
 	}
 
 	/**
@@ -562,17 +561,22 @@ class Casset {
 			{
 				if ($min)
 				{
-					$file = static::find_file(($file_set[1]) ? $file_set[1] : $file_set[0], $type);
+					$file_pattern = static::find_file(($file_set[1]) ? $file_set[1] : $file_set[0], $type);
 					$minified = ($file_set[1] != false);
 				}
 				else
 				{
-					$file = static::find_file($file_set[0], $type);
+					$file_pattern = static::find_file($file_set[0], $type);
 				}
-				array_push($files[$group_name], array(
-					'file' => $file,
-					'minified' => $minified,
-				));
+				$glob_files = glob($file_pattern);
+				if (!$glob_files || !count($glob_files))
+					throw new \Fuel_Exception("Found no files matching $file_pattern");
+				foreach ($glob_files as $file) {
+					array_push($files[$group_name], array(
+						'file' => $file,
+						'minified' => $minified,
+					));
+				}
 			}
 			// In javascript, file order is important (as there might be deps)
 			// However in CSS it isn't, so we can safely take any order of css files

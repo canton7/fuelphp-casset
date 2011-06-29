@@ -132,7 +132,7 @@ array element.
 **enabled**: Whether a group is enabled. A group will only be rendered when it is enabled.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
-The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they exist.  
+The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
 You can also pass an array of groups to enable/disable.
 
 Specific groups can be rendered using eg `Casset::render_js('group_name')`. If no group name is passed, *all* groups will be rendered.  
@@ -147,12 +147,7 @@ Casset::css('myfile.css', false, 'group_name');
 
 (As an aside, you can pass any non-string value instead of 'false' in the second example, and Casset will behave the same: generate your minified file for you.)
 
-If the group name doesn't exist, the group is created, and enabled. 
-You can also use a slightly more involved syntax for creating groups, which allows you to specify multiple files and whether the group is enabled, as shown below:
-
-```php
-Casset::add_group('js', 'group_name', array('file1.js', array('file2.js', 'file2.min.js')), $enabled);
-```
+If the group name doesn't exist, the group is created, and enabled.
 
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
 Similarly (for JS files only), the order in which files appear is determined by the order in which they were added.
@@ -161,6 +156,86 @@ If this isn't working for you, or you want something a bit more explicit, try th
 
 NOTE: Calling ``Casset::js('file.js')`` will add that file to the "global" group. Use / abuse as you need!
 
+Paths and namespacing
+---------------------
+
+The Asset library searches through all of the items in the 'paths' config key until it finds the first matching file.
+However, this approach was undesirable, as it means that if you had the directory structure below, and tried to include 'index.js', the file that was included would be determined by the order of the
+entries in the paths array.
+
+```
+assets/
+   css/
+   js/
+      index.js
+   img/
+   admin/
+      css/
+      js/
+	     index.js
+      img/
+```
+
+Casset brings decent namespacing to the rescue!
+For the above example, you can specify the following in your config file:
+
+```
+'paths' => array(
+	'core' => 'assets/',
+	'admin' => 'assets/admin/',
+),
+```
+
+Which path to use is then decided by prefixing the asset filename with the key of the path to use. Note that if you omit the path key, the current default path key (initially 'core') is used.
+
+```php
+Casset::js('index.js');
+// Or
+Casset::js('core::index.js');
+// Will add assets/js/index.js
+
+Casset::js('admin::index.js');
+// Will add assets/admin/js/index.js
+
+echo Casset::img('test.png', 'An image');
+// <img src="...assets/img/test.png" alt="An image" />
+
+echo Casset::img('admin::test.png', 'An image');
+// <img src="...assets/admin/img/test.png" alt="An image" />
+```
+
+If you wish, you can change the current default path key using `Casset::set_path('path_key')`. This can be useful if you know that all of the assets in a given file will be from a given path. For example:
+
+```php
+Casset::set_path('admin);
+Casset::js('index.js');
+// Will add assets/admin/js/index.js
+```
+
+The "core" path can be restored by calling `Casset::set_path()` with no arguments (or calling `Casset::set_path('core')`).
+
+You can also namespace the files listed in the config file's 'groups' section, in the same manner.
+Note that these are loaded before the namespace is changed from 'core', so any files not in the core namespace will have to by explicitely prepended with the namespace name.
+
+Globbing
+--------
+
+As well as filenames, you can specify [http://php.net/glob](glob patterns). This will act exactly the same as if each file which the glob matches had been added individually.  
+For example:
+
+```php
+Casset::css('*.css');
+// Runs glob('assets/css/*.css') and adds all matches.
+
+Casset::css('admin::admin_*.css');
+// (Assuming the paths configuration in the "Paths and namespacing" section)
+// Executes glob('adders/admin/css/admin_*.css') and adds all matches
+
+Casset::js('*.js', '*.js');
+// Adds all js files in assets/js, ensuring that none of them are minified.
+```
+
+An exception is thrown when no files can be matched.
 
 Inlining
 --------
@@ -252,74 +327,14 @@ the browser to properly use its cache.
 NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
 Therefore an occasional clearout of `public/assets/cache/` is recommended. See  the section below on clearing the cache.
 
-Paths and namespacing
----------------------
-
-The Asset library searches through all of the items in the 'paths' config key until it finds the first matching file.
-However, this approach was undesirable, as it means that if you had the directory structure below, and tried to include 'index.js', the file that was included would be determined by the order of the
-entries in the paths array.
-
-```
-assets/
-   css/
-   js/
-      index.js
-   img/
-   admin/
-      css/
-      js/
-	     index.js
-      img/
-```
-
-Casset brings decent namespacing to the rescue!
-For the above example, you can specify the following in your config file:
-
-```
-'paths' => array(
-	'core' => 'assets/',
-	'admin' => 'assets/admin',
-),
-```
-
-Which path to use is then decided by prefixing the asset filename with the key of the path to use. Note that if you omit the path key, the current default path key (initially 'core') is used.
-
-```php
-Casset::js('index.js');
-// Or
-Casset::js('core::index.js');
-// Will add assets/js/index.js
-
-Casset::js('admin::index.js');
-// Will add assets/admin/js/index.js
-
-echo Casset::img('test.png', 'An image');
-// <img src="...assets/img/test.png" alt="An image" />
-
-echo Casset::img('admin::test.png', 'An image');
-// <img src="...assets/admin/img/test.png" alt="An image" />
-```
-
-If you wish, you can change the current default path key using `Casset::set_path('path_key')`. This can be useful if you know that all of the assets in a given file will be from a given path. For example:
-
-```php
-Casset::set_path('admin);
-Casset::js('index.js');
-// Will add assets/admin/js/index.js
-```
-
-The "core" path can be restored by calling `Casset::set_path()` with no arguments.
-
-You can also namespace the files listed in the config file's 'groups' section, in the same manner.
-Note that these are loaded before the namespace is changed from 'core', so any files not in the core namespace will have to by explicitely prepended with the namespace name.
-
 Clearing the cache
 ------------------
-Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few method have been provided to remove cache files.
+Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few methods have been provided to remove cache files.
 
 `Casset::clear_cache()` will clear all cache files, while `Casset::clear_js_cache()` and `Casset::clear_css_cache()` will remove just JS and CSS files respectively.  
 All of the above functions optionally accept an argument allowing you to only delete cache files last modified before a certain time. This time is specified as a
-[strtotime](http://php.net/strtotime)-formatted string, for example "2 hours ago", "last Tuesday", or "20110609". For example:
+[strtotime](http://php.net/strtotime)-formatted string, for example "2 hours ago", "last Tuesday", or "20110609".  
+For example:
 
 ```php
 Casset::clear_js_cache('2 hours ago');
