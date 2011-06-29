@@ -161,8 +161,7 @@ class Casset {
 	}
 
 	/**
-	 * Adds a group of assets. If a group of this name exists, it will be
-	 * overwritten.
+	 * Adds a group of assets. If a group of this name exists, the function returns.
 	 *
 	 * @param string $group_type 'js' or 'css'
 	 * @param string $group_name The name of the group
@@ -181,13 +180,13 @@ class Casset {
 	}
 
 	/**
-	 * Searches the asset paths to locate a file.
+	 * Figures out where a file should be, based on its namespace and type.
 	 *
 	 * @param string $file The name of the asset to search for
 	 * @param string $asset_type 'css', 'js' or 'img'
 	 * @return string The path to the asset, relative to $asset_url
 	 */
-	public static function find_file($file, $asset_type)
+	private static function find_file($file, $asset_type)
 	{
 		if (strpos($file, '//') === false)
 		{
