@@ -169,7 +169,7 @@ class Casset {
 	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
 	 *        rendered with render_js / render_css
 	 */
-	public static function add_group($group_type, $group_name, $enabled = true)
+	private static function add_group($group_type, $group_name, $enabled = true)
 	{
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
