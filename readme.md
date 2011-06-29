@@ -313,6 +313,26 @@ The "core" path can be restored by calling `Casset::set_path()` with no argument
 You can also namespace the files listed in the config file's 'groups' section, in the same manner.
 Note that these are loaded before the namespace is changed from 'core', so any files not in the core namespace will have to by explicitely prepended with the namespace name.
 
+Globbing
+--------
+
+As well as filenames, you can specify [http://php.net/glob](glob patterns). This will act exactly the same as if each file which the glob matches had been added individually.  
+For example:
+
+```php
+Casset::css('*.css');
+// Runs glob('assets/css/*.css') and adds all matches.
+
+Casset::css('admin::admin_*.css');
+// (Assuming the paths configuration in the "Paths and namespacing" section)
+// Executes glob('adders/admin/css/admin_*.css') and adds all matches
+
+Casset::js('*.js', '*.js');
+// Adds all js files in assets/js, ensuring that none of them are minified.
+```
+
+An exception is thrown when no files can be matched.
+
 Clearing the cache
 ------------------
 Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few method have been provided to remove cache files.
