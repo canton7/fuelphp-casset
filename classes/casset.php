@@ -191,6 +191,8 @@ class Casset {
 		if (strpos($file, '//') === false)
 		{
 			$parts = explode('::', $file, 2);
+			if (!array_key_exists($parts[0], static::$asset_paths))
+				throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
 			$path = static::$asset_paths[$parts[0]];
 			$file = $parts[1];
 
