@@ -147,12 +147,7 @@ Casset::css('myfile.css', false, 'group_name');
 
 (As an aside, you can pass any non-string value instead of 'false' in the second example, and Casset will behave the same: generate your minified file for you.)
 
-If the group name doesn't exist, the group is created, and enabled. 
-You can also use a slightly more involved syntax for creating groups, which allows you to specify multiple files and whether the group is enabled, as shown below:
-
-```php
-Casset::add_group('js', 'group_name', array('file1.js', array('file2.js', 'file2.min.js')), $enabled);
-```
+If the group name doesn't exist, the group is created, and enabled.
 
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
 Similarly (for JS files only), the order in which files appear is determined by the order in which they were added.
