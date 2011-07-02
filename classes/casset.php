@@ -581,13 +581,6 @@ class Casset {
 					));
 				}
 			}
-			// In javascript, file order is important (as there might be deps)
-			// However in CSS it isn't, so we can safely take any order of css files
-			// and stick them into the same cache file
-			if ($type == 'css')
-				uasort($files[$group_name], function($a, $b) {
-					return ($a['file'] > $b['file']) ? 1 : -1;
-				});
 		}
 		return $files;
 	}
