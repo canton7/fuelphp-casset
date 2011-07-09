@@ -574,6 +574,8 @@ class Casset {
 
 		foreach ($group_names as $group_name)
 		{
+			if (!array_key_exists($group_name, static::$groups[$type]))
+				continue;
 			if (static::$groups[$type][$group_name]['enabled'] == false)
 				continue;
 			// If there are no files in the group, there's no point in printing it.

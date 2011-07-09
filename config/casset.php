@@ -40,6 +40,10 @@ return array(
 	 */
 	'paths' => array(
 		'core' => 'assets/',
+		'google' => array(
+			'path' => 'http://ajax.googleapis.com/ajax/libs/',
+			'js_dir' => '',
+		)
 	),
 
 	/**
