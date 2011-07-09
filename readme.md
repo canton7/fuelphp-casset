@@ -108,6 +108,7 @@ To define a group in the config file, use the 'groups' key, eg:
 				'file2.js'
 			),
 			'enabled' => true,
+			'min' => false,
 		),
 		'group_name_2' => array(.....),
 	),
@@ -130,6 +131,7 @@ Each group consists of the following parts:
 If you're using minification, but have a pre-minified copy of your file (jquery is an example), you can pass this as the second
 array element.  
 **enabled**: Whether a group is enabled. A group will only be rendered when it is enabled.
+**min**: This optional key allows you to override the 'min' config key on a per-group basis.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
@@ -318,21 +320,14 @@ Minification
 
 Minification uses libraries from Stephen Clay's [Minify library](http://code.google.com/p/minify/).
 
-When an enabled group is rendered (and minification is turned on), the files in that group are minified combined, and stored in a file in public/assets/cache/ (configurable).
+When an enabled group is rendered (and minification is turned on, see the 'min' config key in the config file), the files in that group are minified combined, and stored in a file in public/assets/cache/ (configurable).
 This is an attempt to achieve a balance between spamming the browser with lots of files, and allowing the browser to cache files.
 The assumption is that each group is likely to appear fairly independantly, so combining groups isn't worth it.
 
 You can choose to include a comment above each `<script>` and `<link>` tag saying which group is contained with that file by setting the "show_files" key to true in the config file.
 Similarly, you can choose to put comments inside each minified file, saying which origin file has ended up where -- set "show_files_inline" to true.
 
-`Casset::render_js()` and `Casset::render_css()` take an optional fourth argument, allowing you to control minification on a per-group basis if you need.
-The following will minify the 'group_name' group, even if minification is turned off in the config file.
-
-```php
-echo Casset::render_js(false, false, array(), true);
-```
-
-(Again, you can pass any non-string value for the first argument, and any non-array value for the third, and Casset will treat them the same as if the default argument (false and array() respectively) had been passed.)
+You can control whether Casset minified individual groups, see the groups section.
 
 When minifying CSS files, urls are rewritten to take account of the fact that your css file has effectively moved into `public/assets/cache`.
 
@@ -341,7 +336,7 @@ This is because the order of files can be important, as dependancies may need to
 Bear this in mind when adding files to groups dynamically -- if you're changing the order of files in an otherwise identical group, you're not allowing
 the browser to properly use its cache.
 
-NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
+NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so Casset doesn't know whether a page still uses the old cache file).
 Therefore an occasional clearout of `public/assets/cache/` is recommended. See  the section below on clearing the cache.
 
 Clearing the cache
