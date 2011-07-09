@@ -67,7 +67,7 @@ class Casset {
 	/**
 	 * @var bool Whether to minfy.
 	 */
-	protected static $min = true;
+	protected static $min_default = true;
 
 	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
@@ -122,7 +122,8 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				static::add_group($group_type, $group_name, $group['enabled']);
+				$min = array_key_exists('min', $group) ? $group['min'] : null;
+				static::add_group($group_type, $group_name, $group['enabled'], $min);
 				foreach ($group['files'] as $files)
 				{
 					if (!is_array($files))
@@ -132,7 +133,7 @@ class Casset {
 			}
 		}
 
-		static::$min = \Config::get('casset.min', static::$min);
+		static::$min_default = \Config::get('casset.min', static::$min_default);
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
@@ -195,7 +196,7 @@ class Casset {
 	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
 	 *        rendered with render_js / render_css
 	 */
-	private static function add_group($group_type, $group_name, $enabled = true)
+	private static function add_group($group_type, $group_name, $enabled = true, $min = null)
 	{
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
@@ -203,6 +204,7 @@ class Casset {
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
 			'enabled' => $enabled,
+			'min' => ($min === null) ? static::$min_default : $min,
 		);
 	}
 
@@ -413,13 +415,12 @@ class Casset {
 	 * @param bool $inline If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
-	 * @param bool $min True to minify the javascript files. null to use the config value
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render($group = false, $inline = false, $attr = array(), $min = null)
+	public static function render($group = false, $inline = false, $attr = array())
 	{
-		$r = static::render_css($group, $inline, $attr, $min);
-		$r.= static::render_js($group, $inline, $attr, $min);
+		$r = static::render_css($group, $inline, $attr);
+		$r.= static::render_js($group, $inline, $attr);
 		return $r;
 	}
 
@@ -430,26 +431,23 @@ class Casset {
 	 * @param bool $inline If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
-	 * @param bool $min True to minify the javascript files. null to use the config value
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render_js($group = false, $inline = false, $attr = array(), $min = null)
+	public static function render_js($group = false, $inline = false, $attr = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
 		if (!is_array($attr))
 			$attr = array();
-		if ($min === null)
-			$min = static::$min;
 
-		$file_groups = static::files_to_render('js', $group, $min);
+		$file_groups = static::files_to_render('js', $group);
 
 		$ret = '';
 
-		if ($min)
+		foreach ($file_groups as $group_name => $file_group)
 		{
-			foreach ($file_groups as $group_name => $file_group)
+			if (static::$groups['js'][$group_name]['min'])
 			{
 				$filename = static::combine_and_minify('js', $file_group, $inline);
 				if (!$inline && static::$show_files)
@@ -466,10 +464,7 @@ class Casset {
 						'src' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr, '').PHP_EOL;
 			}
-		}
-		else
-		{
-			foreach ($file_groups as $group_name => $file_group)
+			else
 			{
 				foreach ($file_group as $file)
 				{
@@ -493,27 +488,25 @@ class Casset {
 	 * @param bool $inline If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
-	 * @param bool $min True to minify the css files. null to use the config value
 	 * @return string The css tags to be written to the page
 	 */
-	public static function render_css($group = false, $inline = false, $attr = array(), $min = null)
+	public static function render_css($group = false, $inline = false, $attr = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
 		if (!is_array($attr))
 			$attr = array();
-		if ($min === null)
-			$min = static::$min;
 
-		$file_groups = static::files_to_render('css', $group, $min);
+		$file_groups = static::files_to_render('css', $group);
 
 		$ret = '';
 
-		if ($min)
+		foreach ($file_groups as $group_name => $file_group)
 		{
-			foreach ($file_groups as $group_name => $file_group)
+			if (static::$groups['css'][$group_name]['min'])
 			{
+
 				$filename = static::combine_and_minify('css', $file_group, $inline);
 				if (!$inline && static::$show_files)
 				{
@@ -530,21 +523,21 @@ class Casset {
 						'href' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr).PHP_EOL;
 			}
-		}
-		else
-		{
-			foreach ($file_groups as $group_name => $file_group)
+			else
 			{
-				foreach ($file_group as $file)
+				foreach ($file_groups as $group_name => $file_group)
 				{
-					if ($inline)
-						$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
-					else
-						$ret .= html_tag('link', array(
-							'rel' => 'stylesheet',
-							'type' => 'text/css',
-							'href' => static::$asset_url.$file['file'],
-						)+$attr).PHP_EOL;
+					foreach ($file_group as $file)
+					{
+						if ($inline)
+							$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+						else
+							$ret .= html_tag('link', array(
+								'rel' => 'stylesheet',
+								'type' => 'text/css',
+								'href' => static::$asset_url.$file['file'],
+							)+$attr).PHP_EOL;
+					}
 				}
 			}
 		}
@@ -557,10 +550,9 @@ class Casset {
 	 *
 	 * @param string $type 'css' / 'js'
 	 * @param array $group The groups to render. If false, takes all groups
-	 * @param bool $min Whether to minify
 	 * @return array An array of array('file' => file_name, 'minified' => whether_minified)
 	 */
-	private static function files_to_render($type, $group, $min)
+	private static function files_to_render($type, $group)
 	{
 		// If no group specified, print all groups.
 		if ($group == false)
@@ -589,7 +581,7 @@ class Casset {
 
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
-				if ($min)
+				if (static::$groups[$type][$group_name]['min'])
 				{
 					$file_pattern = static::find_file(($file_set[1]) ? $file_set[1] : $file_set[0], $type);
 					$minified = ($file_set[1] != false);
