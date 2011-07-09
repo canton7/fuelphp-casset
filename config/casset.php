@@ -80,9 +80,30 @@ return array(
 	'cache_path' => 'assets/cache/',
 
 	/**
-	 * Whether to minify (and combine) files.
+	 * Note the following with regards to combining / minifying files:
+	 * Combine and minify:
+	 *   Files are minified (or the minified form used, if given), and combined
+	 *   into a single cache file.
+	 * Combine and not minify:
+	 *   Non-minified versions of files are combined into a single cache file.
+	 * Not combine and minify:
+	 *   Minified versions of files are linked to, if given. Otherwise the non-
+	 *   minified versions are linked to.
+	 *   NOTE THIS IS POTENTIALLY UNEXPECTED BEHAVIOUR, but makes sense when you
+	 *   take remote assets into account.
+	 * Not combine and not minify:
+	 *   Non-minified versions of files are linked to.
+	 */
+
+	/**
+	 * Whether to minify files.
 	 */
 	'min' => true,
+
+	/**
+	 * Whether to combine files
+	 */
+	'combine' => true,
 
 	/**
 	 * When minifying, whether to show the files names in each combined

@@ -70,6 +70,11 @@ class Casset {
 	protected static $min_default = true;
 
 	/**
+	 * @var bool Whether to combine
+	 */
+	protected static $combine_default = false;
+
+	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
 	 *           which files have been minified into that file.
 	 */
@@ -122,8 +127,9 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
+				$combine = array_key_exists('combine', $group) ? $group['combine'] : null;
 				$min = array_key_exists('min', $group) ? $group['min'] : null;
-				static::add_group($group_type, $group_name, $group['enabled'], $min);
+				static::add_group($group_type, $group_name, $group['enabled'], $combine, $min);
 				foreach ($group['files'] as $files)
 				{
 					if (!is_array($files))
@@ -134,6 +140,7 @@ class Casset {
 		}
 
 		static::$min_default = \Config::get('casset.min', static::$min_default);
+		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
@@ -196,7 +203,7 @@ class Casset {
 	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
 	 *        rendered with render_js / render_css
 	 */
-	private static function add_group($group_type, $group_name, $enabled = true, $min = null)
+	private static function add_group($group_type, $group_name, $enabled = true, $combine = null, $min = null)
 	{
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
@@ -204,6 +211,7 @@ class Casset {
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
 			'enabled' => $enabled,
+			'combine' => ($combine === null) ? static::$combine_default : $combine,
 			'min' => ($min === null) ? static::$min_default : $min,
 		);
 	}
@@ -447,9 +455,9 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
-			if (static::$groups['js'][$group_name]['min'])
+			if (static::$groups['js'][$group_name]['combine'])
 			{
-				$filename = static::combine_and_minify('js', $file_group, $inline);
+				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -504,10 +512,10 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
-			if (static::$groups['css'][$group_name]['min'])
+			if (static::$groups['css'][$group_name]['combine'])
 			{
 
-				$filename = static::combine_and_minify('css', $file_group, $inline);
+				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -612,13 +620,15 @@ class Casset {
 	 * @param string $type 'css' / 'js'
 	 * @param array $file_group Array of ('file' => filename, 'minified' => is_minified)
 	 *        to combine and minify.
+	 * @param bool $minify whether to minify the files, as well as combining them
 	 * @return string The path to the cache file which was written.
 	 */
-	private static function combine_and_minify($type, $file_group, $inline)
+	private static function combine($type, $file_group, $minify, $inline)
 	{
 		$filename = md5(implode('', array_map(function($a) {
 			return $a['file'];
-		}, $file_group))).'.'.$type;
+		}, $file_group)).($minify ? 'min' : '')).'.'.$type;
+
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
 		foreach ($file_group as $file)
@@ -638,7 +648,7 @@ class Casset {
 			{
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
-				if ($file['minified'])
+				if ($file['minified'] || !$minify)
 					$content .= file_get_contents($file['file']).PHP_EOL;
 				else
 				{
