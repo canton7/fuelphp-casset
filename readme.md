@@ -228,9 +228,9 @@ where each of 'js_path', 'css_path' and 'img_path' are optional. If they are not
 array (
 	'some_key' => array(
 		'path' => 'more_assets/',
-			'js_dir' => 'javascript/',
-			'css_dir' => 'styles/'
-			'img_dir' => 'images/',
+		'js_dir' => 'javascript/',
+		'css_dir' => 'styles/'
+		'img_dir' => 'images/',
 		),
 	),
 ),
@@ -324,14 +324,14 @@ Minification uses libraries from Stephen Clay's [Minify library](http://code.goo
 
 The 'min' and 'combine' config file keys work together to control exactly how Casset operates:
 
-**Combine and minify**
+**Combine and minify:**
 When an enabled group is rendered, the files in that group are minified (or the minified version used, if given, see the second parameter of eg `Casset::js()`),
 and combined into a single cache file in public/assets/cache (configurable).
 
-**Combine and not minify**
+**Combine and not minify:**
 When an enabled group is rendered, the files in that group are combined into a a single cache file in public/assets/cache (configurable). The files are not minified.
 
-**Not combine and minify**
+**Not combine and minify:**
 When an enabled group is rendered, a separate `<script>` or `<link>` tag is created for each file.
 If a minified version of a file has been given, it will be linked to. Otherwise, the non-minified version is linked to.
 NOTE THAT THIS MIGHT BE UNEXPECTED BEHAVIOUR. It is useful, however, when linking to remote assets. See the section on remote assets.
