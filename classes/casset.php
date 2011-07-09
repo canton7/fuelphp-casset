@@ -121,6 +121,10 @@ class Casset {
 
 		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
 
+		static::$min_default = \Config::get('casset.min', static::$min_default);
+		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
+
+
 		$group_sets = \Config::get('casset.groups', array());
 
 		foreach ($group_sets as $group_type => $groups)
@@ -138,9 +142,6 @@ class Casset {
 				}
 			}
 		}
-
-		static::$min_default = \Config::get('casset.min', static::$min_default);
-		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
