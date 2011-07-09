@@ -220,10 +220,10 @@ class Casset {
 			$parts = explode('::', $file, 2);
 			if (!array_key_exists($parts[0], static::$asset_paths))
 				throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
-			$path = static::$asset_paths[$parts[0]];
+			$path = static::$asset_paths[$parts[0]]['path'];
 			$file = $parts[1];
 
-			$folder = static::$folders[$asset_type];
+			$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
 			$file = ltrim($file, '/');
 
 			return $path.$folder.$file;
