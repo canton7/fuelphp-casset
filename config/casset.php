@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.7
+ * @version    v1.8
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -23,6 +23,19 @@ return array(
 	 *
 	 * array(
 	 *		'core' => 'assets/'
+	 * )
+	 *
+	 * You can also choose to override the js_dir, css_dir and/or img_dir config
+	 * options on a per-path basis. You can override just one dir, two, or all
+	 * of them.
+	 * In this case, the syntax is
+	 * array (
+	 *		'some_key' => array(
+	 *			'path' => 'more_assets/',
+	 *			'js_dir' => 'javascript/',
+	 *			'css_dir' => 'styles/'
+	 *			'img_dir' => 'images/',
+	 *		),
 	 * )
 	 */
 	'paths' => array(
@@ -63,9 +76,30 @@ return array(
 	'cache_path' => 'assets/cache/',
 
 	/**
-	 * Whether to minify (and combine) files.
+	 * Note the following with regards to combining / minifying files:
+	 * Combine and minify:
+	 *   Files are minified (or the minified form used, if given), and combined
+	 *   into a single cache file.
+	 * Combine and not minify:
+	 *   Non-minified versions of files are combined into a single cache file.
+	 * Not combine and minify:
+	 *   Minified versions of files are linked to, if given. Otherwise the non-
+	 *   minified versions are linked to.
+	 *   NOTE THIS IS POTENTIALLY UNEXPECTED BEHAVIOUR, but makes sense when you
+	 *   take remote assets into account.
+	 * Not combine and not minify:
+	 *   Non-minified versions of files are linked to.
+	 */
+
+	/**
+	 * Whether to minify files.
 	 */
 	'min' => true,
+
+	/**
+	 * Whether to combine files
+	 */
+	'combine' => true,
 
 	/**
 	 * When minifying, whether to show the files names in each combined
@@ -95,6 +129,7 @@ return array(
 	 *             'file2.js'
 	 *          ),
 	 *          'enabled' => true,
+	 *          'min' => false,
 	 *       ),
 	 *       'group_name_2' => array(.....),
 	 *    ),
@@ -128,6 +163,9 @@ return array(
 	 *    version of itself (eg jquery).
 	 * - 'enabled': whether the group will be rendered when render_css() or
 	 *    render_js() is called.
+	 * - 'min: an optional key, allowing you to override the global 'min' config
+	 *    key on a per-group basis. If null or not specified, the 'min' config#
+	 *    key will be used.
 	 *    Using this,
 	 */
 	'groups' => array(

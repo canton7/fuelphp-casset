@@ -108,6 +108,8 @@ To define a group in the config file, use the 'groups' key, eg:
 				'file2.js'
 			),
 			'enabled' => true,
+			'combine' => false,
+			'min' => false,
 		),
 		'group_name_2' => array(.....),
 	),
@@ -129,7 +131,9 @@ Each group consists of the following parts:
 **files**: a list of files present in the group. Each file definition can either be a string or a 2-element array.
 If you're using minification, but have a pre-minified copy of your file (jquery is an example), you can pass this as the second
 array element.  
-**enabled**: Whether a group is enabled. A group will only be rendered when it is enabled.
+**enabled**: Optional, specifies whether a group is enabled. A group will only be rendered when it is enabled. Default true.  
+**combine**: This optional key allows you to override the 'combine' config key on a per-group bases.  
+**min**: This optional key allows you to override the 'min' config key on a per-group basis.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
@@ -217,6 +221,23 @@ The "core" path can be restored by calling `Casset::set_path()` with no argument
 You can also namespace the files listed in the config file's 'groups' section, in the same manner.
 Note that these are loaded before the namespace is changed from 'core', so any files not in the core namespace will have to by explicitely prepended with the namespace name.
 
+In addition, you can override the config options 'js_path', 'css_path' and 'img_path' on a per-path basis. In this case, the element of the 'paths' config array takes the following form,
+where each of 'js_path', 'css_path' and 'img_path' are optional. If they are not specified, the defaults will be used.
+
+```php
+array (
+	'some_key' => array(
+		'path' => 'more_assets/',
+		'js_dir' => 'javascript/',
+		'css_dir' => 'styles/'
+		'img_dir' => 'images/',
+		),
+	),
+),
+```
+
+This can be particularly useful when you're using some third-party code, and don't have control over where the assets are located.
+
 Globbing
 --------
 
@@ -296,36 +317,102 @@ echo Casset::render_css();
 // <link rel="stylesheet" type="text/css" href="http://...main.css" />
 ```
 
-Minification
-------------
+Minification and combining
+--------------------------
 
 Minification uses libraries from Stephen Clay's [Minify library](http://code.google.com/p/minify/).
 
-When an enabled group is rendered (and minification is turned on), the files in that group are minified combined, and stored in a file in public/assets/cache/ (configurable).
-This is an attempt to achieve a balance between spamming the browser with lots of files, and allowing the browser to cache files.
-The assumption is that each group is likely to appear fairly independantly, so combining groups isn't worth it.
+The 'min' and 'combine' config file keys work together to control exactly how Casset operates:
+
+**Combine and minify:**
+When an enabled group is rendered, the files in that group are minified (or the minified version used, if given, see the second parameter of eg `Casset::js()`),
+and combined into a single cache file in public/assets/cache (configurable).
+
+**Combine and not minify:**
+When an enabled group is rendered, the files in that group are combined into a a single cache file in public/assets/cache (configurable). The files are not minified.
+
+**Not combine and minify:**
+When an enabled group is rendered, a separate `<script>` or `<link>` tag is created for each file.
+If a minified version of a file has been given, it will be linked to. Otherwise, the non-minified version is linked to.
+NOTE THAT THIS MIGHT BE UNEXPECTED BEHAVIOUR. It is useful, however, when linking to remote assets. See the section on remote assets.
+
+**Not combine and not minify**
+When an enabled group is rendered, a separate `<script>` or `<link>` tag is created for each file.
+The non-minified version of the file is used in each case.
 
 You can choose to include a comment above each `<script>` and `<link>` tag saying which group is contained with that file by setting the "show_files" key to true in the config file.
 Similarly, you can choose to put comments inside each minified file, saying which origin file has ended up where -- set "show_files_inline" to true.
 
-`Casset::render_js()` and `Casset::render_css()` take an optional fourth argument, allowing you to control minification on a per-group basis if you need.
-The following will minify the 'group_name' group, even if minification is turned off in the config file.
-
-```php
-echo Casset::render_js(false, false, array(), true);
-```
-
-(Again, you can pass any non-string value for the first argument, and any non-array value for the third, and Casset will treat them the same as if the default argument (false and array() respectively) had been passed.)
+You can control whether Casset minifies or combines individual groups, see the groups section.
 
 When minifying CSS files, urls are rewritten to take account of the fact that your css file has effectively moved into `public/assets/cache`.
 
-With JS files, changing the order in which files were added to the group will re-generate the cache file, with the files in their new positions. However with CSS, it will not.
-This is because the order of JS files can be important, as dependancies may need to be satisfied. In CSS, no such dependancies exist.  
+With both CSS and JS files, when a cache file is used, changing the order in which files were added to the group will re-generate the cache file, with the files in their new positions.
+This is because the order of files can be important, as dependancies may need to be satisfied.
 Bear this in mind when adding files to groups dynamically -- if you're changing the order of files in an otherwise identical group, you're not allowing
 the browser to properly use its cache.
 
-NOTE: If you change the contents of a group, a new cache file will be generated. However the old one will not be removed (groups are mutable, so cassed doesn't know whether a page still uses the old cache file).
-Therefore an occasional clearout of `public/assets/cache/` is recommended. See  the section below on clearing the cache.
+NOTE: If you change the contents of a group, and a cache file is used, a new cache file will be generated. However the old one will not be removed (groups are mutable,
+so Casset doesn't know whether a page still uses the old cache file).
+Therefore an occasional clearout of `public/assets/cache/` is recommended. See the section below on clearing the cache.
+
+Remote files
+------------
+
+Casset supports handing files on remote machines, as well as the local one.
+This is done by creating a new namespace, and specifying a url instead of a relative path.
+All files using that namespace will then be fetched from the given url.
+
+However, there are a couple of caveats:
+ - It is possible for Casset to fetch, combine and minify remote assets. However, it can obviously only write the cache file locally.
+ - Casset doesn't bother to check the modification times on remote files when deciding whether the cache is out of date (as this would cause lots of http requests from your server, and entirely defeat
+   the point of caching in the first place). Therefore if the remote file changes, Casset's cache will not be updated, and you'll have to remove it manually, or with the cache-clearing functions.
+
+For this reason, recommended practice is to either turn off combining files entirely if using remote assets (possibly undesirable),
+or create one or more groups dedicated to remote files, in which combination is disabled.
+
+Note that when combining files is disabled, but minification enabled, each file in the group will have its own `<script>` or `<link>` tag, but the minified version of the file will be linked to, if supplied.
+If no minified version of the file is supplied, the non-minified version will be linked to.  
+This behaviour was designed for use when using remote assets, where the desired behaviour is to avoid caching the file locally, instead leaving it on the remote server.
+
+Here is an example, using the Google API libraries:
+
+```php
+// In config/casset.php
+'paths' => array(
+	'core' => 'assets/',
+	'google_api' => array(
+		'path' => 'http://ajax.googleapis.com/ajax/libs/',
+		'js_dir' => '',
+	),
+),
+
+'groups' => array(
+	'js' => array(
+		'jquery' => array(
+			'files' => array(
+				array('google_api::jquery/1.6.2/jquery.js', 'google_api::jquery/1.6.2/jquery.min.js'),
+			),
+			'enabled' => true,
+			'combine' => false,
+		),
+	),
+),
+
+// Then you can also do....
+Casset::js('google_api::jqueryui/1.8.14/jquery-ui.js', 'google_api::jqueryui/1.8.14/jquery-ui.min.js', 'jquery');
+
+
+echo Casset::render();
+
+// If minification is disabled:
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.14/jquery-ui.js"></script>
+
+// If minification is enabled:
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.14/jquery-ui.min.js"></script>
+```
 
 Clearing the cache
 ------------------
