@@ -131,8 +131,8 @@ Each group consists of the following parts:
 **files**: a list of files present in the group. Each file definition can either be a string or a 2-element array.
 If you're using minification, but have a pre-minified copy of your file (jquery is an example), you can pass this as the second
 array element.  
-**enabled**: Optional, specifies whether a group is enabled. A group will only be rendered when it is enabled. Default true.
-**combine**: This optional key allows you to override the 'combine' config key on a per-group bases.
+**enabled**: Optional, specifies whether a group is enabled. A group will only be rendered when it is enabled. Default true.  
+**combine**: This optional key allows you to override the 'combine' config key on a per-group bases.  
 **min**: This optional key allows you to override the 'min' config key on a per-group basis.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
