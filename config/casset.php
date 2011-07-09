@@ -112,6 +112,7 @@ return array(
 	 *             'file2.js'
 	 *          ),
 	 *          'enabled' => true,
+	 *          'min' => false,
 	 *       ),
 	 *       'group_name_2' => array(.....),
 	 *    ),
@@ -145,6 +146,9 @@ return array(
 	 *    version of itself (eg jquery).
 	 * - 'enabled': whether the group will be rendered when render_css() or
 	 *    render_js() is called.
+	 * - 'min: an optional key, allowing you to override the global 'min' config
+	 *    key on a per-group basis. If null or not specified, the 'min' config#
+	 *    key will be used.
 	 *    Using this,
 	 */
 	'groups' => array(
