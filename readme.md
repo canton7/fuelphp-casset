@@ -217,6 +217,23 @@ The "core" path can be restored by calling `Casset::set_path()` with no argument
 You can also namespace the files listed in the config file's 'groups' section, in the same manner.
 Note that these are loaded before the namespace is changed from 'core', so any files not in the core namespace will have to by explicitely prepended with the namespace name.
 
+In addition, you can override the config options 'js_path', 'css_path' and 'img_path' on a per-path basis. In this case, the element of the 'paths' config array takes the following form,
+where each of 'js_path', 'css_path' and 'img_path' are optional. If they are not specified, the defaults will be used.
+
+```php
+array (
+	'some_key' => array(
+		'path' => 'more_assets/',
+			'js_dir' => 'javascript/',
+			'css_dir' => 'styles/'
+			'img_dir' => 'images/',
+		),
+	),
+),
+```
+
+This can be particularly useful when you're using some third-party code, and don't have control over where the assets are located.
+
 Globbing
 --------
 
