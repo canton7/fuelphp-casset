@@ -70,6 +70,11 @@ class Casset {
 	protected static $min_default = true;
 
 	/**
+	 * @var bool Whether to combine
+	 */
+	protected static $combine_default = true;
+
+	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
 	 *           which files have been minified into that file.
 	 */
@@ -122,8 +127,9 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
+				$combine = array_key_exists('combine', $group) ? $group['combine'] : null;
 				$min = array_key_exists('min', $group) ? $group['min'] : null;
-				static::add_group($group_type, $group_name, $group['enabled'], $min);
+				static::add_group($group_type, $group_name, $group['enabled'], $combine, $min);
 				foreach ($group['files'] as $files)
 				{
 					if (!is_array($files))
@@ -134,6 +140,7 @@ class Casset {
 		}
 
 		static::$min_default = \Config::get('casset.min', static::$min_default);
+		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
@@ -196,7 +203,7 @@ class Casset {
 	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
 	 *        rendered with render_js / render_css
 	 */
-	private static function add_group($group_type, $group_name, $enabled = true, $min = null)
+	private static function add_group($group_type, $group_name, $enabled = true, $combine = null, $min = null)
 	{
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
@@ -204,6 +211,7 @@ class Casset {
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
 			'enabled' => $enabled,
+			'combine' => ($combine === null) ? static::$combine_default : $combine,
 			'min' => ($min === null) ? static::$min_default : $min,
 		);
 	}
