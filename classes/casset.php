@@ -224,24 +224,34 @@ class Casset {
 	 * @param string $asset_type 'css', 'js' or 'img'
 	 * @return string The path to the asset, relative to $asset_url
 	 */
-	private static function find_file($file, $asset_type)
+	private static function find_files($file, $asset_type)
 	{
-		if (strpos($file, '//') === false)
+		$parts = explode('::', $file, 2);
+		if (!array_key_exists($parts[0], static::$asset_paths))
+			throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
+
+		$path = static::$asset_paths[$parts[0]]['path'];
+		$file = $parts[1];
+
+		$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
+		$file = ltrim($file, '/');
+
+		$remote = (strpos($path, '//') !== false);
+
+		if ($remote)
 		{
-			$parts = explode('::', $file, 2);
-			if (!array_key_exists($parts[0], static::$asset_paths))
-				throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
-			$path = static::$asset_paths[$parts[0]]['path'];
-			$file = $parts[1];
-
-			$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
-			$file = ltrim($file, '/');
-
-			return $path.$folder.$file;
+			// Glob doesn't work on remote locations, so just assume they
+			// specified a file, not a glob pattern.
+			// Don't look for the file now either. That'll be done by
+			// file_get_contents later on, if need be.
+			return array($path.$folder.$file);
 		}
 		else
 		{
-			return $file;
+			$glob_files = glob($path.$folder.$file);
+			if (!$glob_files || !count($glob_files))
+				throw new \Fuel_Exception("Found no files matching $path$folder$file");
+			return $glob_files;
 		}
 	}
 
@@ -480,10 +490,13 @@ class Casset {
 					if ($inline)
 						$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
+					{
+						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
 						$ret .= html_tag('script', array(
 							'type' => 'text/javascript',
-							'src' => static::$asset_url.$file['file'],
+							'src' => $base.$file['file'],
 						)+$attr, '').PHP_EOL;
+					}
 				}
 			}
 		}
@@ -541,11 +554,14 @@ class Casset {
 						if ($inline)
 							$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 						else
+						{
+							$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
 							$ret .= html_tag('link', array(
 								'rel' => 'stylesheet',
 								'type' => 'text/css',
-								'href' => static::$asset_url.$file['file'],
+								'href' => $base.$file['file'],
 							)+$attr).PHP_EOL;
+						}
 					}
 				}
 			}
@@ -592,17 +608,14 @@ class Casset {
 			{
 				if (static::$groups[$type][$group_name]['min'])
 				{
-					$file_pattern = static::find_file(($file_set[1]) ? $file_set[1] : $file_set[0], $type);
+					$assets = static::find_files(($file_set[1]) ? $file_set[1] : $file_set[0], $type);
 					$minified = ($file_set[1] != false);
 				}
 				else
 				{
-					$file_pattern = static::find_file($file_set[0], $type);
+					$assets = static::find_files($file_set[0], $type);
 				}
-				$glob_files = glob($file_pattern);
-				if (!$glob_files || !count($glob_files))
-					throw new \Fuel_Exception("Found no files matching $file_pattern");
-				foreach ($glob_files as $file) {
+				foreach ($assets as $file) {
 					array_push($files[$group_name], array(
 						'file' => $file,
 						'minified' => $minified,
@@ -634,6 +647,11 @@ class Casset {
 		$last_mod = 0;
 		foreach ($file_group as $file)
 		{
+			// If it's a remote file just assume it isn't modified, otherwise
+			// we're stuck making a ton of HTTP requests
+			if (strpos($file['file'], '//') !== false)
+				continue;
+
 			$mod = filemtime(DOCROOT.$file['file']);
 			if ($mod > $last_mod)
 				$last_mod = $mod;
@@ -653,13 +671,16 @@ class Casset {
 					$content .= file_get_contents($file['file']).PHP_EOL;
 				else
 				{
+					$file_content = file_get_contents($file['file']);
+					if ($file_content === false)
+						throw new \Fuel_Exception("Couldn't not open file {$file['file']}");
 					if ($type == 'js')
 					{
-						$content .= Casset_JSMin::minify(file_get_contents($file['file'])).PHP_EOL;
+						$content .= Casset_JSMin::minify($file_content).PHP_EOL;
 					}
 					elseif ($type == 'css')
 					{
-						$css = Casset_Csscompressor::process(file_get_contents($file['file'])).PHP_EOL;
+						$css = Casset_Csscompressor::process($file_content).PHP_EOL;
 						$content .= Casset_Cssurirewriter::rewrite($css, dirname($file['file']));
 					}
 				}
@@ -719,9 +740,14 @@ class Casset {
 		foreach ($images as $image)
 		{
 			if (strpos($image, '::') === false)
-			$image = static::$default_path_key.'::'.$image;
-			$attr['src'] = static::$asset_url.static::find_file($image, 'img');
-			$ret .= html_tag('img', $attr);
+				$image = static::$default_path_key.'::'.$image;
+			$image_paths = static::find_files($image, 'img');
+			foreach ($image_paths as $image_path)
+			{
+				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';
+				$attr['src'] = $base.$image_path;
+				$ret .= html_tag('img', $attr);
+			}
 		}
 		return $ret;
 	}

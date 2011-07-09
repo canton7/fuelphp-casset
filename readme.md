@@ -356,6 +356,64 @@ NOTE: If you change the contents of a group, and a cache file is used, a new cac
 so Casset doesn't know whether a page still uses the old cache file).
 Therefore an occasional clearout of `public/assets/cache/` is recommended. See the section below on clearing the cache.
 
+Remote files
+------------
+
+Casset supports handing files on remote machines, as well as the local one.
+This is done by creating a new namespace, and specifying a url instead of a relative path.
+All files using that namespace will then be fetched from the given url.
+
+However, there are a couple of caveats:
+ - It is possible for Casset to fetch, combine and minify remote assets. However, it can obviously only write the cache file locally.
+ - Casset doesn't bother to check the modification times on remote files when deciding whether the cache is out of date (as this would cause lots of http requests from your server, and entirely defeat
+   the point of caching in the first place). Therefore if the remote file changes, Casset's cache will not be updated, and you'll have to remove it manually, or with the cache-clearing functions.
+
+For this reason, recommended practice is to either turn off combining files entirely if using remote assets (possibly undesirable),
+or create one or more groups dedicated to remote files, in which combination is disabled.
+
+Note that when combining files is disabled, but minification enabled, each file in the group will have its own `<script>` or `<link>` tag, but the minified version of the file will be linked to, if supplied.
+If no minified version of the file is supplied, the non-minified version will be linked to.  
+This behaviour was designed for use when using remote assets, where the desired behaviour is to avoid caching the file locally, instead leaving it on the remote server.
+
+Here is an example, using the Google API libraries:
+
+```php
+// In config/casset.php
+'paths' => array(
+	'core' => 'assets/',
+	'google_api' => array(
+		'path' => 'http://ajax.googleapis.com/ajax/libs/',
+		'js_dir' => '',
+	),
+),
+
+'groups' => array(
+	'js' => array(
+		'jquery' => array(
+			'files' => array(
+				array('google_api::jquery/1.6.2/jquery.js', 'google_api::jquery/1.6.2/jquery.min.js'),
+			),
+			'enabled' => true,
+			'combine' => false,
+		),
+	),
+),
+
+// Then you can also do....
+Casset::js('google_api::jqueryui/1.8.14/jquery-ui.js', 'google_api::jqueryui/1.8.14/jquery-ui.min.js', 'jquery');
+
+
+echo Casset::render();
+
+// If minification is disabled:
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.js"></script>
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.14/jquery-ui.js"></script>
+
+// If minification is enabled:
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+// <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.14/jquery-ui.min.js"></script>
+```
+
 Clearing the cache
 ------------------
 Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few methods have been provided to remove cache files.
