@@ -72,7 +72,7 @@ class Casset {
 	/**
 	 * @var bool Whether to combine
 	 */
-	protected static $combine_default = true;
+	protected static $combine_default = false;
 
 	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
@@ -455,9 +455,9 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
-			if (static::$groups['js'][$group_name]['min'])
+			if (static::$groups['js'][$group_name]['combine'])
 			{
-				$filename = static::combine_and_minify('js', $file_group, $inline);
+				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -512,10 +512,10 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
-			if (static::$groups['css'][$group_name]['min'])
+			if (static::$groups['css'][$group_name]['combine'])
 			{
 
-				$filename = static::combine_and_minify('css', $file_group, $inline);
+				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
 				if (!$inline && static::$show_files)
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -620,13 +620,15 @@ class Casset {
 	 * @param string $type 'css' / 'js'
 	 * @param array $file_group Array of ('file' => filename, 'minified' => is_minified)
 	 *        to combine and minify.
+	 * @param bool $minify whether to minify the files, as well as combining them
 	 * @return string The path to the cache file which was written.
 	 */
-	private static function combine_and_minify($type, $file_group, $inline)
+	private static function combine($type, $file_group, $minify, $inline)
 	{
 		$filename = md5(implode('', array_map(function($a) {
 			return $a['file'];
-		}, $file_group))).'.'.$type;
+		}, $file_group)).($minify ? 'min' : '')).'.'.$type;
+
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
 		foreach ($file_group as $file)
@@ -646,7 +648,7 @@ class Casset {
 			{
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
-				if ($file['minified'])
+				if ($file['minified'] || !$minify)
 					$content .= file_get_contents($file['file']).PHP_EOL;
 				else
 				{
