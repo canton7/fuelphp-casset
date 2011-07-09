@@ -131,9 +131,10 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
+				$enabled = array_key_exists('enabled', $group) ? $group['enabled'] : true;
 				$combine = array_key_exists('combine', $group) ? $group['combine'] : null;
 				$min = array_key_exists('min', $group) ? $group['min'] : null;
-				static::add_group($group_type, $group_name, $group['enabled'], $combine, $min);
+				static::add_group($group_type, $group_name, $enabled, $combine, $min);
 				foreach ($group['files'] as $files)
 				{
 					if (!is_array($files))
