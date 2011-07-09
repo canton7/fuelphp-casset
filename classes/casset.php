@@ -36,7 +36,7 @@ class Casset {
 	/**
 	 * @var array The folders in which css, js, and images can be found.
 	 */
-	protected static $folders = array(
+	protected static $default_folders = array(
 		'css' => 'css/',
 		'js' => 'js/',
 		'img' => 'img/',
@@ -108,10 +108,10 @@ class Casset {
 
 		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
 
-		static::$folders = array(
-			'css' => \Config::get('casset.css_dir', static::$folders['css']),
-			'js' => \Config::get('casset.js_dir', static::$folders['js']),
-			'img' => \Config::get('casset.img_dir', static::$folders['img']),
+		static::$default_folders = array(
+			'css' => \Config::get('casset.css_dir', static::$default_folders['css']),
+			'js' => \Config::get('casset.js_dir', static::$default_folders['js']),
+			'img' => \Config::get('casset.img_dir', static::$default_folders['img']),
 		);
 
 		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
@@ -141,14 +141,39 @@ class Casset {
 	}
 
 	/**
-	 * Adds a path to the asset paths array.
-	 *
-	 * @param string $path the path to add.
+	 * Parses oen of the 'paths' config keys into the format used internally.
+	 * Config file format:
+	 * 'paths' => array(
+	 *		'assets/',
+	 *		array(
+	 *			'path' => 'assets_2/',
+	 *			'js_dir' => 'js/',
+	 *			'css_dir' => 'css/',
+	 *		),
+	 * ),
+	 * In the event that the value isn't an array, it is turned into one.
+	 * If js_dir, css_dir or img_dir are not given, they are populated with
+	 * the defaults, giving in the 'js_dir', 'css_dir' and 'img_dir' config keys.
+	 * @param string $path_key the key of the path
+	 * @param mixed $path_attr the path attributes, as described above
 	 */
-	public static function add_path($key, $path)
+	private static function add_path($path_key, $path_attr)
 	{
-		static::$asset_paths[$key] = $path;
+		$path_val = array();
+		if (!is_array($path_attr))
+			$path_attr = array('path' => $path_attr, 'dirs' => array());
+		elseif (!array_key_exists('dirs', $path_attr))
+			$path_attr['dirs'] = array();
+
+		$path_val['path'] = $path_attr['path'];
+		$path_val['dirs'] = array(
+			'js' => array_key_exists('js_dir', $path_attr) ? $path_attr['js_dir'] : static::$default_folders['js'],
+			'css' => array_key_exists('css_dir', $path_attr) ? $path_attr['css_dir'] : static::$default_folders['css'],
+			'img' => array_key_exists('img_dir', $path_attr) ? $path_attr['img_dir'] : static::$default_folders['img'],
+		);
+		static::$asset_paths[$path_key] = $path_val;
 	}
+
 
 	/**
 	 * Set the current default path
@@ -195,10 +220,10 @@ class Casset {
 			$parts = explode('::', $file, 2);
 			if (!array_key_exists($parts[0], static::$asset_paths))
 				throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
-			$path = static::$asset_paths[$parts[0]];
+			$path = static::$asset_paths[$parts[0]]['path'];
 			$file = $parts[1];
 
-			$folder = static::$folders[$asset_type];
+			$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
 			$file = ltrim($file, '/');
 
 			return $path.$folder.$file;

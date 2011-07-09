@@ -24,6 +24,19 @@ return array(
 	 * array(
 	 *		'core' => 'assets/'
 	 * )
+	 *
+	 * You can also choose to override the js_dir, css_dir and/or img_dir config
+	 * options on a per-path basis. You can override just one dir, two, or all
+	 * of them.
+	 * In this case, the syntax is
+	 * array (
+	 *		'some_key' => array(
+	 *			'path' => 'more_assets/',
+	 *			'js_dir' => 'javascript/',
+	 *			'css_dir' => 'styles/'
+	 *			'img_dir' => 'images/',
+	 *		),
+	 * )
 	 */
 	'paths' => array(
 		'core' => 'assets/',
