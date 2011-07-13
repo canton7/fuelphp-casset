@@ -390,6 +390,59 @@ class Casset {
 		array_push(static::$inline_assets[$type], $content);
 	}
 
+
+	/**
+	 * Return the path for the given JS asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 */
+	public static function get_filepath_js($filename, $force_array = false)
+	{
+		return static::get_filepath($filename, 'js', $force_array);
+	}
+
+	/**
+	 * Return the path for the given CSS asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 */
+	public static function get_filepath_css($filename, $force_array = false)
+	{
+		return static::get_filepath($filename, 'css', $force_array);
+	}
+
+	/**
+	 * Return the path for the given img asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 */
+	public static function get_filepath_img($filename, $force_array = false)
+	{
+		return static::get_filepath($filename, 'img', $force_array);
+	}
+
+	/**
+	 * Return the path for the given asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param string $type js, css or img
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath($filename, $type, $force_array = false)
+	{
+		if (strpos($filename, '::') === false)
+			$filename = static::$default_path_key.'::'.$filename;
+		$files = static::find_files($filename, $type);
+		if (count($files) == 1 && !$force_array)
+			return $files[0];
+		return $files;
+	}
+
 	/**
 	 * Shortcut to render_js() and render_css().
 	 *
