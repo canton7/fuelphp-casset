@@ -414,6 +414,51 @@ echo Casset::render();
 // <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.14/jquery-ui.min.js"></script>
 ```
 
+Getting asset paths / urls
+--------------------------
+
+Thanks to [Peter](http://fuelphp.com/forums/posts/view_reply/3097) for this one. You can ask Casset for the path / url to a specific file.
+Files are specified in exactly the same way as with eg `Casset::js()`, with the same rules to do with namespacing, `Casset::set_path()`, etc.
+
+The functions in question are `Casset::get_filepath_js()`, `Casset::get_filepath_css()`, and `Casset::get_filepath_img()`.
+
+They're all used in the same way:
+
+```php
+echo Casset::get_filepath_js('file.js');
+// assets/js/file.js
+```
+
+Note that fuel executes in the `/public` directory, so the paths returned are relative to the current working dir.
+If you'd prefer urls to be returned, pass `true` as the second parameter.
+Note that a url will not be added if you're referencing a remote file.
+
+```php
+echo Casset::get_filepath_js('file.js', true);
+// eg http://localhost/site/public/assets/js/file.js
+```
+
+Complexities start arising when you specify globs.
+By default, an array will be returned if more than one file is found, otherwise a string is returned.
+To override this behaviour, and return an array even if only one file is found, pass `true` as the third parameter.
+
+```php
+print_r(Casset::get_filepath_js('file.js', false, true));
+// Array( [0] => 'assets/js/file.js' )
+
+print_r(Casset::get_filepath_js('file*.js'));
+// Array( [0] => 'assets/js/file1.js', [1] => 'assets/js/file2.js' )
+```
+
+There also exists `Casset::get_filepath()`, which takes the form
+
+```php
+Casset::get_filepath($name, $type, $add_url = false, $force_array = false);
+```
+
+`$name`, `$add_url` and `$force_array` are the same as for `Casset::get_filepath_js()`, while the `$type` argument is one of 'js', 'css', or 'img'.
+In the future there are plans to let you specify your own types, hence why this is exposed :)
+
 Clearing the cache
 ------------------
 Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few methods have been provided to remove cache files.

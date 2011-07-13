@@ -219,44 +219,6 @@ class Casset {
 	}
 
 	/**
-	 * Figures out where a file should be, based on its namespace and type.
-	 *
-	 * @param string $file The name of the asset to search for
-	 * @param string $asset_type 'css', 'js' or 'img'
-	 * @return string The path to the asset, relative to $asset_url
-	 */
-	private static function find_files($file, $asset_type)
-	{
-		$parts = explode('::', $file, 2);
-		if (!array_key_exists($parts[0], static::$asset_paths))
-			throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
-
-		$path = static::$asset_paths[$parts[0]]['path'];
-		$file = $parts[1];
-
-		$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
-		$file = ltrim($file, '/');
-
-		$remote = (strpos($path, '//') !== false);
-
-		if ($remote)
-		{
-			// Glob doesn't work on remote locations, so just assume they
-			// specified a file, not a glob pattern.
-			// Don't look for the file now either. That'll be done by
-			// file_get_contents later on, if need be.
-			return array($path.$folder.$file);
-		}
-		else
-		{
-			$glob_files = glob($path.$folder.$file);
-			if (!$glob_files || !count($glob_files))
-				throw new \Fuel_Exception("Found no files matching $path$folder$file");
-			return $glob_files;
-		}
-	}
-
-	/**
 	 * Enables both js and css groups of the given name.
 	 *
 	 * @param mixed $group The group to enable, or array of groups
@@ -428,6 +390,78 @@ class Casset {
 		array_push(static::$inline_assets[$type], $content);
 	}
 
+
+	/**
+	 * Return the path for the given JS asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath_js($filename, $add_url = false, $force_array = false)
+	{
+		return static::get_filepath($filename, 'js', $add_url, $force_array);
+	}
+
+	/**
+	 * Return the path for the given CSS asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath_css($filename, $add_url = false, $force_array = false)
+	{
+		return static::get_filepath($filename, 'css', $add_url, $force_array);
+	}
+
+	/**
+	 * Return the path for the given img asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath_img($filename, $add_url = false, $force_array = false)
+	{
+		return static::get_filepath($filename, 'img', $add_url, $force_array);
+	}
+
+	/**
+	 * Return the path for the given asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param string $type js, css or img
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath($filename, $type, $add_url = false, $force_array = false)
+	{
+		if (strpos($filename, '::') === false)
+			$filename = static::$default_path_key.'::'.$filename;
+		$files = static::find_files($filename, $type);
+		if ($add_url)
+		{
+			foreach ($files as &$file)
+			{
+				if (strpos($file, '//') !== false)
+					continue;
+				$file = static::$asset_url.$file;
+			}
+		}
+		if (count($files) == 1 && !$force_array)
+			return $files[0];
+		return $files;
+	}
+
 	/**
 	 * Shortcut to render_js() and render_css().
 	 *
@@ -568,6 +602,44 @@ class Casset {
 			}
 		}
 		return $ret;
+	}
+
+	/**
+	 * Figures out where a file should be, based on its namespace and type.
+	 *
+	 * @param string $file The name of the asset to search for
+	 * @param string $asset_type 'css', 'js' or 'img'
+	 * @return string The path to the asset, relative to $asset_url
+	 */
+	private static function find_files($file, $asset_type)
+	{
+		$parts = explode('::', $file, 2);
+		if (!array_key_exists($parts[0], static::$asset_paths))
+			throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
+
+		$path = static::$asset_paths[$parts[0]]['path'];
+		$file = $parts[1];
+
+		$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
+		$file = ltrim($file, '/');
+
+		$remote = (strpos($path, '//') !== false);
+
+		if ($remote)
+		{
+			// Glob doesn't work on remote locations, so just assume they
+			// specified a file, not a glob pattern.
+			// Don't look for the file now either. That'll be done by
+			// file_get_contents later on, if need be.
+			return array($path.$folder.$file);
+		}
+		else
+		{
+			$glob_files = glob($path.$folder.$file);
+			if (!$glob_files || !count($glob_files))
+				throw new \Fuel_Exception("Found no files matching $path$folder$file");
+			return $glob_files;
+		}
 	}
 
 	/**
