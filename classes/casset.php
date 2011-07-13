@@ -396,13 +396,13 @@ class Casset {
 	 * everything that, say, Casset::js() does.
 	 * Throws an exception if the file isn't found.
 	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 * @param bool $force_array by default, when one file is found a string is
 	 *		returned. Setting this to true causes a single-element array to be returned.
-	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 */
-	public static function get_filepath_js($filename, $force_array = false, $add_url = false)
+	public static function get_filepath_js($filename, $add_url = false, $force_array = false)
 	{
-		return static::get_filepath($filename, 'js', $force_array, $add_url);
+		return static::get_filepath($filename, 'js', $add_url, $force_array);
 	}
 
 	/**
@@ -410,13 +410,13 @@ class Casset {
 	 * everything that, say, Casset::js() does.
 	 * Throws an exception if the file isn't found.
 	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 * @param bool $force_array by default, when one file is found a string is
 	 *		returned. Setting this to true causes a single-element array to be returned.
-	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 */
-	public static function get_filepath_css($filename, $force_array = false, $add_url = false)
+	public static function get_filepath_css($filename, $add_url = false, $force_array = false)
 	{
-		return static::get_filepath($filename, 'css', $force_array, $add_url);
+		return static::get_filepath($filename, 'css', $add_url, $force_array);
 	}
 
 	/**
@@ -424,13 +424,13 @@ class Casset {
 	 * everything that, say, Casset::js() does.
 	 * Throws an exception if the file isn't found.
 	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 * @param bool $force_array by default, when one file is found a string is
 	 *		returned. Setting this to true causes a single-element array to be returned.
-	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 */
-	public static function get_filepath_img($filename, $force_array = false, $add_url = false)
+	public static function get_filepath_img($filename, $add_url = false, $force_array = false)
 	{
-		return static::get_filepath($filename, 'img', $force_array, $add_url);
+		return static::get_filepath($filename, 'img', $add_url, $force_array);
 	}
 
 	/**
@@ -439,11 +439,11 @@ class Casset {
 	 * Throws an exception if the file isn't found.
 	 * @param string $script the name of the asset to find
 	 * @param string $type js, css or img
+	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 * @param bool $force_array by default, when one file is found a string is
 	 *		returned. Setting this to true causes a single-element array to be returned.
-	 * @param bool $add_url whether to add the 'url' config key to the filename
 	 */
-	public static function get_filepath($filename, $type, $force_array = false, $add_url = false)
+	public static function get_filepath($filename, $type, $add_url = false, $force_array = false)
 	{
 		if (strpos($filename, '::') === false)
 			$filename = static::$default_path_key.'::'.$filename;
