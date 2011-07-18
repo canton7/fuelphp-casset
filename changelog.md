@@ -3,6 +3,12 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.9
+---
+Hotfix release.  
+Fixes #1, reported by jaysonic, where add_path was (for some reason) private.
+
+
 v1.8
 ----
 

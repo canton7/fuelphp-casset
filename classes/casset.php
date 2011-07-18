@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.8
+ * @version    v1.9
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -167,7 +167,7 @@ class Casset {
 	 * @param string $path_key the key of the path
 	 * @param mixed $path_attr the path attributes, as described above
 	 */
-	private static function add_path($path_key, $path_attr)
+	public static function add_path($path_key, $path_attr)
 	{
 		$path_val = array();
 		if (!is_array($path_attr))
