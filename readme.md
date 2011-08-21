@@ -153,6 +153,19 @@ Casset::css('myfile.css', false, 'group_name');
 
 If the group name doesn't exist, the group is created, and enabled.
 
+You can also add groups on-the-fly using `Casset::add_group($group_type, $group_name, $files, $enabled = true, $combine = null, $min = null)`.
+The arguments are the samea s for the config key -- if `$enabled`, `$combine` or `$min` are omitted, the value specified in the config file are used. Eg:
+
+```php
+Casset::add_group('test_group', array(
+	array('file1.js', 'file1.min.js'),
+	'file2.js',
+));
+```
+
+This method is provided merely for convenience when adding lots of files to a group at once.
+You don't have to create a group before adding files to it -- the group will be created it it doesn't exist.
+
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
 Similarly (for JS files only), the order in which files appear is determined by the order in which they were added.
 This allows you a degree of control over what order your files are included in your page, which may be necessary when satisfying dependancies.
