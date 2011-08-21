@@ -203,6 +203,12 @@ For the above example, you can specify the following in your config file:
 ),
 ```
 
+You can also add paths on-the-flow using `Casset::add_path($key, $path)`, eg.
+
+```php
+Casset::add_path('admin', 'assets/admin/');
+```
+
 Which path to use is then decided by prefixing the asset filename with the key of the path to use. Note that if you omit the path key, the current default path key (initially 'core') is used.
 
 ```php
@@ -250,6 +256,9 @@ array (
 ```
 
 This can be particularly useful when you're using some third-party code, and don't have control over where the assets are located.
+
+Note also that you can add an asset which uses a path which isn't yet defined.
+Casset only requires that the path is defined by the time the file is rendered.
 
 Globbing
 --------
