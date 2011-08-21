@@ -10,8 +10,16 @@ Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libr
 Installation
 ------------
 
+### Using oil (linux or daring windows users only)
+1. cd to your fuel project's root
+2. Run `php oil package install casset`
+3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
+4. Create public/assets/cache
+5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
+6. Enjoy :)
+
 ### Manual
-1. Clone / [download](https://github.com/canton7/fuelphp-casset/zipball/master)
+1. Clone (`git clone git://github.com/canton7/fuelphp-casset`) / [download](https://github.com/canton7/fuelphp-casset/zipball/master)
 2. Stick in fuel/packages/
 3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
 4. Create public/assets/cache
