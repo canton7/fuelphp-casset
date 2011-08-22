@@ -393,8 +393,8 @@ Casset supports handing files on remote machines, as well as the local one.
 This is done by creating a new namespace, and specifying a url instead of a relative path.
 All files using that namespace will then be fetched from the given url.
 
-However, there are a couple of caveats:
- - It is possible for Casset to fetch, combine and minify remote assets. However, it can obviously only write the cache file locally.
+However, there are a couple of caveats:  
+ - It is possible for Casset to fetch, combine and minify remote assets. However, it can obviously only write the cache file locally.  
  - Casset doesn't bother to check the modification times on remote files when deciding whether the cache is out of date (as this would cause lots of http requests from your server, and entirely defeat
    the point of caching in the first place). Therefore if the remote file changes, Casset's cache will not be updated, and you'll have to remove it manually, or with the cache-clearing functions.
 
