@@ -94,7 +94,7 @@ return array(
 	/**
 	 * Whether to minify files.
 	 */
-	'min' => true,
+	'min' => false,
 
 	/**
 	 * Whether to combine files
@@ -112,6 +112,26 @@ return array(
 	 * the origin location of each part of the file.
 	 */
 	'show_files_inline' => false,
+
+	/**
+	 * Here you can define a callback that is called after a while is loaded from
+	 * disk, and before it is stored in a cache file.
+	 * This set of circumstances only occurs when 'combine' is true -- the callback
+	 * will *not* be called if 'combine' is false.
+	 *
+	 * This parameter expects a closure (or other function reference), with the
+	 * following prototype:
+	 * function($content, $filename, $type, $group_name)
+	 * and should return the content after being processed.
+	 * $content = the file content which casset has loaded from file
+	 * $filename = the name of the file casset has loaded
+	 * $type = 'js' or 'css'
+	 * $group_name = the name of the group to which the file belongs
+	 *
+	 * You are allowed to define functions in this config file, or you can use
+	 * Casset::set_post_load_callback(function($content,  ...) { ... }); instead
+	 */
+	'post_load_callback' => null,
 
 	/**
 	 * Groups of scripts.
