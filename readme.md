@@ -506,6 +506,68 @@ Casset::clear_cache('yesterday');
 // Removes all cache files last modified yesterday
 ```
 
+Callbacks
+---------
+
+Quick thanks to [ShonM](https://github.com/shonm) for pushing so hard to get this feature implemented :)
+
+There is currently a single callback, `post_load`, and it is likely that it will stay this way.
+
+Callbacks allow you the flexibility to do you own processing on the files that Casset loads.
+This means that you can use SASS, CoffeeScript, etc, then configure Casset to call the appropriate compiler when it loads the asset.
+
+Note that the `post_load` is *only* called when the 'combine' config key is set to true.
+If 'combine' is false, Casset doesn't generate a cache file and instead links to the asset directly.
+No cache file = no processing of the file by Casset = no callback.
+If you really need this changed, send me a message and I'll start hacking :)
+
+Processing files (beyond minification) is not really what Casset is about, and this reflects in the callback design.
+There is a single callback, which is called for all files, regardless of group, type, extension, etc.
+The callback is passed the name of the file, the type (js or css) and the group to which it belongs,as well as the file content of course.
+It is then up to you to decide how, if at all, you want to process this content, based on the other parameters passed.
+
+The callback is set either in the config file (the `post_load_callback` key), or using `Casset::set_post_load_callback()`.
+Both expect an anonymous function (closure), although I daresay you could bind it straight to some other library's method.
+
+The callback itself has the following prototype, although you can miss out the latter arguments if you want: PHP won't complain.
+
+```php
+function($content, $filename, $type, $group_name) { ... }
+```
+
+Where:  
+`$content`: The content of the file which Casset has read, and is passing to you.  
+`$filename`: The name of the file which Casset has read.  
+`$type`: 'js' or 'css', depending on whether the file is js or css.  
+`$group_name`: The group which is currently being rendered, and to which the file belongs.
+
+Obviously, the callback is only called when a cache file is generated.
+When testing, therefore, it is recommended that you stick a `Casset::clear_cache()` above your testing code.
+
+Time for a few examples:
+
+```php
+// In the config file:
+'post_load_callback' => function($content, $filename, $type) {
+	// We don't want to process JS files
+	if ($type == 'js')
+		return $content;
+	return SomeLibrary::some_method($content);
+},
+
+// In a controller somewhere
+Casset::set_post_load_callback(function($content, $filename) {
+	$ext = pathinfo($filename, PATHINFO_EXTENSION);
+	if ($ext != 'sass')
+		return $content;
+	return SomeSassLibrary::some_method($content);
+});
+```
+
+Note that Casset is pretty lazy, so the callback won't be called under you call `Casset::render()` (or one of its variants).
+Therefore feel free to define your callback after telling Casset to include the files you want the callback to process.
+
+
 Comparison to Assetic
 ---------------------
 

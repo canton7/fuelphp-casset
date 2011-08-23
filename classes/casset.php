@@ -87,6 +87,14 @@ class Casset {
 	protected static $show_files_inline = false;
 
 	/**
+	 * @var function If given, the function to call when we've read a file, before
+	 * minifying.
+	 * Note that it's only called if $combine for the file is true
+	 * Prototype: callback(content, filename, type, group_name);
+	 */
+	protected static $post_load_callback = null;
+
+	/**
 	 * @var bool Wether we've been initialized.
 	 */
 	public static $initialized = false;
@@ -140,6 +148,8 @@ class Casset {
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
+
+		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
 
 		static::$initialized = true;
 	}
@@ -721,6 +731,25 @@ class Casset {
 	}
 
 	/**
+	 * Used to load a file from disk.
+	 * Also calls the post_load callback.
+	 *
+	 * @param type $filename
+	 * @return type
+	 */
+	private function load_file($filename, $type, $file_group)
+	{
+		$content = file_get_contents($filename);
+		if (static::$post_load_callback != null)
+		{
+			// For some reason, PHP doesn't like you calling member closure directly
+			$func = static::$post_load_callback;
+			$content = $func($content, $filename, $type, $file_group);
+		}
+		return $content;
+	}
+
+	/**
 	 * Takes a list of files, and combines them into a single minified file.
 	 * Doesn't bother if none of the files have been modified since the cache
 	 * file was written.
@@ -762,10 +791,10 @@ class Casset {
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'] || !$minify)
-					$content .= file_get_contents($file['file']).PHP_EOL;
+					$content .= static::load_file($file['file'], $type, $file_group).PHP_EOL;
 				else
 				{
-					$file_content = file_get_contents($file['file']);
+					$file_content = static::load_file($file['file'], $type, $file_group);
 					if ($file_content === false)
 						throw new \Fuel_Exception("Couldn't not open file {$file['file']}");
 					if ($type == 'js')
@@ -815,6 +844,15 @@ class Casset {
 			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
+	}
+
+	/**
+	 * Sets the post_load file callback. It's pretty basic, and you're expected
+	 * to handle e.g. filtering for the right file yourself.
+	 * @param function the function to set
+	 */
+	public static function set_post_load_callback($callback) {
+		static::$post_load_callback = $callback;
 	}
 
 	/**
