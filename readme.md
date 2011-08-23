@@ -26,6 +26,10 @@ Installation
 5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
 6. Enjoy :)
 
+If you don't want to change the config file in `fuel/packages/casset/config/casset.php`, you can create your own config file in `fuel/app/config/casset.php`.
+You can either copy the entirely of the original config file, or just override the keys as you like.
+The magic of Fuel's `Config` class takes care of the rest.
+
 Introduction
 ------------
 
