@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.9
+ * @version    v1.10
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -548,21 +548,18 @@ class Casset {
 			}
 			else
 			{
-				foreach ($file_groups as $group_name => $file_group)
+				foreach ($file_group as $file)
 				{
-					foreach ($file_group as $file)
+					if ($inline)
+						$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+					else
 					{
-						if ($inline)
-							$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
-						else
-						{
-							$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
-							$ret .= html_tag('link', array(
-								'rel' => 'stylesheet',
-								'type' => 'text/css',
-								'href' => $base.$file['file'],
-							)+$attr).PHP_EOL;
-						}
+						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
+						$ret .= html_tag('link', array(
+							'rel' => 'stylesheet',
+							'type' => 'text/css',
+							'href' => $base.$file['file'],
+						)+$attr).PHP_EOL;
 					}
 				}
 			}
