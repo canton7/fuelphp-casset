@@ -3,6 +3,11 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.10
+-----
+Hotfix release.
+Fixed #3, reported by krtek4, where render_css had an erroneous second loop, meaning that it would render files when it wasn't supposed to
+
 v1.9
 ---
 Hotfix release.  
