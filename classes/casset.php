@@ -734,7 +734,7 @@ class Casset {
 	 * @param type $filename
 	 * @return type
 	 */
-	private function load_file($filename, $type, $file_group)
+	private static function load_file($filename, $type, $file_group)
 	{
 		$content = file_get_contents($filename);
 		if (static::$post_load_callback != null)
