@@ -111,6 +111,12 @@ class Casset {
 	protected static $post_load_callback = null;
 
 	/**
+	 * @var array Keeps a record of which groups have been rendered.
+	 * We then check this when deciding whether to render a dep.
+	 */
+	protected static $rendered_groups = array('js' => array(), 'css' => array());
+
+	/**
 	 * @var bool Wether we've been initialized.
 	 */
 	public static $initialized = false;
@@ -756,7 +762,16 @@ class Casset {
 		// Insert the dep just before what it's a dep for
 		foreach ($group_names as $i => $group_name)
 		{
-			array_splice($group_names, $i, 0, static::resolve_deps($type, static::$groups[$type][$group_name]['deps'], $depth+1));
+			// If the group's already been rendered, bottle
+			if (in_array($group_name, static::$rendered_groups[$type]))
+				continue;
+			// Otherwise, enable the group. Fairly obvious, as the whole point of
+			// deps is to render disabled groups
+			static::asset_enabled($type, $group_name, true);
+			if (count(static::$groups[$type][$group_name]['deps']))
+			{
+				array_splice($group_names, $i, 0, static::resolve_deps($type, static::$groups[$type][$group_name]['deps'], $depth+1));
+			}
 		}
 		return $group_names;
 	}
@@ -774,6 +789,9 @@ class Casset {
 		// If no group specified, print all groups.
 		if ($group == false)
 			$group_names = array_keys(static::$groups[$type]);
+		// If a group was specified, but it doesn't exist
+		else if (!array_key_exists($group, static::$groups[$type]))
+			return array();
 		else
 			$group_names = array($group);
 
@@ -785,8 +803,6 @@ class Casset {
 
 		foreach ($group_names as $group_name)
 		{
-			if (!array_key_exists($group_name, static::$groups[$type]))
-				continue;
 			if (static::$groups[$type][$group_name]['enabled'] == false)
 				continue;
 			// If there are no files in the group, there's no point in printing it.
@@ -797,6 +813,8 @@ class Casset {
 
 			// Mark the group as disabled to avoid the same group being printed twice
 			static::asset_enabled($type, $group_name, false);
+			// Add it to the list of rendered groups
+			array_push(static::$rendered_groups[$type], $group_name);
 
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
