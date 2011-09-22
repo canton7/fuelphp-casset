@@ -156,6 +156,7 @@ class Casset {
 					'min' => array_key_exists('min', $group) ? $group['min'] : static::$min_default,
 					'inline' => array_key_exists('inline', $group) ? $group['inline'] : static::$inline_default,
 					'attr' => array_key_exists('attr', $group) ? $group['attr'] : static::$attr_default,
+					'deps' => array_key_exists('deps', $group) ? $group['deps'] : array(),
 				);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
@@ -227,7 +228,8 @@ class Casset {
 	 *   'enabled' => true/false,
 	 *   'combine' => true/false,
 	 *   'min' => true/false,
-	 *   'inline' => true/false
+	 *   'inline' => true/false,
+	 *	 'deps' => array(),
 	 * );
 	 */
 	private static function add_group_base($group_type, $group_name, $options = array())
@@ -239,6 +241,7 @@ class Casset {
 			'min' => static::$min_default,
 			'inline' => static::$inline_default,
 			'attr' => static::$attr_default,
+			'deps' => array(),
 		), $options);
 		$options['files'] = array();
 		// If it already exists, don't overwrite it
@@ -256,7 +259,9 @@ class Casset {
 	 *   'enabled' => true/false,
 	 *   'combine' => true/false,
 	 *   'min' => true/false,
-	 *   'inline' => true/false
+	 *   'inline' => true/false,
+	 *   'attr' => array(),
+	 *   'deps' => array(),
 	 * );
 	 * To maintain backwards compatibility, you can also pass $enabled here.
 	 * @param bool $combine_dep DEPRECATED. Whether to combine files in this group. Default (null) means use config setting
@@ -740,6 +745,13 @@ class Casset {
 		$files = array();
 
 		$minified = false;
+
+		// Go through and sort out the deps. insert the dep just before what
+		// it's a dep for
+		foreach ($group_names as $i => $group_name)
+		{
+			array_splice($group_names, $i, 0, static::$groups[$type][$group_name]['deps']);
+		}
 
 		foreach ($group_names as $group_name)
 		{
