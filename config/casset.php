@@ -114,6 +114,12 @@ return array(
 	'show_files_inline' => false,
 
 	/**
+	 * How deep to go when resolving deps, before assuming that there're some
+	 * circular ones.
+	 */
+	'deps_max_depth' => 5,
+
+	/**
 	 * Here you can define a callback that is called after a while is loaded from
 	 * disk, and before it is stored in a cache file.
 	 * This set of circumstances only occurs when 'combine' is true -- the callback

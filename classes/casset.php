@@ -86,6 +86,11 @@ class Casset {
 	protected static $attr_default = array();
 
 	/**
+	 * @var int How deep to go when resolving deps
+	 */
+	protected static $deps_max_depth = 5;
+
+	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
 	 *           which files have been minified into that file.
 	 */
@@ -142,6 +147,8 @@ class Casset {
 
 		static::$min_default = \Config::get('casset.min', static::$min_default);
 		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
+
+		static::$deps_max_depth = \Config::get('casset.deps_max_depth', static::$deps_max_depth);
 
 
 		$group_sets = \Config::get('casset.groups', array());
@@ -727,6 +734,34 @@ class Casset {
 	}
 
 	/**
+	 * Given a list of group names, adds to that list, in the appropriate places,
+	 * and groups which are listed as dependencies of those group.
+	 * Duplicate group names are not a problem, as a group is disabled when it's
+	 * rendered.
+	 *
+	 * @param string $type 'js' /or/ 'css'
+	 * @param array $group_names Array of group names to check
+	 * @param int $depth Used by this function to check for potentially infinite recursion
+	 * @return array List of group names with deps resolved
+	 */
+
+	private static function resolve_deps($type, $group_names, $depth=0)
+	{
+		if ($depth > static::$deps_max_depth)
+		{
+			throw new Casset_Exception("Reached depth $depth trying to resolve dependencies. ".
+					"You've probably got some circular ones involving ".implode(',', $group_names).". ".
+					"If not, adjust the config key deps_max_depth.");
+		}
+		// Insert the dep just before what it's a dep for
+		foreach ($group_names as $i => $group_name)
+		{
+			array_splice($group_names, $i, 0, static::resolve_deps($type, static::$groups[$type][$group_name]['deps'], $depth+1));
+		}
+		return $group_names;
+	}
+
+	/**
 	 * Determines the list of files to be rendered, along with whether they
 	 * have been minified already.
 	 *
@@ -746,12 +781,7 @@ class Casset {
 
 		$minified = false;
 
-		// Go through and sort out the deps. insert the dep just before what
-		// it's a dep for
-		foreach ($group_names as $i => $group_name)
-		{
-			array_splice($group_names, $i, 0, static::$groups[$type][$group_name]['deps']);
-		}
+		$group_names = static::resolve_deps($type, $group_names);
 
 		foreach ($group_names as $group_name)
 		{
