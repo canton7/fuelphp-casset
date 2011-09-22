@@ -547,6 +547,42 @@ class Casset {
 	}
 
 	/**
+	 * Can be used to add deps to a group.
+	 *
+	 * @param string $type 'js' / 'css
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_deps($type, $group, $deps)
+	{
+		if (!is_array($deps))
+			$deps = array($deps);
+		if (!array_key_exists($group, static::$groups[$type]))
+			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
+		array_push(static::$groups[$type][$group]['deps'], $deps);
+	}
+
+	/**
+	 * Sugar for add_deps(), for js groups
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_js_deps($group, $deps)
+	{
+		static::add_deps('js', $group, $deps);
+	}
+
+	/**
+	 * Sugar for add_deps(), for css groups
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_css_deps($group, $deps)
+	{
+		static::add_deps('css', $group, $deps);
+	}
+
+	/**
 	 * Shortcut to render_js() and render_css().
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
