@@ -260,7 +260,7 @@ array (
 	'some_key' => array(
 		'path' => 'more_assets/',
 		'js_dir' => 'javascript/',
-		'css_dir' => 'styles/'
+		'css_dir' => 'styles/',
 		'img_dir' => 'images/',
 		),
 	),
@@ -275,7 +275,7 @@ Casset only requires that the path is defined by the time the file is rendered.
 Globbing
 --------
 
-As well as filenames, you can specify [http://php.net/glob](glob patterns). This will act exactly the same as if each file which the glob matches had been added individually.  
+As well as filenames, you can specify [glob patterns](http://php.net/glob). This will act exactly the same as if each file which the glob matches had been added individually.  
 For example:
 
 ```php
@@ -287,7 +287,7 @@ Casset::css('admin::admin_*.css');
 // Executes glob('adders/admin/css/admin_*.css') and adds all matches
 
 Casset::js('*.js', '*.js');
-// Adds all js files in assets/js, ensuring that none of them are minified.
+// Adds all js files in assets/js, ensuring that none of them are pre-minified.
 ```
 
 An exception is thrown when no files can be matched.
