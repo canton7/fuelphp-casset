@@ -801,6 +801,9 @@ class Casset {
 			// If the group's already been rendered, bottle
 			if (in_array($group_name, static::$rendered_groups[$type]))
 				continue;
+			// Don't pay attention to bottom-level groups which are disabled
+			if (!static::$groups[$type][$group_name]['enabled'] && $depth == 0)
+				continue;
 			// Otherwise, enable the group. Fairly obvious, as the whole point of
 			// deps is to render disabled groups
 			static::asset_enabled($type, $group_name, true);
