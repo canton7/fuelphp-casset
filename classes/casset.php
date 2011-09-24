@@ -256,6 +256,8 @@ class Casset {
 			'attr' => static::$attr_default,
 			'deps' => array(),
 		), $options);
+		if (!is_array($options['deps']))
+			$options['deps'] = array($options['deps']);
 		$options['files'] = array();
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))

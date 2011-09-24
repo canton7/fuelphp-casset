@@ -179,6 +179,7 @@ $options = array(
 	'combine' => true/false,
 	'inline' => true/false,
 	'attr' => array(),
+	'deps' => array(),
 );
 ```
 
@@ -352,6 +353,7 @@ The easiest way of specifying dependancies is through the config file:
 Dependencies can be either a string (for a single dependency), or an array (for multiple ones).
 
 You can also define dependencies when you call `Casset::add_group()`, by using the `'deps'` key in `$options`.
+
  Eg:
  
  ```php
