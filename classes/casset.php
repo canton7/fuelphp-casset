@@ -199,7 +199,7 @@ class Casset {
 	public static function set_path($path_key = 'core')
 	{
 		if (!array_key_exists($path_key, static::$asset_paths))
-			throw new \Fuel_Exception("Asset path key $path_key doesn't exist");
+			throw new Casset_Exception("Asset path key $path_key doesn't exist");
 		static::$default_path_key = $path_key;
 	}
 
@@ -217,7 +217,7 @@ class Casset {
 	{
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
-			throw new \Fuel_Exception("Group $group_name already exists: can't create it.");
+			throw new Casset_Exception("Group $group_name already exists: can't create it.");
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
 			'enabled' => $enabled,
@@ -643,7 +643,7 @@ class Casset {
 	{
 		$parts = explode('::', $file, 2);
 		if (!array_key_exists($parts[0], static::$asset_paths))
-			throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
+			throw new Casset_Exception("Could not find namespace {$parts[0]}");
 
 		$path = static::$asset_paths[$parts[0]]['path'];
 		$file = $parts[1];
@@ -665,7 +665,7 @@ class Casset {
 		{
 			$glob_files = glob($path.$folder.$file);
 			if (!$glob_files || !count($glob_files))
-				throw new \Fuel_Exception("Found no files matching $path$folder$file");
+				throw new Casset_Exception("Found no files matching $path$folder$file");
 			return $glob_files;
 		}
 	}
@@ -793,7 +793,7 @@ class Casset {
 				{
 					$file_content = static::load_file($file['file'], $type, $file_group);
 					if ($file_content === false)
-						throw new \Fuel_Exception("Couldn't not open file {$file['file']}");
+						throw new Casset_Exception("Couldn't not open file {$file['file']}");
 					if ($type == 'js')
 					{
 						$content .= Casset_JSMin::minify($file_content).PHP_EOL;
@@ -932,6 +932,9 @@ class Casset {
 		}
 	}
 
+}
+
+class Casset_Exception extends \Fuel_Exception {
 }
 
 /* End of file casset.php */
