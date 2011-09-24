@@ -217,7 +217,7 @@ class Casset {
 	{
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
-			return;
+			throw new \Fuel_Exception("Group $group_name already exists: can't create it.");
 		static::$groups[$group_type][$group_name] = array(
 			'files' => array(),
 			'enabled' => $enabled,
