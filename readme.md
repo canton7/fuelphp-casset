@@ -119,10 +119,9 @@ To define a group in the config file, use the 'groups' key, eg:
 				array('file1.js', 'file1.min.js'),
 				'file2.js'
 			),
-			'enabled' => true,
 			'combine' => false,
 			'min' => false,
-			'inline' => true,
+			'inline' => true
 		),
 		'group_name_2' => array(.....),
 	),
@@ -132,7 +131,8 @@ To define a group in the config file, use the 'groups' key, eg:
 				array('file1.css', 'file1.min.css'),
 				'file2.css',
 			),
-			'enabled' => true,
+			'enabled' => false,
+			'attr' => array('media' => 'print'),
 		),
 		'group_name_3' => array(.....),
 	),
@@ -147,7 +147,8 @@ array element.
 **enabled**: Optional, specifies whether a group is enabled. A group will only be rendered when it is enabled. Default true.  
 **combine**: This optional key allows you to override the 'combine' config key on a per-group bases.  
 **min**: This optional key allows you to override the 'min' config key on a per-group basis.  
-**inline**: Optional, allows you to render the group 'inline' -- that is, show the CSS directly in the file, rather than including a separate .css file.
+**inline**: Optional, allows you to render the group 'inline' -- that is, show the CSS directly in the file, rather than including a separate .css file. See the section on inling below.  
+**attr**: Optional, allows you to specify extra attributes to be added to the script/css/link tag generated. See the section on attributes below.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
@@ -174,6 +175,8 @@ $options = array(
 	'enabled' => true/false,
 	'min' => true/false,
 	'combine' => true/false,
+	'inline' => true/false,
+	'attr' => array(),
 );
 ```
 
@@ -354,21 +357,28 @@ Similarly, `Casset::css_inline()` and `Casset::render_css_inline()` exist.
 Extra attributes
 ----------------
 
-`Casset::render_js()` and `Casset::render_css()` support an optional third argument which allows the user to define extra attributes to be applied to the script/link tag.  
-This can be combined with the fact that one a group has been rendered, it is disabled, allowing the following to be done:
+If you want to apply extra attributes to the script/link tag, you can add them to the group config, using the key 'attr'.
+For example:
 
 ```php
-Casset::css('main.css');
-Casset::css('print.css', false, 'print');
+// In your config
+'groups' => array(
+	'css' => array(
+		'my_print => array(
+			'files' => array('file.css'),
+			'attr' => array('media' => 'print'),
+		),
+	),
+),
 
-// Render the 'print' group
-echo Casset::render_css('print', false, array('media' => 'print');
-// <link rel="stylesheet" type="text/css" href="http://...print.css" media="print />
-
-// Render everything else, except the 'print' group
+// Render the 'my_print' group, along with the others
 echo Casset::render_css();
-// <link rel="stylesheet" type="text/css" href="http://...main.css" />
+// <link rel="stylesheet" type="text/css" href="http://...somefile.css" media="print" />
 ```
+
+NOTE: You used to be able to pass an `$attr` argument to `Casset::render()`.
+This behaviour has been deprecated, although it still works.
+Please move to the new system.
 
 Minification and combining
 --------------------------
