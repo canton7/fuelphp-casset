@@ -75,6 +75,11 @@ class Casset {
 	protected static $combine_default = false;
 
 	/**
+	 * @var bool Whether to render files inline by default.
+	 */
+	protected static $inline_default = false;
+
+	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
 	 *           which files have been minified into that file.
 	 */
@@ -143,6 +148,7 @@ class Casset {
 					'enabled' => array_key_exists('enabled', $group) ? $group['enabled'] : true,
 					'combine' => array_key_exists('combine', $group) ? $group['combine'] : static::$combine_default,
 					'min' => array_key_exists('min', $group) ? $group['min'] : static::$min_default,
+					'inline' => array_key_exists('inline', $group) ? $group['inline'] : static::$inline_default
 				);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
@@ -213,7 +219,8 @@ class Casset {
 	 * @param array $options. An array of options. array(
 	 *   'enabled' => true/false,
 	 *   'combine' => true/false,
-	 *   'min' => true/false
+	 *   'min' => true/false,
+	 *   'inline' => true/false
 	 * );
 	 */
 	private static function add_group_base($group_type, $group_name, $options = array())
@@ -223,6 +230,7 @@ class Casset {
 			'enabled' => true,
 			'combine' => static::$combine_default,
 			'min' => static::$min_default,
+			'inline' => static::$inline_default,
 		), $options);
 		$options['files'] = array();
 		// If it already exists, don't overwrite it
@@ -239,7 +247,8 @@ class Casset {
 	 * @param array $options. An array of options. array(
 	 *   'enabled' => true/false,
 	 *   'combine' => true/false,
-	 *   'min' => true/false
+	 *   'min' => true/false,
+	 *   'inline' => true/false
 	 * );
 	 * To maintain backwards compatibility, you can also pass $enabled here.
 	 * @param bool $combine_dep DEPRECATED. Whether to combine files in this group. Default (null) means use config setting
@@ -515,12 +524,12 @@ class Casset {
 	 * Shortcut to render_js() and render_css().
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
-	 * @param bool $inline If true, the result is printed inline. If false, is
+	 * @param bool $inline DEPRECATED. If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render($group = false, $inline = false, $attr = array())
+	public static function render($group = false, $inline = null, $attr = array())
 	{
 		$r = static::render_css($group, $inline, $attr);
 		$r.= static::render_js($group, $inline, $attr);
@@ -531,12 +540,12 @@ class Casset {
 	 * Renders the specific javascript group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
-	 * @param bool $inline If true, the result is printed inline. If false, is
+	 * @param bool $inline DEPRECATED. If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render_js($group = false, $inline = false, $attr = array())
+	public static function render_js($group = false, $inline = null, $attr = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
@@ -550,6 +559,11 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
+			// We used to take $inline as 2nd argument. However, we now use a group option.
+			// It's easiest if we let $inline override this group option, though.
+			if ($inline === null)
+				$inline = static::$groups['js'][$group_name]['inline'];
+
 			if (static::$groups['js'][$group_name]['combine'])
 			{
 				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
@@ -591,12 +605,12 @@ class Casset {
 	 * Renders the specific css group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
-	 * @param bool $inline If true, the result is printed inline. If false, is
+	 * @param bool $inline DEPRECATED. If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
 	 * @return string The css tags to be written to the page
 	 */
-	public static function render_css($group = false, $inline = false, $attr = array())
+	public static function render_css($group = false, $inline = null, $attr = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
@@ -610,6 +624,11 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
+			// We used to take $inline as 2nd argument. However, we now use a group option.
+			// It's easiest if we let $inline override this group option, though.
+			if ($inline === null)
+				$inline = static::$groups['css'][$group_name]['inline'];
+
 			if (static::$groups['css'][$group_name]['combine'])
 			{
 
