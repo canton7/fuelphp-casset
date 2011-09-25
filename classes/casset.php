@@ -825,7 +825,13 @@ class Casset {
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'] || !$minify)
-					$content .= static::load_file($file['file'], $type, $file_group).PHP_EOL;
+				{
+					$content_temp = static::load_file($file['file'], $type, $file_group).PHP_EOL;
+					if ($type == 'css')
+						$content .= Casset_Cssurirewriter::rewrite($content_temp, dirname($file['file']));
+					else
+						$content .= $content_temp;
+				}
 				else
 				{
 					$file_content = static::load_file($file['file'], $type, $file_group);
