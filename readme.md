@@ -20,7 +20,7 @@ Installation
 5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
 6. Enjoy :)
 
-### Manual
+### Manual (may be more up-to-date)
 1. Clone (`git clone git://github.com/canton7/fuelphp-casset`) / [download](https://github.com/canton7/fuelphp-casset/zipball/master)
 2. Stick in fuel/packages/
 3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
