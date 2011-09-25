@@ -382,8 +382,10 @@ If you want Casset to display a group inline, instead of linking to a cache file
 // In your config (see add_group also)
 'groups' => array(
 	'js' => array(
-		'files' => array('file.css'),
-		'inline' => true,
+		'my_inline_group' => array(
+			'files' => array('file.css'),
+			'inline' => true,
+		),
 	),
 ),
 ```
