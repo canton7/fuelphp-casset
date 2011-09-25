@@ -133,6 +133,7 @@ To define a group in the config file, use the 'groups' key, eg:
 			),
 			'enabled' => false,
 			'attr' => array('media' => 'print'),
+			'deps' => array('some_group'),
 		),
 		'group_name_3' => array(.....),
 	),
@@ -148,7 +149,8 @@ array element.
 **combine**: This optional key allows you to override the 'combine' config key on a per-group bases.  
 **min**: This optional key allows you to override the 'min' config key on a per-group basis.  
 **inline**: Optional, allows you to render the group 'inline' -- that is, show the CSS directly in the file, rather than including a separate .css file. See the section on inling below.  
-**attr**: Optional, allows you to specify extra attributes to be added to the script/css/link tag generated. See the section on attributes below.
+**attr**: Optional, allows you to specify extra attributes to be added to the script/css/link tag generated. See the section on attributes below.  
+**deps**: (Optional) Specifies other groups to be rendered whenever this group is rendered, see the section below.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
@@ -177,6 +179,7 @@ $options = array(
 	'combine' => true/false,
 	'inline' => true/false,
 	'attr' => array(),
+	'deps' => array(),
 );
 ```
 
@@ -307,6 +310,68 @@ Casset::js('*.js', '*.js');
 ```
 
 An exception is thrown when no files can be matched.
+
+Dependencies
+------------
+
+Casset allows you to specify dependancies between groups, which are automatically resolved.
+This means that you can, say, define a group for your jQuery plugin, and have jQuery automatically included every time that plugin is included.
+
+Note that dependancies can only be entire groups -- groups can not depend on individual files.
+This has to do with how files are put into cache files, email me if you're interested.
+
+A JS group can only depend on other JS groups, while a CSS group can only depend on other CSS groups.
+
+Casset is pretty intelligent, and will only include a file once, before the file that requires it.
+After a file has been required as a dependency, it will be disabled.
+Casset will also bail after following the dependency chain through a certain number of steps, to avoid cycling dependancies.
+This value is given by the config key 'deps_max_depth'.
+
+The easiest way of specifying dependancies is through the config file:
+
+```php
+'groups' => array(
+	'js' => array(
+		'jquery' => array(
+			'files' => array(
+				array('jquery.js', 'jquery.min.js'),
+			),
+		),
+		
+		'my_plugin' => array(
+			'files' => array(
+				'jquery.my_plugin.js',
+			),
+			'deps' => array(
+				'jquery',
+			),
+		),
+	),
+),
+```
+
+Dependencies can be either a string (for a single dependency), or an array (for multiple ones).
+
+You can also define dependencies when you call `Casset::add_group()`, by using the `'deps'` key in `$options`.
+
+ Eg:
+ 
+ ```php
+Caset::add_group('js', 'my_plugin', array('jquery.my_plugin.js'), array(
+	'deps' => 'jquery',
+));
+ ```
+
+In addition, the functions `Casset::add_js_deps()` and `Casset::add_css_deps()` exist, which can be used like:
+
+```php
+Casset::add_js_deps('group_name', array('this', 'groups', 'deps'));
+```
+
+As usual, there's another base function, `Casset::add_deps()`, which takes 'js' or 'css' as its first argument, but is otherwise identical.
+
+If you have a JS group A, which depends on both the JS group B and CSS group B, a useful trick is to create a CSS group A with no files, that depends on the CSS group B.
+Therefore whenever group A is rendered, both the JS group B and CSS group B will be rendered.
 
 Inlining
 --------

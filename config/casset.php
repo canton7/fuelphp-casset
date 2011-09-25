@@ -114,6 +114,12 @@ return array(
 	'show_files_inline' => false,
 
 	/**
+	 * How deep to go when resolving deps, before assuming that there're some
+	 * circular ones.
+	 */
+	'deps_max_depth' => 5,
+
+	/**
 	 * Here you can define a callback that is called after a while is loaded from
 	 * disk, and before it is stored in a cache file.
 	 * This set of circumstances only occurs when 'combine' is true -- the callback
@@ -160,6 +166,7 @@ return array(
 	 *             'file2.css',
 	 *          ),
 	 *          'enabled' => true,
+	 *			'deps' => array('some_other_group'),
 	 *       ),
 	 *       'group_name_2' => array(.....),
 	 *    ),
@@ -184,9 +191,12 @@ return array(
 	 * - 'enabled': whether the group will be rendered when render_css() or
 	 *    render_js() is called.
 	 * - 'min: an optional key, allowing you to override the global 'min' config
-	 *    key on a per-group basis. If null or not specified, the 'min' config#
+	 *    key on a per-group basis. If null or not specified, the 'min' config
 	 *    key will be used.
 	 *    Using this,
+	 * - 'deps': an optional key, allowing you to specify other groups
+	 *    which are automatically rendered when this group is. See the readme
+	 *    for more details.
 	 */
 	'groups' => array(
 	),

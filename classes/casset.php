@@ -86,6 +86,11 @@ class Casset {
 	protected static $attr_default = array();
 
 	/**
+	 * @var int How deep to go when resolving deps
+	 */
+	protected static $deps_max_depth = 5;
+
+	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
 	 *           which files have been minified into that file.
 	 */
@@ -104,6 +109,12 @@ class Casset {
 	 * Prototype: callback(content, filename, type, group_name);
 	 */
 	protected static $post_load_callback = null;
+
+	/**
+	 * @var array Keeps a record of which groups have been rendered.
+	 * We then check this when deciding whether to render a dep.
+	 */
+	protected static $rendered_groups = array('js' => array(), 'css' => array());
 
 	/**
 	 * @var bool Wether we've been initialized.
@@ -143,6 +154,8 @@ class Casset {
 		static::$min_default = \Config::get('casset.min', static::$min_default);
 		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
 
+		static::$deps_max_depth = \Config::get('casset.deps_max_depth', static::$deps_max_depth);
+
 
 		$group_sets = \Config::get('casset.groups', array());
 
@@ -156,6 +169,7 @@ class Casset {
 					'min' => array_key_exists('min', $group) ? $group['min'] : static::$min_default,
 					'inline' => array_key_exists('inline', $group) ? $group['inline'] : static::$inline_default,
 					'attr' => array_key_exists('attr', $group) ? $group['attr'] : static::$attr_default,
+					'deps' => array_key_exists('deps', $group) ? $group['deps'] : array(),
 				);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
@@ -227,7 +241,8 @@ class Casset {
 	 *   'enabled' => true/false,
 	 *   'combine' => true/false,
 	 *   'min' => true/false,
-	 *   'inline' => true/false
+	 *   'inline' => true/false,
+	 *	 'deps' => array(),
 	 * );
 	 */
 	private static function add_group_base($group_type, $group_name, $options = array())
@@ -239,7 +254,10 @@ class Casset {
 			'min' => static::$min_default,
 			'inline' => static::$inline_default,
 			'attr' => static::$attr_default,
+			'deps' => array(),
 		), $options);
+		if (!is_array($options['deps']))
+			$options['deps'] = array($options['deps']);
 		$options['files'] = array();
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
@@ -256,7 +274,9 @@ class Casset {
 	 *   'enabled' => true/false,
 	 *   'combine' => true/false,
 	 *   'min' => true/false,
-	 *   'inline' => true/false
+	 *   'inline' => true/false,
+	 *   'attr' => array(),
+	 *   'deps' => array(),
 	 * );
 	 * To maintain backwards compatibility, you can also pass $enabled here.
 	 * @param bool $combine_dep DEPRECATED. Whether to combine files in this group. Default (null) means use config setting
@@ -529,6 +549,42 @@ class Casset {
 	}
 
 	/**
+	 * Can be used to add deps to a group.
+	 *
+	 * @param string $type 'js' / 'css
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_deps($type, $group, $deps)
+	{
+		if (!is_array($deps))
+			$deps = array($deps);
+		if (!array_key_exists($group, static::$groups[$type]))
+			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
+		array_push(static::$groups[$type][$group]['deps'], $deps);
+	}
+
+	/**
+	 * Sugar for add_deps(), for js groups
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_js_deps($group, $deps)
+	{
+		static::add_deps('js', $group, $deps);
+	}
+
+	/**
+	 * Sugar for add_deps(), for css groups
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_css_deps($group, $deps)
+	{
+		static::add_deps('css', $group, $deps);
+	}
+
+	/**
 	 * Shortcut to render_js() and render_css().
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
@@ -722,6 +778,46 @@ class Casset {
 	}
 
 	/**
+	 * Given a list of group names, adds to that list, in the appropriate places,
+	 * and groups which are listed as dependencies of those group.
+	 * Duplicate group names are not a problem, as a group is disabled when it's
+	 * rendered.
+	 *
+	 * @param string $type 'js' /or/ 'css'
+	 * @param array $group_names Array of group names to check
+	 * @param int $depth Used by this function to check for potentially infinite recursion
+	 * @return array List of group names with deps resolved
+	 */
+
+	private static function resolve_deps($type, $group_names, $depth=0)
+	{
+		if ($depth > static::$deps_max_depth)
+		{
+			throw new Casset_Exception("Reached depth $depth trying to resolve dependencies. ".
+					"You've probably got some circular ones involving ".implode(',', $group_names).". ".
+					"If not, adjust the config key deps_max_depth.");
+		}
+		// Insert the dep just before what it's a dep for
+		foreach ($group_names as $i => $group_name)
+		{
+			// If the group's already been rendered, bottle
+			if (in_array($group_name, static::$rendered_groups[$type]))
+				continue;
+			// Don't pay attention to bottom-level groups which are disabled
+			if (!static::$groups[$type][$group_name]['enabled'] && $depth == 0)
+				continue;
+			// Otherwise, enable the group. Fairly obvious, as the whole point of
+			// deps is to render disabled groups
+			static::asset_enabled($type, $group_name, true);
+			if (count(static::$groups[$type][$group_name]['deps']))
+			{
+				array_splice($group_names, $i, 0, static::resolve_deps($type, static::$groups[$type][$group_name]['deps'], $depth+1));
+			}
+		}
+		return $group_names;
+	}
+
+	/**
 	 * Determines the list of files to be rendered, along with whether they
 	 * have been minified already.
 	 *
@@ -734,6 +830,9 @@ class Casset {
 		// If no group specified, print all groups.
 		if ($group == false)
 			$group_names = array_keys(static::$groups[$type]);
+		// If a group was specified, but it doesn't exist
+		else if (!array_key_exists($group, static::$groups[$type]))
+			return array();
 		else
 			$group_names = array($group);
 
@@ -741,10 +840,10 @@ class Casset {
 
 		$minified = false;
 
+		$group_names = static::resolve_deps($type, $group_names);
+
 		foreach ($group_names as $group_name)
 		{
-			if (!array_key_exists($group_name, static::$groups[$type]))
-				continue;
 			if (static::$groups[$type][$group_name]['enabled'] == false)
 				continue;
 			// If there are no files in the group, there's no point in printing it.
@@ -755,6 +854,8 @@ class Casset {
 
 			// Mark the group as disabled to avoid the same group being printed twice
 			static::asset_enabled($type, $group_name, false);
+			// Add it to the list of rendered groups
+			array_push(static::$rendered_groups[$type], $group_name);
 
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
