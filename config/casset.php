@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.10
+ * @version    v1.11
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -105,13 +105,39 @@ return array(
 	 * When minifying, whether to show the files names in each combined
 	 * file in a comment before the tag to the file.
 	 */
-	'show_files' => true,
+	'show_files' => false,
 
 	/**
 	 * When minifying, whether to put comments in each minified file showing
 	 * the origin location of each part of the file.
 	 */
 	'show_files_inline' => false,
+
+	/**
+	 * How deep to go when resolving deps, before assuming that there're some
+	 * circular ones.
+	 */
+	'deps_max_depth' => 5,
+
+	/**
+	 * Here you can define a callback that is called after a while is loaded from
+	 * disk, and before it is stored in a cache file.
+	 * This set of circumstances only occurs when 'combine' is true -- the callback
+	 * will *not* be called if 'combine' is false.
+	 *
+	 * This parameter expects a closure (or other function reference), with the
+	 * following prototype:
+	 * function($content, $filename, $type, $group_name)
+	 * and should return the content after being processed.
+	 * $content = the file content which casset has loaded from file
+	 * $filename = the name of the file casset has loaded
+	 * $type = 'js' or 'css'
+	 * $group_name = the name of the group to which the file belongs
+	 *
+	 * You are allowed to define functions in this config file, or you can use
+	 * Casset::set_post_load_callback(function($content,  ...) { ... }); instead
+	 */
+	'post_load_callback' => null,
 
 	/**
 	 * Groups of scripts.
@@ -140,6 +166,7 @@ return array(
 	 *             'file2.css',
 	 *          ),
 	 *          'enabled' => true,
+	 *			'deps' => array('some_other_group'),
 	 *       ),
 	 *       'group_name_2' => array(.....),
 	 *    ),
@@ -164,9 +191,12 @@ return array(
 	 * - 'enabled': whether the group will be rendered when render_css() or
 	 *    render_js() is called.
 	 * - 'min: an optional key, allowing you to override the global 'min' config
-	 *    key on a per-group basis. If null or not specified, the 'min' config#
+	 *    key on a per-group basis. If null or not specified, the 'min' config
 	 *    key will be used.
 	 *    Using this,
+	 * - 'deps': an optional key, allowing you to specify other groups
+	 *    which are automatically rendered when this group is. See the readme
+	 *    for more details.
 	 */
 	'groups' => array(
 	),

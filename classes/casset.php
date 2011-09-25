@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.10
+ * @version    v1.11
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -72,7 +72,23 @@ class Casset {
 	/**
 	 * @var bool Whether to combine
 	 */
-	protected static $combine_default = false;
+	protected static $combine_default = true;
+
+	/**
+	 * @var bool Whether to render files inline by default.
+	 */
+	protected static $inline_default = false;
+
+	/**
+	 *
+	 * @var array The default attributes when creating the asset's tag.
+	 */
+	protected static $attr_default = array();
+
+	/**
+	 * @var int How deep to go when resolving deps
+	 */
+	protected static $deps_max_depth = 5;
 
 	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
@@ -85,6 +101,20 @@ class Casset {
 	 *           original file is where.
 	 */
 	protected static $show_files_inline = false;
+
+	/**
+	 * @var function If given, the function to call when we've read a file, before
+	 * minifying.
+	 * Note that it's only called if $combine for the file is true
+	 * Prototype: callback(content, filename, type, group_name);
+	 */
+	protected static $post_load_callback = null;
+
+	/**
+	 * @var array Keeps a record of which groups have been rendered.
+	 * We then check this when deciding whether to render a dep.
+	 */
+	protected static $rendered_groups = array('js' => array(), 'css' => array());
 
 	/**
 	 * @var bool Wether we've been initialized.
@@ -124,6 +154,8 @@ class Casset {
 		static::$min_default = \Config::get('casset.min', static::$min_default);
 		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
 
+		static::$deps_max_depth = \Config::get('casset.deps_max_depth', static::$deps_max_depth);
+
 
 		$group_sets = \Config::get('casset.groups', array());
 
@@ -131,24 +163,27 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				$enabled = array_key_exists('enabled', $group) ? $group['enabled'] : true;
-				$combine = array_key_exists('combine', $group) ? $group['combine'] : null;
-				$min = array_key_exists('min', $group) ? $group['min'] : null;
-				static::add_group($group_type, $group_name, $enabled, $combine, $min);
-				foreach ($group['files'] as $files)
-				{
-					if (!is_array($files))
-						$files = array($files, false);
-					static::add_asset($group_type, $files[0], $files[1], $group_name);
-				}
+				$options = array(
+					'enabled' => array_key_exists('enabled', $group) ? $group['enabled'] : true,
+					'combine' => array_key_exists('combine', $group) ? $group['combine'] : static::$combine_default,
+					'min' => array_key_exists('min', $group) ? $group['min'] : static::$min_default,
+					'inline' => array_key_exists('inline', $group) ? $group['inline'] : static::$inline_default,
+					'attr' => array_key_exists('attr', $group) ? $group['attr'] : static::$attr_default,
+					'deps' => array_key_exists('deps', $group) ? $group['deps'] : array(),
+				);
+				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
 		}
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
+		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
+
 		static::$initialized = true;
 	}
+
+
 
 	/**
 	 * Parses oen of the 'paths' config keys into the format used internally.
@@ -193,7 +228,7 @@ class Casset {
 	public static function set_path($path_key = 'core')
 	{
 		if (!array_key_exists($path_key, static::$asset_paths))
-			throw new \Fuel_Exception("Asset path key $path_key doesn't exist");
+			throw new Casset_Exception("Asset path key $path_key doesn't exist");
 		static::$default_path_key = $path_key;
 	}
 
@@ -202,57 +237,70 @@ class Casset {
 	 *
 	 * @param string $group_type 'js' or 'css'
 	 * @param string $group_name The name of the group
-	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
-	 *        rendered with render_js / render_css
+	 * @param array $options. An array of options. array(
+	 *   'enabled' => true/false,
+	 *   'combine' => true/false,
+	 *   'min' => true/false,
+	 *   'inline' => true/false,
+	 *	 'deps' => array(),
+	 * );
 	 */
-	private static function add_group($group_type, $group_name, $enabled = true, $combine = null, $min = null)
+	private static function add_group_base($group_type, $group_name, $options = array())
 	{
+		// Insert defaults
+		$options = array_merge(array(
+			'enabled' => true,
+			'combine' => static::$combine_default,
+			'min' => static::$min_default,
+			'inline' => static::$inline_default,
+			'attr' => static::$attr_default,
+			'deps' => array(),
+		), $options);
+		if (!is_array($options['deps']))
+			$options['deps'] = array($options['deps']);
+		$options['files'] = array();
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
-			return;
-		static::$groups[$group_type][$group_name] = array(
-			'files' => array(),
-			'enabled' => $enabled,
-			'combine' => ($combine === null) ? static::$combine_default : $combine,
-			'min' => ($min === null) ? static::$min_default : $min,
-		);
+			throw new Casset_Exception("Group $group_name already exists: can't create it.");
+		static::$groups[$group_type][$group_name] = $options;
 	}
 
 	/**
-	 * Figures out where a file should be, based on its namespace and type.
+	 * Adds a group for assets, and adds assets to that group.
 	 *
-	 * @param string $file The name of the asset to search for
-	 * @param string $asset_type 'css', 'js' or 'img'
-	 * @return string The path to the asset, relative to $asset_url
+	 * @param string $group_type 'js' or 'css'
+	 * @param string $group_name The name of the group
+	 * @param array $options. An array of options. array(
+	 *   'enabled' => true/false,
+	 *   'combine' => true/false,
+	 *   'min' => true/false,
+	 *   'inline' => true/false,
+	 *   'attr' => array(),
+	 *   'deps' => array(),
+	 * );
+	 * To maintain backwards compatibility, you can also pass $enabled here.
+	 * @param bool $combine_dep DEPRECATED. Whether to combine files in this group. Default (null) means use config setting
+	 * @param boo $min_dep DEPRECATED/ Whether to minify files in this group. Default (null) means use config setting
 	 */
-	private static function find_files($file, $asset_type)
+	public static function add_group($group_type, $group_name, $files, $options = array(), $combine_dep = null, $min_dep = null)
 	{
-		$parts = explode('::', $file, 2);
-		if (!array_key_exists($parts[0], static::$asset_paths))
-			throw new \Fuel_Exception("Could not find namespace {$parts[0]}");
-
-		$path = static::$asset_paths[$parts[0]]['path'];
-		$file = $parts[1];
-
-		$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
-		$file = ltrim($file, '/');
-
-		$remote = (strpos($path, '//') !== false);
-
-		if ($remote)
+		// Bit of backwards compatibity.
+		// Order used to be add_group(group_type, group_name, files, enabled, combine, min)
+		if (!is_array($options))
 		{
-			// Glob doesn't work on remote locations, so just assume they
-			// specified a file, not a glob pattern.
-			// Don't look for the file now either. That'll be done by
-			// file_get_contents later on, if need be.
-			return array($path.$folder.$file);
+			$options = array(
+				'enabled' => $options,
+				'combine' => $combine_dep,
+				'min' => $min_dep,
+			);
 		}
-		else
-		{
-			$glob_files = glob($path.$folder.$file);
-			if (!$glob_files || !count($glob_files))
-				throw new \Fuel_Exception("Found no files matching $path$folder$file");
-			return $glob_files;
+		// We're basically faking the old add_group. However, the approach has changed since those days
+		// Therefore we create the group it it doesn't already exist, then add the files to it
+		static::add_group_base($group_type, $group_name, $options);
+		foreach ($files as $file) {
+			if (!is_array($file))
+				$file = array($file, false);
+			static::add_asset($group_type, $file[0], $file[1], $group_name);
 		}
 	}
 
@@ -339,6 +387,58 @@ class Casset {
 	}
 
 	/**
+	 * Set group options on-the-fly.
+	 *
+	 * @param string $type 'js' / 'css
+	 * @param mixed $group_names Group name to change, or array of groups to change,
+	 *		or '' for global group, or '*' for all groups.
+	 * @param string $option_key The name of the option to change
+	 * @param mixed $option_value What to set the option to
+	 */
+	public static function set_group_option($type, $group_names, $option_key, $option_value)
+	{
+		if ($group_names == '')
+			$group_names = array('global');
+		else if ($group_names == '*')
+			$group_names = array_keys(static::$groups[$type]);
+		else if (!is_array($group_names))
+			$group_names = array($group_names);
+
+		// Allow them to specify a single string dep
+		if ($option_key == 'deps' && !is_array($option_value))
+			$option_value = array($option_value);
+
+		foreach ($group_names as $group_name)
+			static::$groups[$type][$group_name][$option_key] = $option_value;
+	}
+
+	/**
+	 * Set group options on-the-fly, js version
+	 *
+	 * @param mixed $group_names Group name to change, or array of groups to change,
+	 *		or '' for global group, or '*' for all groups.
+	 * @param string $option_key The name of the option to change
+	 * @param mixed $option_value What to set the option to
+	 */
+	public static function set_js_option($group_names, $option_key, $option_value)
+	{
+		static::set_group_option('js', $group_names, $option_key, $option_value);
+	}
+
+	/**
+	 * Set group options on-the-fly, css version
+	 *
+	 * @param mixed $group_names Group name to change, or array of groups to change,
+	 *		or '' for global group, or '*' for all groups.
+	 * @param string $option_key The name of the option to change
+	 * @param mixed $option_value What to set the option to
+	 */
+	public static function set_css_option($group_names, $option_key, $option_value)
+	{
+		static::set_group_option('css', $group_names, $option_key, $option_value);
+	}
+
+	/**
 	 * Add a javascript asset.
 	 *
 	 * @param string $script The script to add.
@@ -390,7 +490,7 @@ class Casset {
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group($type, $group, true);
+			static::add_group_base($type, $group);
 		}
 		array_push(static::$groups[$type][$group]['files'], $files);
 	}
@@ -428,19 +528,127 @@ class Casset {
 		array_push(static::$inline_assets[$type], $content);
 	}
 
+
+	/**
+	 * Return the path for the given JS asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath_js($filename, $add_url = false, $force_array = false)
+	{
+		return static::get_filepath($filename, 'js', $add_url, $force_array);
+	}
+
+	/**
+	 * Return the path for the given CSS asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath_css($filename, $add_url = false, $force_array = false)
+	{
+		return static::get_filepath($filename, 'css', $add_url, $force_array);
+	}
+
+	/**
+	 * Return the path for the given img asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath_img($filename, $add_url = false, $force_array = false)
+	{
+		return static::get_filepath($filename, 'img', $add_url, $force_array);
+	}
+
+	/**
+	 * Return the path for the given asset. Ties into find_files, so supports
+	 * everything that, say, Casset::js() does.
+	 * Throws an exception if the file isn't found.
+	 * @param string $script the name of the asset to find
+	 * @param string $type js, css or img
+	 * @param bool $add_url whether to add the 'url' config key to the filename
+	 * @param bool $force_array by default, when one file is found a string is
+	 *		returned. Setting this to true causes a single-element array to be returned.
+	 */
+	public static function get_filepath($filename, $type, $add_url = false, $force_array = false)
+	{
+		if (strpos($filename, '::') === false)
+			$filename = static::$default_path_key.'::'.$filename;
+		$files = static::find_files($filename, $type);
+		if ($add_url)
+		{
+			foreach ($files as &$file)
+			{
+				if (strpos($file, '//') !== false)
+					continue;
+				$file = static::$asset_url.$file;
+			}
+		}
+		if (count($files) == 1 && !$force_array)
+			return $files[0];
+		return $files;
+	}
+
+	/**
+	 * Can be used to add deps to a group.
+	 *
+	 * @param string $type 'js' / 'css
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_deps($type, $group, $deps)
+	{
+		if (!is_array($deps))
+			$deps = array($deps);
+		if (!array_key_exists($group, static::$groups[$type]))
+			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
+		array_push(static::$groups[$type][$group]['deps'], $deps);
+	}
+
+	/**
+	 * Sugar for add_deps(), for js groups
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_js_deps($group, $deps)
+	{
+		static::add_deps('js', $group, $deps);
+	}
+
+	/**
+	 * Sugar for add_deps(), for css groups
+	 * @param string $group The group name to add deps to
+	 * @param array $deps An array of group names to add as deps.
+	 */
+	public static function add_css_deps($group, $deps)
+	{
+		static::add_deps('css', $group, $deps);
+	}
+
 	/**
 	 * Shortcut to render_js() and render_css().
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
-	 * @param bool $inline If true, the result is printed inline. If false, is
+	 * @param bool $inline_dep DEPRECATED. If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render($group = false, $inline = false, $attr = array())
+	public static function render($group = false, $inline_dep = null, $attr = array())
 	{
-		$r = static::render_css($group, $inline, $attr);
-		$r.= static::render_js($group, $inline, $attr);
+		$r = static::render_css($group, $inline_dep, $attr);
+		$r.= static::render_js($group, $inline_dep, $attr);
 		return $r;
 	}
 
@@ -448,12 +656,12 @@ class Casset {
 	 * Renders the specific javascript group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
-	 * @param bool $inline If true, the result is printed inline. If false, is
+	 * @param bool $inline_dep DEPRECATED. If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render_js($group = false, $inline = false, $attr = array())
+	public static function render_js($group = false, $inline = null, $attr = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
@@ -467,6 +675,14 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
+			// We used to take $inline as 2nd argument. However, we now use a group option.
+			// It's easiest if we let $inline override this group option, though.
+			if ($inline === null)
+				$inline = static::$groups['js'][$group_name]['inline'];
+			// $attr is also deprecated. If specified, entirely overrides the group option.
+			if (!count($attr))
+				$attr = static::$groups['js'][$group_name]['attr'];
+
 			if (static::$groups['js'][$group_name]['combine'])
 			{
 				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
@@ -508,12 +724,12 @@ class Casset {
 	 * Renders the specific css group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
-	 * @param bool $inline If true, the result is printed inline. If false, is
+	 * @param bool $inline DEPRECATED. If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
 	 * @return string The css tags to be written to the page
 	 */
-	public static function render_css($group = false, $inline = false, $attr = array())
+	public static function render_css($group = false, $inline = null, $attr = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
@@ -527,6 +743,14 @@ class Casset {
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
+			// We used to take $inline as 2nd argument. However, we now use a group option.
+			// It's easiest if we let $inline override this group option, though.
+			if ($inline === null)
+				$inline = static::$groups['css'][$group_name]['inline'];
+			// $attr is also deprecated. If specified, entirely overrides the group option.
+			if (!count($attr))
+				$attr = static::$groups['css'][$group_name]['attr'];
+
 			if (static::$groups['css'][$group_name]['combine'])
 			{
 
@@ -568,6 +792,84 @@ class Casset {
 	}
 
 	/**
+	 * Figures out where a file should be, based on its namespace and type.
+	 *
+	 * @param string $file The name of the asset to search for
+	 * @param string $asset_type 'css', 'js' or 'img'
+	 * @return string The path to the asset, relative to $asset_url
+	 */
+	private static function find_files($file, $asset_type)
+	{
+		$parts = explode('::', $file, 2);
+		if (!array_key_exists($parts[0], static::$asset_paths))
+			throw new Casset_Exception("Could not find namespace {$parts[0]}");
+
+		$path = static::$asset_paths[$parts[0]]['path'];
+		$file = $parts[1];
+
+		$folder = static::$asset_paths[$parts[0]]['dirs'][$asset_type];
+		$file = ltrim($file, '/');
+
+		$remote = (strpos($path, '//') !== false);
+
+		if ($remote)
+		{
+			// Glob doesn't work on remote locations, so just assume they
+			// specified a file, not a glob pattern.
+			// Don't look for the file now either. That'll be done by
+			// file_get_contents later on, if need be.
+			return array($path.$folder.$file);
+		}
+		else
+		{
+			$glob_files = glob($path.$folder.$file);
+			if (!$glob_files || !count($glob_files))
+				throw new Casset_Exception("Found no files matching $path$folder$file");
+			return $glob_files;
+		}
+	}
+
+	/**
+	 * Given a list of group names, adds to that list, in the appropriate places,
+	 * and groups which are listed as dependencies of those group.
+	 * Duplicate group names are not a problem, as a group is disabled when it's
+	 * rendered.
+	 *
+	 * @param string $type 'js' /or/ 'css'
+	 * @param array $group_names Array of group names to check
+	 * @param int $depth Used by this function to check for potentially infinite recursion
+	 * @return array List of group names with deps resolved
+	 */
+
+	private static function resolve_deps($type, $group_names, $depth=0)
+	{
+		if ($depth > static::$deps_max_depth)
+		{
+			throw new Casset_Exception("Reached depth $depth trying to resolve dependencies. ".
+					"You've probably got some circular ones involving ".implode(',', $group_names).". ".
+					"If not, adjust the config key deps_max_depth.");
+		}
+		// Insert the dep just before what it's a dep for
+		foreach ($group_names as $i => $group_name)
+		{
+			// If the group's already been rendered, bottle
+			if (in_array($group_name, static::$rendered_groups[$type]))
+				continue;
+			// Don't pay attention to bottom-level groups which are disabled
+			if (!static::$groups[$type][$group_name]['enabled'] && $depth == 0)
+				continue;
+			// Otherwise, enable the group. Fairly obvious, as the whole point of
+			// deps is to render disabled groups
+			static::asset_enabled($type, $group_name, true);
+			if (count(static::$groups[$type][$group_name]['deps']))
+			{
+				array_splice($group_names, $i, 0, static::resolve_deps($type, static::$groups[$type][$group_name]['deps'], $depth+1));
+			}
+		}
+		return $group_names;
+	}
+
+	/**
 	 * Determines the list of files to be rendered, along with whether they
 	 * have been minified already.
 	 *
@@ -580,6 +882,9 @@ class Casset {
 		// If no group specified, print all groups.
 		if ($group == false)
 			$group_names = array_keys(static::$groups[$type]);
+		// If a group was specified, but it doesn't exist
+		else if (!array_key_exists($group, static::$groups[$type]))
+			return array();
 		else
 			$group_names = array($group);
 
@@ -587,10 +892,10 @@ class Casset {
 
 		$minified = false;
 
+		$group_names = static::resolve_deps($type, $group_names);
+
 		foreach ($group_names as $group_name)
 		{
-			if (!array_key_exists($group_name, static::$groups[$type]))
-				continue;
 			if (static::$groups[$type][$group_name]['enabled'] == false)
 				continue;
 			// If there are no files in the group, there's no point in printing it.
@@ -601,6 +906,8 @@ class Casset {
 
 			// Mark the group as disabled to avoid the same group being printed twice
 			static::asset_enabled($type, $group_name, false);
+			// Add it to the list of rendered groups
+			array_push(static::$rendered_groups[$type], $group_name);
 
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
@@ -622,6 +929,25 @@ class Casset {
 			}
 		}
 		return $files;
+	}
+
+	/**
+	 * Used to load a file from disk.
+	 * Also calls the post_load callback.
+	 *
+	 * @param type $filename
+	 * @return type
+	 */
+	private static function load_file($filename, $type, $file_group)
+	{
+		$content = file_get_contents($filename);
+		if (static::$post_load_callback != null)
+		{
+			// For some reason, PHP doesn't like you calling member closure directly
+			$func = static::$post_load_callback;
+			$content = $func($content, $filename, $type, $file_group);
+		}
+		return $content;
 	}
 
 	/**
@@ -666,12 +992,18 @@ class Casset {
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'] || !$minify)
-					$content .= file_get_contents($file['file']).PHP_EOL;
+				{
+					$content_temp = static::load_file($file['file'], $type, $file_group).PHP_EOL;
+					if ($type == 'css')
+						$content .= Casset_Cssurirewriter::rewrite($content_temp, dirname($file['file']));
+					else
+						$content .= $content_temp;
+				}
 				else
 				{
-					$file_content = file_get_contents($file['file']);
+					$file_content = static::load_file($file['file'], $type, $file_group);
 					if ($file_content === false)
-						throw new \Fuel_Exception("Couldn't not open file {$file['file']}");
+						throw new Casset_Exception("Couldn't not open file {$file['file']}");
 					if ($type == 'js')
 					{
 						$content .= Casset_JSMin::minify($file_content).PHP_EOL;
@@ -719,6 +1051,15 @@ class Casset {
 			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
+	}
+
+	/**
+	 * Sets the post_load file callback. It's pretty basic, and you're expected
+	 * to handle e.g. filtering for the right file yourself.
+	 * @param function the function to set
+	 */
+	public static function set_post_load_callback($callback) {
+		static::$post_load_callback = $callback;
 	}
 
 	/**
@@ -801,6 +1142,9 @@ class Casset {
 		}
 	}
 
+}
+
+class Casset_Exception extends \Fuel_Exception {
 }
 
 /* End of file casset.php */

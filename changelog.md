@@ -3,6 +3,18 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.11
+-----
+ - Asset URLs can be obtained, see "Getting asset paths / urls".
+ - Casset::add_group() has been re-implemented.
+ - Callbacks now exist: You can use these to process js/css files after they're loaded, but before they're cached. Allows use of SASS, Coffeescript, etc.
+ - Exception now thrown if someone attempts to define a group that already exists.
+ - Group options are now specified using array syntax, instead of separate function arguments.
+ - Option to inline groups moved from Caset::render() to when the group's defined.
+ - Option to add attributes to a group's tag moved from Casset::render() to when the group's defined.
+ - Add dependencies between groups. Rendering a group will automatically render its dependencies.
+ - New functions to allow changing of group options on-the-fly.
+
 v1.10
 -----
 Hotfix release.
@@ -10,7 +22,7 @@ Fixed #3, reported by krtek4, where render_css had an erroneous second loop, mea
 
 v1.9
 ---
-Hotfix release.  
+Hotfix release.
 Fixes #1, reported by jaysonic, where add_path was (for some reason) private.
 
 

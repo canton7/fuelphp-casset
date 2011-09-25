@@ -7,16 +7,30 @@ There are are some other changes too, please read on!
 
 Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libraries, stolen from http://code.google.com/p/minify/.
 
+If you have any comments/queries, either send me a message on github, post to the fuelphp [forum thread](http://fuelphp.com/forums/topics/view/2187), catch me on #fuelphp, or open an issue.
+
 Installation
 ------------
 
-### Manual
-1. Clone / [download](https://github.com/canton7/fuelphp-casset/zipball/master)
+### Using oil (linux or daring windows users only)
+1. cd to your fuel project's root
+2. Run `php oil package install casset`
+3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
+4. Create public/assets/cache
+5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
+6. Enjoy :)
+
+### Manual (may be more up-to-date)
+1. Clone (`git clone git://github.com/canton7/fuelphp-casset`) / [download](https://github.com/canton7/fuelphp-casset/zipball/master)
 2. Stick in fuel/packages/
 3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
 4. Create public/assets/cache
 5. Add 'casset' to the 'always_load/packages' array in app/config/config.php (or call `Fuel::add_package('casset')` whenever you want to use it).
 6. Enjoy :)
+
+If you don't want to change the config file in `fuel/packages/casset/config/casset.php`, you can create your own config file in `fuel/app/config/casset.php`.
+You can either copy the entirely of the original config file, or just override the keys as you like.
+The magic of Fuel's `Config` class takes care of the rest.
 
 Introduction
 ------------
@@ -107,9 +121,9 @@ To define a group in the config file, use the 'groups' key, eg:
 				array('file1.js', 'file1.min.js'),
 				'file2.js'
 			),
-			'enabled' => true,
 			'combine' => false,
 			'min' => false,
+			'inline' => true
 		),
 		'group_name_2' => array(.....),
 	),
@@ -119,7 +133,9 @@ To define a group in the config file, use the 'groups' key, eg:
 				array('file1.css', 'file1.min.css'),
 				'file2.css',
 			),
-			'enabled' => true,
+			'enabled' => false,
+			'attr' => array('media' => 'print'),
+			'deps' => array('some_group'),
 		),
 		'group_name_3' => array(.....),
 	),
@@ -133,7 +149,10 @@ If you're using minification, but have a pre-minified copy of your file (jquery 
 array element.  
 **enabled**: Optional, specifies whether a group is enabled. A group will only be rendered when it is enabled. Default true.  
 **combine**: This optional key allows you to override the 'combine' config key on a per-group bases.  
-**min**: This optional key allows you to override the 'min' config key on a per-group basis.
+**min**: This optional key allows you to override the 'min' config key on a per-group basis.  
+**inline**: Optional, allows you to render the group 'inline' -- that is, show the CSS directly in the file, rather than including a separate .css file. See the section on inling below.  
+**attr**: Optional, allows you to specify extra attributes to be added to the script/css/link tag generated. See the section on attributes below.  
+**deps**: (Optional) Specifies other groups to be rendered whenever this group is rendered, see the section below.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
@@ -153,12 +172,56 @@ Casset::css('myfile.css', false, 'group_name');
 
 If the group name doesn't exist, the group is created, and enabled.
 
+You can also add groups on-the-fly using `Casset::add_group($group_type, $group_name, $files, $options)`, where `$options`is an array with *any* of the following keys:
+
+```php
+$options = array(
+	'enabled' => true/false,
+	'min' => true/false,
+	'combine' => true/false,
+	'inline' => true/false,
+	'attr' => array(),
+	'deps' => array(),
+);
+```
+
+The arguments are the same as for the config key -- if `'enabled'`, `'combine'` or `'min'` are omitted, the value specified in the config file are used. Eg:
+
+```php
+Casset::add_group('test_group', array(
+	array('file1.js', 'file1.min.js'),
+	'file2.js',
+));
+```
+
+This method is provided merely for convenience when adding lots of files to a group at once.
+You don't have to create a group before adding files to it -- the group will be created it it doesn't exist.
+
+You can change any of these options on-the-fly using `Casset::set_group_option($type, $group, $key, $value)`, or the CSS- and JS- specific versions, `Caset::set_js_option($group, $key, $value)` and `Casset::set_css_option($group, $key, $value)`.
+`$group` has some special values: an empty string is a shortcut to the 'global' group (to which files are added if a group is not specified), and '*' is a shortcut to all groups.
+Multiple group names can also be specified, using an array.
+
+Examples:
+
+```php
+// Add a dep to the my_plugin group
+Casset::set_js_option('my_plugin', 'deps', 'jquery');
+
+// Make all files added to the current page using Casset::add_css() display inline:
+Casset::set_css_option('', 'inline', true);
+
+// Turn off minification for all groups, regardless of per-group settings, for the current page:
+CassetLLset_js_option('*', 'min', false);
+```
+
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
 Similarly (for JS files only), the order in which files appear is determined by the order in which they were added.
-This allows you a degree of control over what order your files are included in your page, which may be necessary when satisfying dependancies.
+This allows you a degree of control over what order your files are included in your page, which may be necessary when satisfying dependencies.
 If this isn't working for you, or you want something a bit more explicit, try this: If file A depends on B, add B to its own group and explicitely render it first.
 
 NOTE: Calling ``Casset::js('file.js')`` will add that file to the "global" group. Use / abuse as you need!
+
+NOTE: The arguments for `Casset::add_group` used to be different. Backwards compatibilty is maintained (for now), but you are encouranged to more to the new syntax.
 
 Paths and namespacing
 ---------------------
@@ -188,6 +251,12 @@ For the above example, you can specify the following in your config file:
 	'core' => 'assets/',
 	'admin' => 'assets/admin/',
 ),
+```
+
+You can also add paths on-the-flow using `Casset::add_path($key, $path)`, eg.
+
+```php
+Casset::add_path('admin', 'assets/admin/');
 ```
 
 Which path to use is then decided by prefixing the asset filename with the key of the path to use. Note that if you omit the path key, the current default path key (initially 'core') is used.
@@ -229,7 +298,7 @@ array (
 	'some_key' => array(
 		'path' => 'more_assets/',
 		'js_dir' => 'javascript/',
-		'css_dir' => 'styles/'
+		'css_dir' => 'styles/',
 		'img_dir' => 'images/',
 		),
 	),
@@ -238,10 +307,13 @@ array (
 
 This can be particularly useful when you're using some third-party code, and don't have control over where the assets are located.
 
+Note also that you can add an asset which uses a path which isn't yet defined.
+Casset only requires that the path is defined by the time the file is rendered.
+
 Globbing
 --------
 
-As well as filenames, you can specify [http://php.net/glob](glob patterns). This will act exactly the same as if each file which the glob matches had been added individually.  
+As well as filenames, you can specify [glob patterns](http://php.net/glob). This will act exactly the same as if each file which the glob matches had been added individually.  
 For example:
 
 ```php
@@ -253,23 +325,93 @@ Casset::css('admin::admin_*.css');
 // Executes glob('adders/admin/css/admin_*.css') and adds all matches
 
 Casset::js('*.js', '*.js');
-// Adds all js files in assets/js, ensuring that none of them are minified.
+// Adds all js files in assets/js, ensuring that none of them are pre-minified.
 ```
 
 An exception is thrown when no files can be matched.
 
+Dependencies
+------------
+
+Casset allows you to specify dependancies between groups, which are automatically resolved.
+This means that you can, say, define a group for your jQuery plugin, and have jQuery automatically included every time that plugin is included.
+
+Note that dependancies can only be entire groups -- groups can not depend on individual files.
+This has to do with how files are put into cache files, email me if you're interested.
+
+A JS group can only depend on other JS groups, while a CSS group can only depend on other CSS groups.
+
+Casset is pretty intelligent, and will only include a file once, before the file that requires it.
+After a file has been required as a dependency, it will be disabled.
+Casset will also bail after following the dependency chain through a certain number of steps, to avoid cycling dependancies.
+This value is given by the config key 'deps_max_depth'.
+
+The easiest way of specifying dependancies is through the config file:
+
+```php
+'groups' => array(
+	'js' => array(
+		'jquery' => array(
+			'files' => array(
+				array('jquery.js', 'jquery.min.js'),
+			),
+		),
+		
+		'my_plugin' => array(
+			'files' => array(
+				'jquery.my_plugin.js',
+			),
+			'deps' => array(
+				'jquery',
+			),
+		),
+	),
+),
+```
+
+Dependencies can be either a string (for a single dependency), or an array (for multiple ones).
+
+You can also define dependencies when you call `Casset::add_group()`, by using the `'deps'` key in `$options`.
+
+ Eg:
+ 
+ ```php
+Caset::add_group('js', 'my_plugin', array('jquery.my_plugin.js'), array(
+	'deps' => 'jquery',
+));
+ ```
+
+In addition, the functions `Casset::add_js_deps()` and `Casset::add_css_deps()` exist, which can be used like:
+
+```php
+Casset::add_js_deps('group_name', array('this', 'groups', 'deps'));
+```
+
+As usual, there's another base function, `Casset::add_deps()`, which takes 'js' or 'css' as its first argument, but is otherwise identical.
+
+If you have a JS group A, which depends on both the JS group B and CSS group B, a useful trick is to create a CSS group A with no files, that depends on the CSS group B.
+Therefore whenever group A is rendered, both the JS group B and CSS group B will be rendered.
+
 Inlining
 --------
 
-If you want Casset to display a group inline, instead of linking to a cache file, you can pass `true` as the second argument to `Casset::render_js()` or `Casset::render_css()`.
-For example...
+If you want Casset to display a group inline, instead of linking to a cache file, you can mark the group as 'inline' when you create it.
 
 ```php
-// Render 'group_name' js inline.
-echo Casset::render_js('group_name', true);
-// Render all css groups inline.
-echo Casset::render_css(false, true);
+// In your config (see add_group also)
+'groups' => array(
+	'js' => array(
+		'my_inline_group' => array(
+			'files' => array('file.css'),
+			'inline' => true,
+		),
+	),
+),
 ```
+
+NOTE: You could previously pass an argument to `Casset::render()` to tell it to render the group inline.
+This behaviour has been deprecated, although it still works.
+You are encouraged to move away from this technique if you are using it.
 
 Occasionally it can be useful to declare a bit of javascript in your view, but have it included in your template. Casset allows for this, although it doesn't support groups and minification
 (as I don't see a need for those features in this context -- give me a shout if you find an application for them, and I'll enhance).
@@ -301,21 +443,28 @@ Similarly, `Casset::css_inline()` and `Casset::render_css_inline()` exist.
 Extra attributes
 ----------------
 
-`Casset::render_js()` and `Casset::render_css()` support an optional third argument which allows the user to define extra attributes to be applied to the script/link tag.  
-This can be combined with the fact that one a group has been rendered, it is disabled, allowing the following to be done:
+If you want to apply extra attributes to the script/link tag, you can add them to the group config, using the key 'attr'.
+For example:
 
 ```php
-Casset::css('main.css');
-Casset::css('print.css', false, 'print');
+// In your config
+'groups' => array(
+	'css' => array(
+		'my_print => array(
+			'files' => array('file.css'),
+			'attr' => array('media' => 'print'),
+		),
+	),
+),
 
-// Render the 'print' group
-echo Casset::render_css('print', false, array('media' => 'print');
-// <link rel="stylesheet" type="text/css" href="http://...print.css" media="print />
-
-// Render everything else, except the 'print' group
+// Render the 'my_print' group, along with the others
 echo Casset::render_css();
-// <link rel="stylesheet" type="text/css" href="http://...main.css" />
+// <link rel="stylesheet" type="text/css" href="http://...somefile.css" media="print" />
 ```
+
+NOTE: You used to be able to pass an `$attr` argument to `Casset::render()`.
+This behaviour has been deprecated, although it still works.
+Please move to the new system.
 
 Minification and combining
 --------------------------
@@ -363,8 +512,8 @@ Casset supports handing files on remote machines, as well as the local one.
 This is done by creating a new namespace, and specifying a url instead of a relative path.
 All files using that namespace will then be fetched from the given url.
 
-However, there are a couple of caveats:
- - It is possible for Casset to fetch, combine and minify remote assets. However, it can obviously only write the cache file locally.
+However, there are a couple of caveats:  
+ - It is possible for Casset to fetch, combine and minify remote assets. However, it can obviously only write the cache file locally.  
  - Casset doesn't bother to check the modification times on remote files when deciding whether the cache is out of date (as this would cause lots of http requests from your server, and entirely defeat
    the point of caching in the first place). Therefore if the remote file changes, Casset's cache will not be updated, and you'll have to remove it manually, or with the cache-clearing functions.
 
@@ -414,6 +563,51 @@ echo Casset::render();
 // <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.14/jquery-ui.min.js"></script>
 ```
 
+Getting asset paths / urls
+--------------------------
+
+Thanks to [Peter](http://fuelphp.com/forums/posts/view_reply/3097) for this one. You can ask Casset for the path / url to a specific file.
+Files are specified in exactly the same way as with eg `Casset::js()`, with the same rules to do with namespacing, `Casset::set_path()`, etc.
+
+The functions in question are `Casset::get_filepath_js()`, `Casset::get_filepath_css()`, and `Casset::get_filepath_img()`.
+
+They're all used in the same way:
+
+```php
+echo Casset::get_filepath_js('file.js');
+// assets/js/file.js
+```
+
+Note that fuel executes in the `/public` directory, so the paths returned are relative to the current working dir.
+If you'd prefer urls to be returned, pass `true` as the second parameter.
+Note that a url will not be added if you're referencing a remote file.
+
+```php
+echo Casset::get_filepath_js('file.js', true);
+// eg http://localhost/site/public/assets/js/file.js
+```
+
+Complexities start arising when you specify globs.
+By default, an array will be returned if more than one file is found, otherwise a string is returned.
+To override this behaviour, and return an array even if only one file is found, pass `true` as the third parameter.
+
+```php
+print_r(Casset::get_filepath_js('file.js', false, true));
+// Array( [0] => 'assets/js/file.js' )
+
+print_r(Casset::get_filepath_js('file*.js'));
+// Array( [0] => 'assets/js/file1.js', [1] => 'assets/js/file2.js' )
+```
+
+There also exists `Casset::get_filepath()`, which takes the form
+
+```php
+Casset::get_filepath($name, $type, $add_url = false, $force_array = false);
+```
+
+`$name`, `$add_url` and `$force_array` are the same as for `Casset::get_filepath_js()`, while the `$type` argument is one of 'js', 'css', or 'img'.
+In the future there are plans to let you specify your own types, hence why this is exposed :)
+
 Clearing the cache
 ------------------
 Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few methods have been provided to remove cache files.
@@ -430,6 +624,68 @@ Casset::clear_js_cache('2 hours ago');
 Casset::clear_cache('yesterday');
 // Removes all cache files last modified yesterday
 ```
+
+Callbacks
+---------
+
+Quick thanks to [ShonM](https://github.com/shonm) for pushing so hard to get this feature implemented :)
+
+There is currently a single callback, `post_load`, and it is likely that it will stay this way.
+
+Callbacks allow you the flexibility to do you own processing on the files that Casset loads.
+This means that you can use SASS, CoffeeScript, etc, then configure Casset to call the appropriate compiler when it loads the asset.
+
+Note that the `post_load` is *only* called when the 'combine' config key is set to true.
+If 'combine' is false, Casset doesn't generate a cache file and instead links to the asset directly.
+No cache file = no processing of the file by Casset = no callback.
+If you really need this changed, send me a message and I'll start hacking :)
+
+Processing files (beyond minification) is not really what Casset is about, and this reflects in the callback design.
+There is a single callback, which is called for all files, regardless of group, type, extension, etc.
+The callback is passed the name of the file, the type (js or css) and the group to which it belongs,as well as the file content of course.
+It is then up to you to decide how, if at all, you want to process this content, based on the other parameters passed.
+
+The callback is set either in the config file (the `post_load_callback` key), or using `Casset::set_post_load_callback()`.
+Both expect an anonymous function (closure), although I daresay you could bind it straight to some other library's method.
+
+The callback itself has the following prototype, although you can miss out the latter arguments if you want: PHP won't complain.
+
+```php
+function($content, $filename, $type, $group_name) { ... }
+```
+
+Where:  
+`$content`: The content of the file which Casset has read, and is passing to you.  
+`$filename`: The name of the file which Casset has read.  
+`$type`: 'js' or 'css', depending on whether the file is js or css.  
+`$group_name`: The group which is currently being rendered, and to which the file belongs.
+
+Obviously, the callback is only called when a cache file is generated.
+When testing, therefore, it is recommended that you stick a `Casset::clear_cache()` above your testing code.
+
+Time for a few examples:
+
+```php
+// In the config file:
+'post_load_callback' => function($content, $filename, $type) {
+	// We don't want to process JS files
+	if ($type == 'js')
+		return $content;
+	return SomeLibrary::some_method($content);
+},
+
+// In a controller somewhere
+Casset::set_post_load_callback(function($content, $filename) {
+	$ext = pathinfo($filename, PATHINFO_EXTENSION);
+	if ($ext != 'sass')
+		return $content;
+	return SomeSassLibrary::some_method($content);
+});
+```
+
+Note that Casset is pretty lazy, so the callback won't be called under you call `Casset::render()` (or one of its variants).
+Therefore feel free to define your callback after telling Casset to include the files you want the callback to process.
+
 
 Comparison to Assetic
 ---------------------
