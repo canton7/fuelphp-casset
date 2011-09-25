@@ -139,10 +139,12 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				$enabled = array_key_exists('enabled', $group) ? $group['enabled'] : true;
-				$combine = array_key_exists('combine', $group) ? $group['combine'] : null;
-				$min = array_key_exists('min', $group) ? $group['min'] : null;
-				static::add_group($group_type, $group_name, $group['files'], $enabled, $combine, $min);
+				$options = array(
+					'enabled' => array_key_exists('enabled', $group) ? $group['enabled'] : true,
+					'combine' => array_key_exists('combine', $group) ? $group['combine'] : static::$combine_default,
+					'min' => array_key_exists('min', $group) ? $group['min'] : static::$min_default,
+				);
+				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
 		}
 
@@ -208,22 +210,25 @@ class Casset {
 	 *
 	 * @param string $group_type 'js' or 'css'
 	 * @param string $group_name The name of the group
-	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
-	 *        rendered with render_js / render_css
-	 * @param bool $combine Whether to combine files in this group. Default (null) means use config setting
-	 * @param boo $min Whether to minify files in this group. Default (null) means use config setting
+	 * @param array $options. An array of options. array(
+	 *   'enabled' => true/false,
+	 *   'combine' => true/false,
+	 *   'min' => true/false
+	 * );
 	 */
-	private static function add_group_base($group_type, $group_name, $enabled = true, $combine = null, $min = null)
+	private static function add_group_base($group_type, $group_name, $options = array())
 	{
+		// Insert defaults
+		$options = array_merge(array(
+			'enabled' => true,
+			'combine' => static::$combine_default,
+			'min' => static::$min_default,
+		), $options);
+		$options['files'] = array();
 		// If it already exists, don't overwrite it
 		if (array_key_exists($group_name, static::$groups[$group_type]))
 			throw new Casset_Exception("Group $group_name already exists: can't create it.");
-		static::$groups[$group_type][$group_name] = array(
-			'files' => array(),
-			'enabled' => $enabled,
-			'combine' => ($combine === null) ? static::$combine_default : $combine,
-			'min' => ($min === null) ? static::$min_default : $min,
-		);
+		static::$groups[$group_type][$group_name] = $options;
 	}
 
 	/**
@@ -231,17 +236,30 @@ class Casset {
 	 *
 	 * @param string $group_type 'js' or 'css'
 	 * @param string $group_name The name of the group
-	 * @param array $files Array of files to add. Each may be string, or array of (non-min, min)
-	 * @param bool $enabled Whether the group is enabled. Enabled groups will be
-	 *        rendered with render_js / render_css
-	 * @param bool $combine Whether to combine files in this group. Default (null) means use config setting
-	 * @param boo $min Whether to minify files in this group. Default (null) means use config setting
+	 * @param array $options. An array of options. array(
+	 *   'enabled' => true/false,
+	 *   'combine' => true/false,
+	 *   'min' => true/false
+	 * );
+	 * To maintain backwards compatibility, you can also pass $enabled here.
+	 * @param bool $combine_dep DEPRECATED. Whether to combine files in this group. Default (null) means use config setting
+	 * @param boo $min_dep DEPRECATED/ Whether to minify files in this group. Default (null) means use config setting
 	 */
-	public static function add_group($group_type, $group_name, $files, $enabled = true, $combine = null, $min = null)
+	public static function add_group($group_type, $group_name, $files, $options = array(), $combine_dep = null, $min_dep = null)
 	{
+		// Bit of backwards compatibity.
+		// Order used to be add_group(group_type, group_name, files, enabled, combine, min)
+		if (!is_array($options))
+		{
+			$options = array(
+				'enabled' => $options,
+				'combine' => $combine_dep,
+				'min' => $min_dep,
+			);
+		}
 		// We're basically faking the old add_group. However, the approach has changed since those days
 		// Therefore we create the group it it doesn't already exist, then add the files to it
-		static::add_group_base($group_type, $group_name, $enabled, $combine, $min);
+		static::add_group_base($group_type, $group_name, $options);
 		foreach ($files as $file) {
 			if (!is_array($file))
 				$file = array($file, false);
@@ -383,7 +401,7 @@ class Casset {
 		if (!array_key_exists($group, static::$groups[$type]))
 		{
 			// Assume they want the group enabled
-			static::add_group_base($type, $group, true);
+			static::add_group_base($type, $group);
 		}
 		array_push(static::$groups[$type][$group]['files'], $files);
 	}
