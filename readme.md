@@ -122,6 +122,7 @@ To define a group in the config file, use the 'groups' key, eg:
 			'enabled' => true,
 			'combine' => false,
 			'min' => false,
+			'inline' => true,
 		),
 		'group_name_2' => array(.....),
 	),
@@ -145,7 +146,8 @@ If you're using minification, but have a pre-minified copy of your file (jquery 
 array element.  
 **enabled**: Optional, specifies whether a group is enabled. A group will only be rendered when it is enabled. Default true.  
 **combine**: This optional key allows you to override the 'combine' config key on a per-group bases.  
-**min**: This optional key allows you to override the 'min' config key on a per-group basis.
+**min**: This optional key allows you to override the 'min' config key on a per-group basis.  
+**inline**: Optional, allows you to render the group 'inline' -- that is, show the CSS directly in the file, rather than including a separate .css file.
 
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
@@ -306,15 +308,21 @@ An exception is thrown when no files can be matched.
 Inlining
 --------
 
-If you want Casset to display a group inline, instead of linking to a cache file, you can pass `true` as the second argument to `Casset::render_js()` or `Casset::render_css()`.
-For example...
+If you want Casset to display a group inline, instead of linking to a cache file, you can mark the group as 'inline' when you create it.
 
 ```php
-// Render 'group_name' js inline.
-echo Casset::render_js('group_name', true);
-// Render all css groups inline.
-echo Casset::render_css(false, true);
+// In your config (see add_group also)
+'groups' => array(
+	'js' => array(
+		'files' => array('file.css'),
+		'inline' => true,
+	),
+),
 ```
+
+NOTE: You could previously pass an argument to `Casset::render()` to tell it to render the group inline.
+This behaviour has been deprecated, although it still works.
+You are encouraged to move away from this technique if you are using it.
 
 Occasionally it can be useful to declare a bit of javascript in your view, but have it included in your template. Casset allows for this, although it doesn't support groups and minification
 (as I don't see a need for those features in this context -- give me a shout if you find an application for them, and I'll enhance).
