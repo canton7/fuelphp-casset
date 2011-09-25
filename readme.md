@@ -7,6 +7,8 @@ There are are some other changes too, please read on!
 
 Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libraries, stolen from http://code.google.com/p/minify/.
 
+If you have any comments/queries, either send me a message on github, post to the fuelphp [forum thread](http://fuelphp.com/forums/topics/view/2187), catch me on #fuelphp, or open an issue.
+
 Installation
 ------------
 
