@@ -387,6 +387,58 @@ class Casset {
 	}
 
 	/**
+	 * Set group options on-the-fly.
+	 *
+	 * @param string $type 'js' / 'css
+	 * @param mixed $group_names Group name to change, or array of groups to change,
+	 *		or '' for global group, or '*' for all groups.
+	 * @param string $option_key The name of the option to change
+	 * @param mixed $option_value What to set the option to
+	 */
+	public static function set_group_option($type, $group_names, $option_key, $option_value)
+	{
+		if ($group_names == '')
+			$group_names = array('global');
+		else if ($group_names == '*')
+			$group_names = array_keys(static::$groups[$type]);
+		else if (!is_array($group_names))
+			$group_names = array($group_names);
+
+		// Allow them to specify a single string dep
+		if ($option_key == 'deps' && !is_array($option_value))
+			$option_value = array($option_value);
+
+		foreach ($group_names as $group_name)
+			static::$groups[$type][$group_name][$option_key] = $option_value;
+	}
+
+	/**
+	 * Set group options on-the-fly, js version
+	 *
+	 * @param mixed $group_names Group name to change, or array of groups to change,
+	 *		or '' for global group, or '*' for all groups.
+	 * @param string $option_key The name of the option to change
+	 * @param mixed $option_value What to set the option to
+	 */
+	public static function set_js_option($group_names, $option_key, $option_value)
+	{
+		static::set_group_option('js', $group_names, $option_key, $option_value);
+	}
+
+	/**
+	 * Set group options on-the-fly, css version
+	 *
+	 * @param mixed $group_names Group name to change, or array of groups to change,
+	 *		or '' for global group, or '*' for all groups.
+	 * @param string $option_key The name of the option to change
+	 * @param mixed $option_value What to set the option to
+	 */
+	public static function set_css_option($group_names, $option_key, $option_value)
+	{
+		static::set_group_option('css', $group_names, $option_key, $option_value);
+	}
+
+	/**
 	 * Add a javascript asset.
 	 *
 	 * @param string $script The script to add.

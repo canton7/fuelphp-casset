@@ -195,6 +195,23 @@ Casset::add_group('test_group', array(
 This method is provided merely for convenience when adding lots of files to a group at once.
 You don't have to create a group before adding files to it -- the group will be created it it doesn't exist.
 
+You can change any of these options on-the-fly using `Casset::set_group_option($type, $group, $key, $value)`, or the CSS- and JS- specific versions, `Caset::set_js_option($group, $key, $value)` and `Casset::set_css_option($group, $key, $value)`.
+`$group` has some special values: an empty string is a shortcut to the 'global' group (to which files are added if a group is not specified), and '*' is a shortcut to all groups.
+Multiple group names can also be specified, using an array.
+
+Examples:
+
+```php
+// Add a dep to the my_plugin group
+Casset::set_js_option('my_plugin', 'deps', 'jquery');
+
+// Make all files added to the current page using Casset::add_css() display inline:
+Casset::set_css_option('', 'inline', true);
+
+// Turn off minification for all groups, regardless of per-group settings, for the current page:
+CassetLLset_js_option('*', 'min', false);
+```
+
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
 Similarly (for JS files only), the order in which files appear is determined by the order in which they were added.
 This allows you a degree of control over what order your files are included in your page, which may be necessary when satisfying dependencies.
