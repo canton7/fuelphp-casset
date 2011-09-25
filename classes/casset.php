@@ -72,7 +72,7 @@ class Casset {
 	/**
 	 * @var bool Whether to combine
 	 */
-	protected static $combine_default = false;
+	protected static $combine_default = true;
 
 	/**
 	 * @var bool Whether to render files inline by default.

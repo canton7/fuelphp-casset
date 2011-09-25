@@ -94,18 +94,18 @@ return array(
 	/**
 	 * Whether to minify files.
 	 */
-	'min' => false,
+	'min' => true,
 
 	/**
 	 * Whether to combine files
 	 */
-	'combine' => false,
+	'combine' => true,
 
 	/**
 	 * When minifying, whether to show the files names in each combined
 	 * file in a comment before the tag to the file.
 	 */
-	'show_files' => true,
+	'show_files' => false,
 
 	/**
 	 * When minifying, whether to put comments in each minified file showing
