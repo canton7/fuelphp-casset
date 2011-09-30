@@ -211,7 +211,7 @@ Casset::set_js_option('my_plugin', 'deps', 'jquery');
 Casset::set_css_option('', 'inline', true);
 
 // Turn off minification for all groups, regardless of per-group settings, for the current page:
-CassetLLset_js_option('*', 'min', false);
+Casset::set_js_option('*', 'min', false);
 ```
 
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
