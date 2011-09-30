@@ -101,6 +101,32 @@ return array(
 	 */
 	'combine' => true,
 
+	/*
+	 * Whether to version images or not.
+	 * NOTE: If this is TRUE then you need to include the following in your
+	 * .htaccess file (or equivalent).
+	 *
+	 * # http://example.com/assets/img/test.1298892196.jpeg
+	 * RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png|php)$ $1/$2.$4 [L]
+	 *
+	 * This has to go above the index.php removal lines if you are using that
+	 * feature. If you are it should look something like this:
+	 *
+		<IfModule mod_rewrite.c>
+			RewriteBase /
+
+			# http://example.com/assets/img/test.1298892196.jpeg
+			RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png)$ $1/$2.$4 [L]
+
+		    RewriteCond %{REQUEST_FILENAME} !-f
+		    RewriteCond %{REQUEST_FILENAME} !-d
+
+		    RewriteRule ^(.*)$ index.php/$1 [L]
+		</IfModule>
+	 *
+	*/
+	'version_images' => false,
+
 	/**
 	 * When minifying, whether to show the files names in each combined
 	 * file in a comment before the tag to the file.

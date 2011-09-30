@@ -75,6 +75,11 @@ class Casset {
 	protected static $combine_default = false;
 
 	/**
+	 * @var bool Whether to version images
+	 */
+	protected static $version_images = false;
+
+	/**
 	 * @var bool Whether to show comments above the <script>/<link> tags showing
 	 *           which files have been minified into that file.
 	 */
@@ -123,6 +128,8 @@ class Casset {
 
 		static::$min_default = \Config::get('casset.min', static::$min_default);
 		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
+
+		static::$version_images = \Config::get('casset.version_images', static::$version_images);
 
 
 		$group_sets = \Config::get('casset.groups', array());
@@ -818,11 +825,27 @@ class Casset {
 			foreach ($image_paths as $image_path)
 			{
 				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';
+				$image_path = (static::$version_images) ? static::version_img($image_path) : $image_path;
 				$attr['src'] = $base.$image_path;
 				$ret .= html_tag('img', $attr);
 			}
 		}
 		return $ret;
+	}
+
+	/**
+	 * Returns given img with modified path to include file modified time.
+	 * Requires .htaccess in public route to make this work...
+	 *
+	 * @param string $image_path
+	 * @return void
+	 * @author Lee Overy
+	 */
+	public static function version_img($image_path)
+	{
+		$path 	= pathinfo($image_path);
+		$mtime 	= '.'.filemtime(DOCROOT.$image_path).'.';
+		return str_replace('.'.$path['extension'], $mtime, $image_path.$path['extension']);
 	}
 
 	/**
