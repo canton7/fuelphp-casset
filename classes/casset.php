@@ -1048,7 +1048,7 @@ class Casset {
 		$ret = '';
 		foreach (static::$inline_assets['css'] as $content)
 		{
-			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+			$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
 	}
