@@ -1114,7 +1114,13 @@ class Casset {
 			$image_paths = static::find_files($image, 'img');
 			foreach ($image_paths as $image_path)
 			{
-				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';
+				$remote = (strpos($image_path, '//') !== false);	
+				if (static::$filepath_callback)
+				{
+					$func = static::$filepath_callback;
+					$image_path = $func($image_path, 'img', $remote);
+				}
+				$base = ($remote) ? '' : static::$asset_url;
 				$attr['src'] = $base.$image_path;
 				$ret .= html_tag('img', $attr);
 			}
