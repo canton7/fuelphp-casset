@@ -109,6 +109,14 @@ class Casset {
 	 * Prototype: callback(content, filename, type, group_name);
 	 */
 	protected static $post_load_callback = null;
+		 
+	/*
+	 * @var function If given, the function to call when we've decided on the name
+	 * for a file, but want to allow the user to tweak it before we write it to the
+	 * page.
+	 * Prototype: callback($filepath, $type, $remote);
+	 */
+	protected static $filepath_callback = null;
 
 	/**
 	 * @var array Keeps a record of which groups have been rendered.
@@ -179,6 +187,8 @@ class Casset {
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
+
+		static::$filepath_callback = \Config::get('casset.filepath_callback', static::$filepath_callback);
 
 		static::$initialized = true;
 	}
