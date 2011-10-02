@@ -978,10 +978,6 @@ class Casset {
 	 */
 	private static function combine($type, $file_group, $minify, $inline)
 	{
-		$filename = md5(implode('', array_map(function($a) {
-			return $a['file'];
-		}, $file_group)).($minify ? 'min' : '')).'.'.$type;
-
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
 		foreach ($file_group as $file)
@@ -996,8 +992,12 @@ class Casset {
 				$last_mod = $mod;
 		}
 
+		$filename = md5(implode('', array_map(function($a) {
+			return $a['file'];
+		}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
+
 		$filepath = DOCROOT.static::$cache_path.'/'.$filename;
-		$needs_update = (!file_exists($filepath) || ($mtime = filemtime($filepath)) < $last_mod);
+		$needs_update = (!file_exists($filepath));
 
 		if ($needs_update)
 		{
@@ -1033,8 +1033,6 @@ class Casset {
 			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
-		if (!$inline)
-			$filename .= '?'.$mtime;
 		return $filename;
 	}
 
