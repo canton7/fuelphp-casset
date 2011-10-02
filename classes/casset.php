@@ -596,14 +596,14 @@ class Casset {
 		if (strpos($filename, '::') === false)
 			$filename = static::$default_path_key.'::'.$filename;
 		$files = static::find_files($filename, $type);
-		if ($add_url)
+		foreach ($files as &$file)
 		{
-			foreach ($files as &$file)
-			{
-				if (strpos($file, '//') !== false)
-					continue;
+			$remote = (strpos($file, '//') !== false);
+			$file = static::process_filepath($file, $type, $remote);
+			if ($remote)
+				continue;
+			if ($add_url)
 				$file = static::$asset_url.$file;
-			}
 		}
 		if (count($files) == 1 && !$force_array)
 			return $files[0];
