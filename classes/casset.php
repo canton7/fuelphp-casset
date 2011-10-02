@@ -111,13 +111,11 @@ class Casset {
 	protected static $post_load_callback = null;
 
 	/**
-	 * @var function If given, the function to call when we've read a file, before
-	 * minifying.
-	 * Note that it's only called if $combine for the file is true
-	 * Prototype: callback(content, filename, type, group_name);
+	 * @var function If given, the function to call when rendering an asset.
+	 * Prototype: Casset::set_filename_callback(function($filename,  ...) { ... }); instead.
 	 */
 	protected static $filename_callback = null;
-	
+
 	/**
 	 * @var array Keeps a record of which groups have been rendered.
 	 * We then check this when deciding whether to render a dep.
@@ -1031,12 +1029,12 @@ class Casset {
 			// 	// For some reason, PHP doesn't like you calling member closure directly
 			// 	$func = static::$filename_callback;
 			// 	$image_path = $func($filename, $type, (strpos($image_path, '//') === false) ? false : true);
-			// 	
+			//
 			// } else {
 				$filename .= '?'.$mtime;
 			// }
 		}
-			
+
 		return $filename;
 	}
 
@@ -1108,15 +1106,16 @@ class Casset {
 			$image_paths = static::find_files($image, 'img');
 			foreach ($image_paths as $image_path)
 			{
-				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';				
+				$remote_bool = (strpos($image_path, '//') === false) ? false : true;
+				$base = (!$remote_bool) ? static::$asset_url : '';
 
 				if (static::$filename_callback != null)
 				{
 					// For some reason, PHP doesn't like you calling member closure directly
 					$func = static::$filename_callback;
-					$image_path = $func($image_path, 'img', (strpos($image_path, '//') === false) ? false : true);
+					$image_path = $func($image_path, 'img', $remote_bool);
 				}
-				
+
 				$attr['src'] = $base.$image_path;
 				$ret .= html_tag('img', $attr);
 			}
