@@ -211,7 +211,7 @@ Casset::set_js_option('my_plugin', 'deps', 'jquery');
 Casset::set_css_option('', 'inline', true);
 
 // Turn off minification for all groups, regardless of per-group settings, for the current page:
-CassetLLset_js_option('*', 'min', false);
+Casset::set_js_option('*', 'min', false);
 ```
 
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
@@ -645,8 +645,9 @@ There is a single callback, which is called for all files, regardless of group, 
 The callback is passed the name of the file, the type (js or css) and the group to which it belongs,as well as the file content of course.
 It is then up to you to decide how, if at all, you want to process this content, based on the other parameters passed.
 
-The callback is set either in the config file (the `post_load_callback` key), or using `Casset::set_post_load_callback()`.
-Both expect an anonymous function (closure), although I daresay you could bind it straight to some other library's method.
+You can either define your callback using `Casset::set_post_load_callback()`, or you can pass the name of a function to call to the config key `post_load_callback`.
+`Casset::set_post_load_callback()` expects an anonymous function (closure), although I daresay you could bind it straight to some other library's method.
+Unfortunately, fuel doesn't allow you to define closues in your config (it tries to evaluate them to get a value to assign to the config key).
 
 The callback itself has the following prototype, although you can miss out the latter arguments if you want: PHP won't complain.
 
@@ -666,14 +667,6 @@ When testing, therefore, it is recommended that you stick a `Casset::clear_cache
 Time for a few examples:
 
 ```php
-// In the config file:
-'post_load_callback' => function($content, $filename, $type) {
-	// We don't want to process JS files
-	if ($type == 'js')
-		return $content;
-	return SomeLibrary::some_method($content);
-},
-
 // In a controller somewhere
 Casset::set_post_load_callback(function($content, $filename) {
 	$ext = pathinfo($filename, PATHINFO_EXTENSION);
@@ -681,6 +674,9 @@ Casset::set_post_load_callback(function($content, $filename) {
 		return $content;
 	return SomeSassLibrary::some_method($content);
 });
+
+// In the config file:
+'post_load_callback' => 'my_callback_name',
 ```
 
 Note that Casset is pretty lazy, so the callback won't be called under you call `Casset::render()` (or one of its variants).

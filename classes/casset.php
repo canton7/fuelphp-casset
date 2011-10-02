@@ -111,6 +111,12 @@ class Casset {
 	protected static $post_load_callback = null;
 
 	/**
+	 * @var function If given, the function to call when rendering an asset.
+	 * Prototype: Casset::set_filename_callback(function($filename,  ...) { ... }); instead.
+	 */
+	protected static $filename_callback = null;
+
+	/**
 	 * @var array Keeps a record of which groups have been rendered.
 	 * We then check this when deciding whether to render a dep.
 	 */
@@ -179,6 +185,7 @@ class Casset {
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
+		static::$filename_callback = \Config::get('casset.filename_callback', static::$filename_callback);
 
 		static::$initialized = true;
 	}
@@ -661,13 +668,13 @@ class Casset {
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render_js($group = false, $inline = null, $attr = array())
+	public static function render_js($group = false, $inline_dep = null, $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
-		if (!is_array($attr))
-			$attr = array();
+		if (!is_array($attr_dep))
+			$attr_dep = array();
 
 		$file_groups = static::files_to_render('js', $group);
 
@@ -677,11 +684,10 @@ class Casset {
 		{
 			// We used to take $inline as 2nd argument. However, we now use a group option.
 			// It's easiest if we let $inline override this group option, though.
-			if ($inline === null)
-				$inline = static::$groups['js'][$group_name]['inline'];
+			$inline = ($inline_dep === null) ? static::$groups['js'][$group_name]['inline'] : $inline_dep;
+
 			// $attr is also deprecated. If specified, entirely overrides the group option.
-			if (!count($attr))
-				$attr = static::$groups['js'][$group_name]['attr'];
+			$attr = (!count($attr_dep)) ? static::$groups['js'][$group_name]['attr'] : $attr_dep;
 
 			if (static::$groups['js'][$group_name]['combine'])
 			{
@@ -729,13 +735,13 @@ class Casset {
 	 *        a cache file to be written for speed purposes
 	 * @return string The css tags to be written to the page
 	 */
-	public static function render_css($group = false, $inline = null, $attr = array())
+	public static function render_css($group = false, $inline_dep = null, $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
-		if (!is_array($attr))
-			$attr = array();
+		if (!is_array($attr_dep))
+			$attr_dep = array();
 
 		$file_groups = static::files_to_render('css', $group);
 
@@ -745,11 +751,10 @@ class Casset {
 		{
 			// We used to take $inline as 2nd argument. However, we now use a group option.
 			// It's easiest if we let $inline override this group option, though.
-			if ($inline === null)
-				$inline = static::$groups['css'][$group_name]['inline'];
+			$inline = ($inline_dep === null) ? static::$groups['css'][$group_name]['inline'] : $inline_dep;
+
 			// $attr is also deprecated. If specified, entirely overrides the group option.
-			if (!count($attr))
-				$attr = static::$groups['css'][$group_name]['attr'];
+			$attr = (!count($attr_dep)) ? static::$groups['css'][$group_name]['attr'] : $attr_dep;
 
 			if (static::$groups['css'][$group_name]['combine'])
 			{
@@ -1018,8 +1023,18 @@ class Casset {
 			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
-		if (!$inline)
-			$filename .= '?'.$mtime;
+		if (!$inline) {
+			// if (static::$filename_callback != null)
+			// {
+			// 	// For some reason, PHP doesn't like you calling member closure directly
+			// 	$func = static::$filename_callback;
+			// 	$image_path = $func($filename, $type, (strpos($image_path, '//') === false) ? false : true);
+			//
+			// } else {
+				$filename .= '?'.$mtime;
+			// }
+		}
+
 		return $filename;
 	}
 
@@ -1048,7 +1063,7 @@ class Casset {
 		$ret = '';
 		foreach (static::$inline_assets['css'] as $content)
 		{
-			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+			$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
 	}
@@ -1060,6 +1075,14 @@ class Casset {
 	 */
 	public static function set_post_load_callback($callback) {
 		static::$post_load_callback = $callback;
+	}
+
+	/**
+	 * Sets the filename callback.
+	 * @param function the function to set
+	 */
+	public static function set_filename_callback($callback) {
+		static::$filename_callback = $callback;
 	}
 
 	/**
@@ -1083,7 +1106,16 @@ class Casset {
 			$image_paths = static::find_files($image, 'img');
 			foreach ($image_paths as $image_path)
 			{
-				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';
+				$remote_bool = (strpos($image_path, '//') === false) ? false : true;
+				$base = (!$remote_bool) ? static::$asset_url : '';
+
+				if (static::$filename_callback != null)
+				{
+					// For some reason, PHP doesn't like you calling member closure directly
+					$func = static::$filename_callback;
+					$image_path = $func($image_path, 'img', $remote_bool);
+				}
+
 				$attr['src'] = $base.$image_path;
 				$ret .= html_tag('img', $attr);
 			}
