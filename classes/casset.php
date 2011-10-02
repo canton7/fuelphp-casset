@@ -1122,6 +1122,14 @@ class Casset {
 	}
 
 	/**
+	 * Sets the filepath callback
+	 * @param function The function to set
+	 */
+	public static function set_filepath_callback($callback) {
+		static::$filepath_callback = $callback;
+	}
+
+	/**
 	 * Locates the given image(s), and returns the resulting <img> tag.
 	 *
 	 * @param mixed $images Image(s) to print. Can be string or array of strings
