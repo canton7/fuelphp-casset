@@ -646,6 +646,26 @@ class Casset {
 		static::add_deps('css', $group, $deps);
 	}
 
+
+	/**
+	 * Sticks the given filename through the filepath callback, if given.
+	 *
+	 * @param string $filepath The filepath to process
+	 * @param string $type The type of asset, passed to the callback
+	 * @param bool $remote Whether the asset is on another machine, passed to the callback
+	 */
+	private static function process_filepath($filepath, $type, $remote = null)
+	{
+		if (static::$filepath_callback)
+		{
+			if ($remote === null)
+				$remote = (strpos($filepath, '//') !== false);
+			$func = static::$filepath_callback;
+			$filepath = $func($filepath, $type, $remote);
+		}
+		return $filepath;
+	}
+
 	/**
 	 * Shortcut to render_js() and render_css().
 	 *
