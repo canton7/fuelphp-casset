@@ -111,6 +111,14 @@ class Casset {
 	protected static $post_load_callback = null;
 
 	/**
+	 * @var function If given, the function to call when we've read a file, before
+	 * minifying.
+	 * Note that it's only called if $combine for the file is true
+	 * Prototype: callback(content, filename, type, group_name);
+	 */
+	protected static $filename_callback = null;
+	
+	/**
 	 * @var array Keeps a record of which groups have been rendered.
 	 * We then check this when deciding whether to render a dep.
 	 */
@@ -179,6 +187,7 @@ class Casset {
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
+		static::$filename_callback = \Config::get('casset.filename_callback', static::$filename_callback);
 
 		static::$initialized = true;
 	}
@@ -1016,8 +1025,18 @@ class Casset {
 			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
-		if (!$inline)
-			$filename .= '?'.$mtime;
+		if (!$inline) {
+			// if (static::$filename_callback != null)
+			// {
+			// 	// For some reason, PHP doesn't like you calling member closure directly
+			// 	$func = static::$filename_callback;
+			// 	$image_path = $func($filename, $type, (strpos($image_path, '//') === false) ? false : true);
+			// 	
+			// } else {
+				$filename .= '?'.$mtime;
+			// }
+		}
+			
 		return $filename;
 	}
 
@@ -1061,6 +1080,14 @@ class Casset {
 	}
 
 	/**
+	 * Sets the filename callback.
+	 * @param function the function to set
+	 */
+	public static function set_filename_callback($callback) {
+		static::$filename_callback = $callback;
+	}
+
+	/**
 	 * Locates the given image(s), and returns the resulting <img> tag.
 	 *
 	 * @param mixed $images Image(s) to print. Can be string or array of strings
@@ -1081,7 +1108,15 @@ class Casset {
 			$image_paths = static::find_files($image, 'img');
 			foreach ($image_paths as $image_path)
 			{
-				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';
+				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';				
+
+				if (static::$filename_callback != null)
+				{
+					// For some reason, PHP doesn't like you calling member closure directly
+					$func = static::$filename_callback;
+					$image_path = $func($image_path, 'img', (strpos($image_path, '//') === false) ? false : true);
+				}
+				
 				$attr['src'] = $base.$image_path;
 				$ret .= html_tag('img', $attr);
 			}
