@@ -1040,6 +1040,9 @@ class Casset {
 		if ( !\Html::$html5 ) {
 			$attr = array( 'type' => 'text/javascript' );
 		}
+		else {
+			$attr = array();
+		}
 		
 		$ret = '';
 		foreach (static::$inline_assets['js'] as $content)
