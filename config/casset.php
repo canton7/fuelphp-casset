@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Casset: Convenient asset library for FuelPHP.
  *
@@ -120,12 +119,12 @@ return array(
 	'deps_max_depth' => 5,
 
 	/**
-	 * Here you can define a callback that is called after a while is loaded from
+	 * Here you can pass the name of a callback that is called after a while is loaded from
 	 * disk, and before it is stored in a cache file.
 	 * This set of circumstances only occurs when 'combine' is true -- the callback
 	 * will *not* be called if 'combine' is false.
 	 *
-	 * This parameter expects a closure (or other function reference), with the
+	 * This parameter expects a string, which is the name of a closure, with the
 	 * following prototype:
 	 * function($content, $filename, $type, $group_name)
 	 * and should return the content after being processed.
@@ -134,7 +133,7 @@ return array(
 	 * $type = 'js' or 'css'
 	 * $group_name = the name of the group to which the file belongs
 	 *
-	 * You are allowed to define functions in this config file, or you can use
+	 * Alternatively, or you can use
 	 * Casset::set_post_load_callback(function($content,  ...) { ... }); instead
 	 */
 	'post_load_callback' => null,
