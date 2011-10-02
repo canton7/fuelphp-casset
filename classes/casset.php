@@ -729,9 +729,12 @@ class Casset {
 				if ($inline)
 					$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
+				{
+					$filepath = static::process_filepath(static::$cache_path.$filename, 'js');
 					$ret .= html_tag('script', array(
-						'src' => static::$asset_url.static::$cache_path.$filename,
+						'src' => static::$asset_url.$filepath,
 					)+$attr, '').PHP_EOL;
+				}
 			}
 			else
 			{
@@ -741,9 +744,11 @@ class Casset {
 						$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 					{
-						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
+						$remote = (strpos($file['file'], '//') !== false);
+						$base = ($remote) ? '' : static::$asset_url;
+						$filepath = static::process_filepath($file['file'], 'js', $remote);
 						$ret .= html_tag('script', array(
-							'src' => $base.$file['file'],
+							'src' => $base.$filepath,
 						)+$attr, '').PHP_EOL;
 					}
 				}
@@ -790,7 +795,6 @@ class Casset {
 			
 			if (static::$groups['css'][$group_name]['combine'])
 			{
-
 				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
 				if (!$inline && static::$show_files)
 				{
@@ -801,10 +805,13 @@ class Casset {
 				if ($inline)
 					$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
+				{
+					$filepath = static::process_filepath(static::$cache_path.$filename, 'css');
 					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
-						'href' => static::$asset_url.static::$cache_path.$filename,
+						'href' => static::$asset_url.$filepath,
 					)+$attr).PHP_EOL;
+				}
 			}
 			else
 			{
@@ -814,10 +821,12 @@ class Casset {
 						$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 					{
-						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
+						$remote = (strpos($file['file'], '//') !== false);
+						$base = ($remote) ? '' : static::$asset_url;
+						$filepath = static::process_filepath($file['file'], 'css', $remote);
 						$ret .= html_tag('link', array(
 							'rel' => 'stylesheet',
-							'href' => $base.$file['file'],
+							'href' => $base.$filepath,
 						)+$attr).PHP_EOL;
 					}
 				}
@@ -1053,6 +1062,7 @@ class Casset {
 			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
+
 		return $filename;
 	}
 
