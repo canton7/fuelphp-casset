@@ -628,11 +628,11 @@ Casset::clear_cache('yesterday');
 Callbacks
 ---------
 
+### post_load_callback
+
 Quick thanks to [ShonM](https://github.com/shonm) for pushing so hard to get this feature implemented :)
 
-There is currently a single callback, `post_load`, and it is likely that it will stay this way.
-
-Callbacks allow you the flexibility to do you own processing on the files that Casset loads.
+The post_load callback allows you the flexibility to do you own processing on the files that Casset loads.
 This means that you can use SASS, CoffeeScript, etc, then configure Casset to call the appropriate compiler when it loads the asset.
 
 Note that the `post_load` is *only* called when the 'combine' config key is set to true.
@@ -682,6 +682,74 @@ Casset::set_post_load_callback(function($content, $filename) {
 Note that Casset is pretty lazy, so the callback won't be called under you call `Casset::render()` (or one of its variants).
 Therefore feel free to define your callback after telling Casset to include the files you want the callback to process.
 
+### filepath_callback
+
+Thanks to [leekudos](https://github.com/leekudos) for pushing for this one, and for numerous suggestions and comments.
+
+This callback was implenented to solve one particular problem. However, it has been generalised in case you manage to find another use.
+
+The original problem was this: There are some very large images on the server, so have been cached for a very long time.
+This means that the url of the image has to be changed every time the image changes.
+Now what if we could get Casset to do this url changing for us....
+
+The filepath callback is called, basically, whenever Casset has generated a URL, but has not yet committed to using it.
+This allows you to modify that URL.
+
+More specifically:
+
+ - `img()` calls it just before writing the <img> tag.
+ - `render_css()` and `render_js()` call it just before writing a \<script src=".."\> or \<link href="..."\> tag to the page.
+
+The callback itself has the following prototype:
+
+```php
+function($filepath, $type, $remote) { ... }
+```
+
+Where:  
+`$filepath`: The path to the asset. Doesn't include the part of the URL specified by the 'url' config key, although will be a full URL if the asset is located on another server.  
+`$type`: The type of asset: 'js', 'css' or 'img' currently.  
+`$remote`: True if the asset is located on another server, false otherwise.
+
+As with the post_local callback, this callback can either be specified directly using `Casset::set_filepath_callback()`, or the name of a function to call can be specified in the config, under the 'filepath_callback' key.
+
+A trivial example:
+
+```php
+// Adds the string '?query=hello' to the end of all local js urls
+Casset::set_filepath_callback(function($filepath, $type, $remote) {
+	if ($remote || $type != 'js')
+		return $filepath;
+	return $filepath.'?query=hello';
+});
+```
+
+Back to addressing the original problem (large cached images).
+Appending the last modified time of the file to the end of the URL is one option, but this doesn't necessarily work in all browsers.
+However, inserting the mtime into the middle of the filename will certainly work.
+This needs some .htaccess magic, but that's OK.
+
+Somewhere in your project:
+
+```php
+// Rewrite e.g. assets/img/file.jpeg to assets/img/file.1298892196.jpg
+Casset::set_filepath_callback($filepath, $type, $remote) {
+	if ($remote || $type != 'img')
+		return $filepath;
+
+	$pathinfo = pathinfo($filepath);
+	$mtime = filemtime(DOCROOT.$filepath);
+	return $pathinfo['dirname'].$pathinfo['basename'].'.'.$mtime.'.'.$pathinfo['extension'];
+});
+```
+
+In your .htaccess:
+
+```
+# Rewrite e.g. http://example.com/assets/img/test.1298892196.jpg to http://example.com/assets/img/test.jpg
+# Needs to be ABOVE the lines for removing index.php, if they exist.
+RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png)$ $1/$2.$4 [L]
+```
 
 Comparison to Assetic
 ---------------------
