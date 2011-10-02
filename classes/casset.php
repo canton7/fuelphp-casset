@@ -661,13 +661,13 @@ class Casset {
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render_js($group = false, $inline = null, $attr = array())
+	public static function render_js($group = false, $inline_dep = null, $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
-		if (!is_array($attr))
-			$attr = array();
+		if (!is_array($attr_dep))
+			$attr_dep = array();
 
 		$file_groups = static::files_to_render('js', $group);
 
@@ -677,11 +677,10 @@ class Casset {
 		{
 			// We used to take $inline as 2nd argument. However, we now use a group option.
 			// It's easiest if we let $inline override this group option, though.
-			if ($inline === null)
-				$inline = static::$groups['js'][$group_name]['inline'];
+			$inline = ($inline_dep === null) ? static::$groups['js'][$group_name]['inline'] : $inline_dep;
+
 			// $attr is also deprecated. If specified, entirely overrides the group option.
-			if (!count($attr))
-				$attr = static::$groups['js'][$group_name]['attr'];
+			$attr = (!count($attr_dep)) ? static::$groups['js'][$group_name]['attr'] : $attr_dep;
 
 			if (static::$groups['js'][$group_name]['combine'])
 			{
@@ -729,13 +728,13 @@ class Casset {
 	 *        a cache file to be written for speed purposes
 	 * @return string The css tags to be written to the page
 	 */
-	public static function render_css($group = false, $inline = null, $attr = array())
+	public static function render_css($group = false, $inline_dep = null, $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
-		if (!is_array($attr))
-			$attr = array();
+		if (!is_array($attr_dep))
+			$attr_dep = array();
 
 		$file_groups = static::files_to_render('css', $group);
 
@@ -745,11 +744,10 @@ class Casset {
 		{
 			// We used to take $inline as 2nd argument. However, we now use a group option.
 			// It's easiest if we let $inline override this group option, though.
-			if ($inline === null)
-				$inline = static::$groups['css'][$group_name]['inline'];
+			$inline = ($inline_dep === null) ? static::$groups['css'][$group_name]['inline'] : $inline_dep;
+
 			// $attr is also deprecated. If specified, entirely overrides the group option.
-			if (!count($attr))
-				$attr = static::$groups['css'][$group_name]['attr'];
+			$attr = (!count($attr_dep)) ? static::$groups['css'][$group_name]['attr'] : $attr_dep;
 
 			if (static::$groups['css'][$group_name]['combine'])
 			{
