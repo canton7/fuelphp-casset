@@ -12,7 +12,7 @@ If you have any comments/queries, either send me a message on github, post to th
 Installation
 ------------
 
-### Using oil (linux or daring windows users only)
+### Using oil
 1. cd to your fuel project's root
 2. Run `php oil package install casset`
 3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
