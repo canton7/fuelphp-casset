@@ -683,6 +683,12 @@ class Casset {
 			if (!count($attr))
 				$attr = static::$groups['js'][$group_name]['attr'];
 
+			// the type attribute is not required for script elements under html5
+			// @link http://www.w3.org/TR/html5/scripting-1.html#attr-script-type
+			if ( !\Html::$html5 ) {
+				$attr = array( 'type' => 'text/javascript' ) + $attr;
+			}
+			
 			if (static::$groups['js'][$group_name]['combine'])
 			{
 				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
@@ -693,10 +699,9 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('script', array(
-						'type' => 'text/javascript',
 						'src' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr, '').PHP_EOL;
 			}
@@ -705,12 +710,11 @@ class Casset {
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+						$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 					{
 						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
 						$ret .= html_tag('script', array(
-							'type' => 'text/javascript',
 							'src' => $base.$file['file'],
 						)+$attr, '').PHP_EOL;
 					}
@@ -751,6 +755,13 @@ class Casset {
 			if (!count($attr))
 				$attr = static::$groups['css'][$group_name]['attr'];
 
+			// the type attribute is not required for style or link[rel="stylesheet"] elements under html5
+			// @link http://www.w3.org/TR/html5/links.html#link-type-stylesheet
+			// @link http://www.w3.org/TR/html5/semantics.html#attr-style-type
+			if ( !\Html::$html5 ) {
+				$attr = array( 'type' => 'text/css' ) + $attr;
+			}
+			
 			if (static::$groups['css'][$group_name]['combine'])
 			{
 
@@ -762,11 +773,10 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
 					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
-						'type' => 'text/css',
 						'href' => static::$asset_url.static::$cache_path.$filename,
 					)+$attr).PHP_EOL;
 			}
@@ -775,13 +785,12 @@ class Casset {
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+						$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 					{
 						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
 						$ret .= html_tag('link', array(
 							'rel' => 'stylesheet',
-							'type' => 'text/css',
 							'href' => $base.$file['file'],
 						)+$attr).PHP_EOL;
 					}
@@ -1030,10 +1039,20 @@ class Casset {
 	 */
 	public static function render_js_inline()
 	{
+		
+		// the type attribute is not required for script elements under html5
+		// @link http://www.w3.org/TR/html5/scripting-1.html#attr-script-type
+		if ( !\Html::$html5 ) {
+			$attr = array( 'type' => 'text/javascript' );
+		}
+		else {
+			$attr = array();
+		}
+		
 		$ret = '';
 		foreach (static::$inline_assets['js'] as $content)
 		{
-			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+			$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
 	}
@@ -1045,10 +1064,20 @@ class Casset {
 	 */
 	public static function render_css_inline()
 	{
+		
+		// the type attribute is not required for style elements under html5
+		// @link http://www.w3.org/TR/html5/semantics.html#attr-style-type
+		if ( !\Html::$html5 ) {
+			$attr = array( 'type' => 'text/css' ) + $attr;
+		}
+		else {
+			$attr = array();
+		}
+		
 		$ret = '';
 		foreach (static::$inline_assets['css'] as $content)
 		{
-			$ret .= html_tag('style', array('type' => 'text/css'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+			$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
 	}
