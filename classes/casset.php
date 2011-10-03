@@ -291,6 +291,17 @@ class Casset {
 	}
 
 	/**
+	 * Returns true if the given group exists
+	 *
+	 * @param string $group_type 'js' or 'css
+	 * @param type $group_name the nam eof the group
+	 */
+	public static function group_exists($group_type, $group_name)
+	{
+		return array_key_exists($group_name, static::$groups[$group_type]);
+	}
+
+	/**
 	 * Enables both js and css groups of the given name.
 	 *
 	 * @param mixed $group The group to enable, or array of groups
