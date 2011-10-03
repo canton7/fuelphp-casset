@@ -162,6 +162,7 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
+				$options = static::prep_new_group_options($group);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
 		}
@@ -184,6 +185,25 @@ class Casset {
 		static::$initialized = true;
 	}
 
+
+	/**
+	 * Sets up options for new groups setup via casset/config.php.
+	 * Abstracts away from _init method. Also easier if options are
+	 * added in future as iterates through defaults to do checking.
+	 *
+	 * @param array $options Options as defined in group in config.php
+	 * @return void
+	 */
+	private static function prep_new_group_options($group_options)
+	{
+		$options = array();
+		foreach (static::$default_options as $key => $option_val) {
+			if (array_key_exists($key, $group_options)) {
+				$options[$key] = $group_options[$key];
+			}
+		}
+		return $options;
+	}
 
 
 	/**
