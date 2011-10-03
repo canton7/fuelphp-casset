@@ -162,9 +162,18 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
+				$options = static::prep_new_group_options($group);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
 		}
+
+		// Add the global group if it doesn't already exist.
+		// This is so that set_group_option() can be used on it. This function will
+		// throw an exception if the named group doesn't exist.
+		if (!static::group_exists('js', 'global'))
+			static::add_group_base('js', 'global');
+		if (!static::group_exists('css', 'global'))
+			static::add_group_base('css', 'global');
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
@@ -176,6 +185,25 @@ class Casset {
 		static::$initialized = true;
 	}
 
+
+	/**
+	 * Sets up options for new groups setup via casset/config.php.
+	 * Abstracts away from _init method. Also easier if options are
+	 * added in future as iterates through defaults to do checking.
+	 *
+	 * @param array $options Options as defined in group in config.php
+	 * @return void
+	 */
+	private static function prep_new_group_options($group_options)
+	{
+		$options = array();
+		foreach (static::$default_options as $key => $option_val) {
+			if (array_key_exists($key, $group_options)) {
+				$options[$key] = $group_options[$key];
+			}
+		}
+		return $options;
+	}
 
 
 	/**
@@ -291,6 +319,17 @@ class Casset {
 	}
 
 	/**
+	 * Returns true if the given group exists
+	 *
+	 * @param string $group_type 'js' or 'css
+	 * @param type $group_name the nam eof the group
+	 */
+	public static function group_exists($group_type, $group_name)
+	{
+		return array_key_exists($group_name, static::$groups[$group_type]);
+	}
+
+	/**
 	 * Enables both js and css groups of the given name.
 	 *
 	 * @param mixed $group The group to enable, or array of groups
@@ -386,7 +425,11 @@ class Casset {
 		if ($group_names == '')
 			$group_names = array('global');
 		else if ($group_names == '*')
+		{
+			// Change the default
+			static::$default_options[$option_key] = $option_value;
 			$group_names = array_keys(static::$groups[$type]);
+		}
 		else if (!is_array($group_names))
 			$group_names = array($group_names);
 
@@ -395,7 +438,12 @@ class Casset {
 			$option_value = array($option_value);
 
 		foreach ($group_names as $group_name)
+		{
+			// If the group doesn't exist, throw a fuss
+			if (!static::group_exists($type, $group_name))
+				throw new Casset_Exception("Can't set option for group '$group_name' ($type), as it doesn't exist.");
 			static::$groups[$type][$group_name][$option_key] = $option_value;
+		}
 	}
 
 	/**
