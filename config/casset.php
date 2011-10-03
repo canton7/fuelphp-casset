@@ -139,6 +139,25 @@ return array(
 	'post_load_callback' => null,
 
 	/**
+	 * This config key specifies the name of a callback which is called when Casset
+	 * wants to create a <script> or <link> tag pointing at a remote asset path,
+	 * or you've called img() and Casset is about to return the image path to you.
+	 * The callback allows you to overwrite / modify that path.
+	 *
+	 * As with the post_load_callback, this parameter expects a string.
+	 * The function prototype for the function named is:
+	 * function($filepath, $type, $remote);
+	 * and should return the modified filepath after being processed.
+	 * $filepath = the path to the file
+	 * $type = 'js' / 'css' / 'img'
+	 * $remote = true if the file is located on another server, false otherwise
+	 *
+	 * Alternatively, you can use
+	 * Casset::set_filepath_callback(function($filepath, ...) { ... }); instead
+	 */
+	'filepath_callback' => null,
+
+	/**
 	 * Groups of scripts.
 	 * You can predefine groups of js and css scripts which can be enabled/disabled
 	 * and rendered.

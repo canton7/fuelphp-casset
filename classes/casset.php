@@ -109,6 +109,14 @@ class Casset {
 	 * Prototype: callback(content, filename, type, group_name);
 	 */
 	protected static $post_load_callback = null;
+		 
+	/*
+	 * @var function If given, the function to call when we've decided on the name
+	 * for a file, but want to allow the user to tweak it before we write it to the
+	 * page.
+	 * Prototype: callback($filepath, $type, $remote);
+	 */
+	protected static $filepath_callback = null;
 
 	/**
 	 * @var array Keeps a record of which groups have been rendered.
@@ -179,6 +187,8 @@ class Casset {
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
+
+		static::$filepath_callback = \Config::get('casset.filepath_callback', static::$filepath_callback);
 
 		static::$initialized = true;
 	}
@@ -586,14 +596,14 @@ class Casset {
 		if (strpos($filename, '::') === false)
 			$filename = static::$default_path_key.'::'.$filename;
 		$files = static::find_files($filename, $type);
-		if ($add_url)
+		foreach ($files as &$file)
 		{
-			foreach ($files as &$file)
-			{
-				if (strpos($file, '//') !== false)
-					continue;
+			$remote = (strpos($file, '//') !== false);
+			$file = static::process_filepath($file, $type, $remote);
+			if ($remote)
+				continue;
+			if ($add_url)
 				$file = static::$asset_url.$file;
-			}
 		}
 		if (count($files) == 1 && !$force_array)
 			return $files[0];
@@ -634,6 +644,26 @@ class Casset {
 	public static function add_css_deps($group, $deps)
 	{
 		static::add_deps('css', $group, $deps);
+	}
+
+
+	/**
+	 * Sticks the given filename through the filepath callback, if given.
+	 *
+	 * @param string $filepath The filepath to process
+	 * @param string $type The type of asset, passed to the callback
+	 * @param bool $remote Whether the asset is on another machine, passed to the callback
+	 */
+	private static function process_filepath($filepath, $type, $remote = null)
+	{
+		if (static::$filepath_callback)
+		{
+			if ($remote === null)
+				$remote = (strpos($filepath, '//') !== false);
+			$func = static::$filepath_callback;
+			$filepath = $func($filepath, $type, $remote);
+		}
+		return $filepath;
 	}
 
 	/**
@@ -699,9 +729,12 @@ class Casset {
 				if ($inline)
 					$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
+				{
+					$filepath = static::process_filepath(static::$cache_path.$filename, 'js');
 					$ret .= html_tag('script', array(
-						'src' => static::$asset_url.static::$cache_path.$filename,
+						'src' => static::$asset_url.$filepath,
 					)+$attr, '').PHP_EOL;
+				}
 			}
 			else
 			{
@@ -711,9 +744,11 @@ class Casset {
 						$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 					{
-						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
+						$remote = (strpos($file['file'], '//') !== false);
+						$base = ($remote) ? '' : static::$asset_url;
+						$filepath = static::process_filepath($file['file'], 'js', $remote);
 						$ret .= html_tag('script', array(
-							'src' => $base.$file['file'],
+							'src' => $base.$filepath,
 						)+$attr, '').PHP_EOL;
 					}
 				}
@@ -760,7 +795,6 @@ class Casset {
 			
 			if (static::$groups['css'][$group_name]['combine'])
 			{
-
 				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
 				if (!$inline && static::$show_files)
 				{
@@ -771,10 +805,13 @@ class Casset {
 				if ($inline)
 					$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
+				{
+					$filepath = static::process_filepath(static::$cache_path.$filename, 'css');
 					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
-						'href' => static::$asset_url.static::$cache_path.$filename,
+						'href' => static::$asset_url.$filepath,
 					)+$attr).PHP_EOL;
+				}
 			}
 			else
 			{
@@ -784,10 +821,12 @@ class Casset {
 						$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 					{
-						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
+						$remote = (strpos($file['file'], '//') !== false);
+						$base = ($remote) ? '' : static::$asset_url;
+						$filepath = static::process_filepath($file['file'], 'css', $remote);
 						$ret .= html_tag('link', array(
 							'rel' => 'stylesheet',
-							'href' => $base.$file['file'],
+							'href' => $base.$filepath,
 						)+$attr).PHP_EOL;
 					}
 				}
@@ -968,10 +1007,6 @@ class Casset {
 	 */
 	private static function combine($type, $file_group, $minify, $inline)
 	{
-		$filename = md5(implode('', array_map(function($a) {
-			return $a['file'];
-		}, $file_group)).($minify ? 'min' : '')).'.'.$type;
-
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
 		foreach ($file_group as $file)
@@ -986,8 +1021,12 @@ class Casset {
 				$last_mod = $mod;
 		}
 
+		$filename = md5(implode('', array_map(function($a) {
+			return $a['file'];
+		}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
+
 		$filepath = DOCROOT.static::$cache_path.'/'.$filename;
-		$needs_update = (!file_exists($filepath) || ($mtime = filemtime($filepath)) < $last_mod);
+		$needs_update = (!file_exists($filepath));
 
 		if ($needs_update)
 		{
@@ -1023,8 +1062,7 @@ class Casset {
 			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
-		if (!$inline)
-			$filename .= '?'.$mtime;
+
 		return $filename;
 	}
 
@@ -1084,6 +1122,14 @@ class Casset {
 	}
 
 	/**
+	 * Sets the filepath callback
+	 * @param function The function to set
+	 */
+	public static function set_filepath_callback($callback) {
+		static::$filepath_callback = $callback;
+	}
+
+	/**
 	 * Locates the given image(s), and returns the resulting <img> tag.
 	 *
 	 * @param mixed $images Image(s) to print. Can be string or array of strings
@@ -1104,7 +1150,9 @@ class Casset {
 			$image_paths = static::find_files($image, 'img');
 			foreach ($image_paths as $image_path)
 			{
-				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';
+				$remote = (strpos($image_path, '//') !== false);	
+				$image_path = static::process_filepath($image_path, 'img', $remote);
+				$base = ($remote) ? '' : static::$asset_url;
 				$attr['src'] = $base.$image_path;
 				$ret .= html_tag('img', $attr);
 			}
