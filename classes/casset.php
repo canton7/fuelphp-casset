@@ -65,25 +65,17 @@ class Casset {
 	);
 
 	/**
-	 * @var bool Whether to minfy.
-	 */
-	protected static $min_default = true;
-
-	/**
-	 * @var bool Whether to combine
-	 */
-	protected static $combine_default = true;
-
-	/**
-	 * @var bool Whether to render files inline by default.
-	 */
-	protected static $inline_default = false;
-
-	/**
 	 *
-	 * @var array The default attributes when creating the asset's tag.
+	 * @var array Defaults for a group
 	 */
-	protected static $attr_default = array();
+	protected static $default_options = array(
+		'enabled' => true,
+		'combine' => true,
+		'min' => true,
+		'inline' => false,
+		'attr' => array(),
+		'deps' => array(),
+	);
 
 	/**
 	 * @var int How deep to go when resolving deps
@@ -159,11 +151,10 @@ class Casset {
 
 		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
 
-		static::$min_default = \Config::get('casset.min', static::$min_default);
-		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
+		static::$default_options['min'] = \Config::get('casset.min', static::$default_options['min']);
+		static::$default_options['combine'] = \Config::get('casset.combine', static::$default_options['combine']);
 
 		static::$deps_max_depth = \Config::get('casset.deps_max_depth', static::$deps_max_depth);
-
 
 		$group_sets = \Config::get('casset.groups', array());
 
@@ -171,14 +162,6 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				$options = array(
-					'enabled' => array_key_exists('enabled', $group) ? $group['enabled'] : true,
-					'combine' => array_key_exists('combine', $group) ? $group['combine'] : static::$combine_default,
-					'min' => array_key_exists('min', $group) ? $group['min'] : static::$min_default,
-					'inline' => array_key_exists('inline', $group) ? $group['inline'] : static::$inline_default,
-					'attr' => array_key_exists('attr', $group) ? $group['attr'] : static::$attr_default,
-					'deps' => array_key_exists('deps', $group) ? $group['deps'] : array(),
-				);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
 		}
@@ -258,14 +241,7 @@ class Casset {
 	private static function add_group_base($group_type, $group_name, $options = array())
 	{
 		// Insert defaults
-		$options = array_merge(array(
-			'enabled' => true,
-			'combine' => static::$combine_default,
-			'min' => static::$min_default,
-			'inline' => static::$inline_default,
-			'attr' => static::$attr_default,
-			'deps' => array(),
-		), $options);
+		$options += static::$default_options;
 		if (!is_array($options['deps']))
 			$options['deps'] = array($options['deps']);
 		$options['files'] = array();
