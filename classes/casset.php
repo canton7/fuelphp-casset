@@ -101,7 +101,7 @@ class Casset {
 	 * Prototype: callback(content, filename, type, group_name);
 	 */
 	protected static $post_load_callback = null;
-		 
+
 	/*
 	 * @var function If given, the function to call when we've decided on the name
 	 * for a file, but want to allow the user to tweak it before we write it to the
@@ -162,6 +162,7 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
+				$options = static::prep_new_group_options($group);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
 		}
@@ -184,6 +185,25 @@ class Casset {
 		static::$initialized = true;
 	}
 
+
+	/**
+	 * Sets up options for new groups setup via casset/config.php.
+	 * Abstracts away from _init method. Also easier if options are
+	 * added in future as iterates through defaults to do checking.
+	 *
+	 * @param array $options Options as defined in group in config.php
+	 * @return void
+	 */
+	public static function prep_new_group_options($group_options)
+	{
+		$options = array();
+		foreach (static::$default_options as $key => $option_val) {
+			if (array_key_exists($key, $group_options)) {
+				$options[$key] = $group_options[$key];
+			}
+		}
+		return $options;
+	}
 
 
 	/**
@@ -720,7 +740,7 @@ class Casset {
 			// @link http://www.w3.org/TR/html5/scripting-1.html#attr-script-type
 			if (!\Html::$html5)
 				$attr = array( 'type' => 'text/javascript' ) + $attr;
-			
+
 			if (static::$groups['js'][$group_name]['combine'])
 			{
 				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
@@ -796,7 +816,7 @@ class Casset {
 			// @link http://www.w3.org/TR/html5/semantics.html#attr-style-type
 			if (!\Html::$html5)
 				$attr = array( 'type' => 'text/css' ) + $attr;
-			
+
 			if (static::$groups['css'][$group_name]['combine'])
 			{
 				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
@@ -1077,14 +1097,14 @@ class Casset {
 	 */
 	public static function render_js_inline()
 	{
-		
+
 		// the type attribute is not required for script elements under html5
 		// @link http://www.w3.org/TR/html5/scripting-1.html#attr-script-type
 		if (!\Html::$html5)
 			$attr = array( 'type' => 'text/javascript' );
 		else
 			$attr = array();
-		
+
 		$ret = '';
 		foreach (static::$inline_assets['js'] as $content)
 		{
@@ -1100,14 +1120,14 @@ class Casset {
 	 */
 	public static function render_css_inline()
 	{
-		
+
 		// the type attribute is not required for style elements under html5
 		// @link http://www.w3.org/TR/html5/semantics.html#attr-style-type
 		if (!\Html::$html5)
 			$attr = array( 'type' => 'text/css' ) + $attr;
 		else
 			$attr = array();
-		
+
 		$ret = '';
 		foreach (static::$inline_assets['css'] as $content)
 		{
@@ -1154,7 +1174,7 @@ class Casset {
 			$image_paths = static::find_files($image, 'img');
 			foreach ($image_paths as $image_path)
 			{
-				$remote = (strpos($image_path, '//') !== false);	
+				$remote = (strpos($image_path, '//') !== false);
 				$image_path = static::process_filepath($image_path, 'img', $remote);
 				$base = ($remote) ? '' : static::$asset_url;
 				$attr['src'] = $base.$image_path;
