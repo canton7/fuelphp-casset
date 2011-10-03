@@ -405,7 +405,11 @@ class Casset {
 		if ($group_names == '')
 			$group_names = array('global');
 		else if ($group_names == '*')
+		{
+			// Change the default
+			static::$default_options[$option_key] = $option_value;
 			$group_names = array_keys(static::$groups[$type]);
+		}
 		else if (!is_array($group_names))
 			$group_names = array($group_names);
 
