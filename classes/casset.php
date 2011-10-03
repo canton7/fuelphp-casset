@@ -166,6 +166,14 @@ class Casset {
 			}
 		}
 
+		// Add the global group if it doesn't already exist.
+		// This is so that set_group_option() can be used on it. This function will
+		// throw an exception if the named group doesn't exist.
+		if (!static::group_exists('js', 'global'))
+			static::add_group_base('js', 'global');
+		if (!static::group_exists('css', 'global'))
+			static::add_group_base('css', 'global');
+
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
