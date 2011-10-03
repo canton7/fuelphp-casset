@@ -406,7 +406,12 @@ class Casset {
 			$option_value = array($option_value);
 
 		foreach ($group_names as $group_name)
+		{
+			// If the group doesn't exist, throw a fuss
+			if (!static::group_exists($type, $group_name))
+				throw new Casset_Exception("Can't set option for group '$group_name' ($type), as it doesn't exist.");
 			static::$groups[$type][$group_name][$option_key] = $option_value;
+		}
 	}
 
 	/**
