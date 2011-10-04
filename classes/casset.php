@@ -848,7 +848,7 @@ class Casset {
 				{
 					if ($inline)
 					{
-						$content = Casset_Cssurirewriter::rewrite(file_get_contents($file['file']), dirname($file['file']));
+						$content = static::load_file($file['file'], 'css');
 						$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 					}
 					else
@@ -1014,7 +1014,7 @@ class Casset {
 	 * @param type $filename
 	 * @return type
 	 */
-	protected static function load_file($filename, $type, $file_group)
+	protected static function load_file($filename, $type, $file_group = false)
 	{
 		$content = file_get_contents($filename);
 		if (static::$post_load_callback != null)
@@ -1023,6 +1023,8 @@ class Casset {
 			$func = static::$post_load_callback;
 			$content = $func($content, $filename, $type, $file_group);
 		}
+		if ($type == 'css')
+			$content = Casset_Cssurirewriter::rewrite($content, dirname($filename));
 		return $content;
 	}
 
@@ -1068,13 +1070,7 @@ class Casset {
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'] || !$minify)
-				{
-					$content_temp = static::load_file($file['file'], $type, $file_group).PHP_EOL;
-					if ($type == 'css')
-						$content .= Casset_Cssurirewriter::rewrite($content_temp, dirname($file['file']));
-					else
-						$content .= $content_temp;
-				}
+					$content = static::load_file($file['file'], $type, $file_group).PHP_EOL;
 				else
 				{
 					$file_content = static::load_file($file['file'], $type, $file_group);
@@ -1086,8 +1082,7 @@ class Casset {
 					}
 					elseif ($type == 'css')
 					{
-						$css = Casset_Csscompressor::process($file_content).PHP_EOL;
-						$content .= Casset_Cssurirewriter::rewrite($css, dirname($file['file']));
+						$content .= Casset_Csscompressor::process($file_content).PHP_EOL;
 					}
 				}
 			}
