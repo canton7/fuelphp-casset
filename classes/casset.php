@@ -847,7 +847,10 @@ class Casset {
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+					{
+						$content = Casset_Cssurirewriter::rewrite(file_get_contents($file['file']), dirname($file['file']));
+						$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
+					}
 					else
 					{
 						$remote = (strpos($file['file'], '//') !== false);
