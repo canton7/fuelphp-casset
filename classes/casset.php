@@ -194,7 +194,7 @@ class Casset {
 	 * @param array $options Options as defined in group in config.php
 	 * @return void
 	 */
-	private static function prep_new_group_options($group_options)
+	protected static function prep_new_group_options($group_options)
 	{
 		$options = array();
 		foreach (static::$default_options as $key => $option_val) {
@@ -266,7 +266,7 @@ class Casset {
 	 *	 'deps' => array(),
 	 * );
 	 */
-	private static function add_group_base($group_type, $group_name, $options = array())
+	protected static function add_group_base($group_type, $group_name, $options = array())
 	{
 		// Insert defaults
 		$options += static::$default_options;
@@ -398,7 +398,7 @@ class Casset {
 	 * @param string $group The group to enable/disable, or array of groups
 	 * @param bool $enabled True to enabel to group, false odisable
 	 */
-	private static function asset_enabled($type, $groups, $enabled)
+	protected static function asset_enabled($type, $groups, $enabled)
 	{
 		if (!is_array($groups))
 			$groups = array($groups);
@@ -507,7 +507,7 @@ class Casset {
 	 *        If omitted, $script will be minified internally
 	 * @param string $group The group to add this asset to
 	 */
-	private static function add_asset($type, $script, $script_min, $group)
+	protected static function add_asset($type, $script, $script_min, $group)
 	{
 		// Don't force the user to remember that 'false' is used when not supplying
 		// a pre-minified file.
@@ -557,7 +557,7 @@ class Casset {
 	 * @param string $type 'css' / 'js'
 	 * @param string $content The css / js to add
 	 */
-	private static function add_asset_inline($type, $content)
+	protected static function add_asset_inline($type, $content)
 	{
 		array_push(static::$inline_assets[$type], $content);
 	}
@@ -678,7 +678,7 @@ class Casset {
 	 * @param string $type The type of asset, passed to the callback
 	 * @param bool $remote Whether the asset is on another machine, passed to the callback
 	 */
-	private static function process_filepath($filepath, $type, $remote = null)
+	protected static function process_filepath($filepath, $type, $remote = null)
 	{
 		if (static::$filepath_callback)
 		{
@@ -866,7 +866,7 @@ class Casset {
 	 * @param string $asset_type 'css', 'js' or 'img'
 	 * @return string The path to the asset, relative to $asset_url
 	 */
-	private static function find_files($file, $asset_type)
+	protected static function find_files($file, $asset_type)
 	{
 		$parts = explode('::', $file, 2);
 		if (!array_key_exists($parts[0], static::$asset_paths))
@@ -909,7 +909,7 @@ class Casset {
 	 * @return array List of group names with deps resolved
 	 */
 
-	private static function resolve_deps($type, $group_names, $depth=0)
+	protected static function resolve_deps($type, $group_names, $depth=0)
 	{
 		if ($depth > static::$deps_max_depth)
 		{
@@ -945,7 +945,7 @@ class Casset {
 	 * @param array $group The groups to render. If false, takes all groups
 	 * @return array An array of array('file' => file_name, 'minified' => whether_minified)
 	 */
-	private static function files_to_render($type, $group)
+	protected static function files_to_render($type, $group)
 	{
 		// If no group specified, print all groups.
 		if ($group == false)
@@ -1006,7 +1006,7 @@ class Casset {
 	 * @param type $filename
 	 * @return type
 	 */
-	private static function load_file($filename, $type, $file_group)
+	protected static function load_file($filename, $type, $file_group)
 	{
 		$content = file_get_contents($filename);
 		if (static::$post_load_callback != null)
@@ -1029,7 +1029,7 @@ class Casset {
 	 * @param bool $minify whether to minify the files, as well as combining them
 	 * @return string The path to the cache file which was written.
 	 */
-	private static function combine($type, $file_group, $minify, $inline)
+	protected static function combine($type, $file_group, $minify, $inline)
 	{
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
@@ -1224,7 +1224,7 @@ class Casset {
 	 * @param type $before Time before which to delete files. Defaults to 'now'.
 	 *        Uses strtotime.
 	 */
-	private static function clear_cache_base($filter = '*', $before = 'now')
+	protected static function clear_cache_base($filter = '*', $before = 'now')
 	{
 		$before = strtotime($before);
 		$files = glob(DOCROOT.static::$cache_path.$filter);
