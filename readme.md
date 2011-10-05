@@ -300,7 +300,6 @@ array (
 		'js_dir' => 'javascript/',
 		'css_dir' => 'styles/',
 		'img_dir' => 'images/',
-		),
 	),
 ),
 ```
