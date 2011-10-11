@@ -449,7 +449,7 @@ For example:
 // In your config
 'groups' => array(
 	'css' => array(
-		'my_print => array(
+		'my_print' => array(
 			'files' => array('file.css'),
 			'attr' => array('media' => 'print'),
 		),
