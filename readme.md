@@ -253,7 +253,7 @@ For the above example, you can specify the following in your config file:
 ),
 ```
 
-You can also add paths on-the-flow using `Casset::add_path($key, $path)`, eg.
+You can also add paths on-the-fly using `Casset::add_path($key, $path)`, eg.
 
 ```php
 Casset::add_path('admin', 'assets/admin/');
