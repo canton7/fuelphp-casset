@@ -461,6 +461,21 @@ echo Casset::render_css();
 // <link rel="stylesheet" type="text/css" href="http://...somefile.css" media="print" />
 ```
 
+You can also pass them in the `$options` argument to `Casset::add_group()`, for example:
+
+```php
+Casset::add_group('js', 'my_deferred_js', array(
+	'file.js',
+	), array(
+	'attr' => array(
+		'defer' => 'defer',
+	),
+);
+
+echo Casset::render_js();
+// <script type="text/javascript" src="http://...somefile.js" defer="defer"></script>
+```
+
 NOTE: You used to be able to pass an `$attr` argument to `Casset::render()`.
 This behaviour has been deprecated, although it still works.
 Please move to the new system.
