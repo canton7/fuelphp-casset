@@ -509,6 +509,11 @@ class Casset {
 	 */
 	protected static function add_asset($type, $script, $script_min, $group)
 	{
+		// Allow the user to specify any non-string value for an asset, and it
+		// will be ignore. This can be handy when using ternary operators
+		// in the groups config.
+		if (!is_string($script))
+			return;
 		// Don't force the user to remember that 'false' is used when not supplying
 		// a pre-minified file.
 		if (!is_string($script_min))

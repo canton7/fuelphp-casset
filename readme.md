@@ -154,6 +154,9 @@ array element.
 **attr**: Optional, allows you to specify extra attributes to be added to the script/css/link tag generated. See the section on attributes below.  
 **deps**: (Optional) Specifies other groups to be rendered whenever this group is rendered, see the section below.
 
+Aside: You can specify any non-string value for the asset name, and it will be ignored.
+This can be handy if you're doing something like `'files' => array(($var == $val) ? false : 'file.js')`.
+
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
 You can also pass an array of groups to enable/disable.
