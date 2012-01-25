@@ -1129,7 +1129,7 @@ class Casset {
 		// the type attribute is not required for style elements under html5
 		// @link http://www.w3.org/TR/html5/semantics.html#attr-style-type
 		if (!\Html::$html5)
-			$attr = array( 'type' => 'text/css' ) + $attr;
+			$attr = array( 'type' => 'text/css' );
 		else
 			$attr = array();
 
