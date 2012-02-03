@@ -652,7 +652,9 @@ class Casset {
 			$deps = array($deps);
 		if (!array_key_exists($group, static::$groups[$type]))
 			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
-		array_push(static::$groups[$type][$group]['deps'], $deps);
+		//Using a shortcut
+		$old_deps = &static::$groups[$type][$group]['deps'];
+		$old_deps = array_unique(array_merge($old_deps, $deps));
 	}
 
 	/**
