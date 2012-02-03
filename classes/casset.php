@@ -646,13 +646,15 @@ class Casset {
 	 * @param string $group The group name to add deps to
 	 * @param array $deps An array of group names to add as deps.
 	 */
-	public static function add_deps($type, $group, $deps)
+	public static function add_deps($type, $group, $new_deps)
 	{
-		if (!is_array($deps))
-			$deps = array($deps);
+		if (!is_array($new_deps))
+			$new_deps = array($new_deps);
 		if (!array_key_exists($group, static::$groups[$type]))
 			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
-		array_push(static::$groups[$type][$group]['deps'], $deps);
+		// Avoid duplicates in deps array
+		$deps = &static::$groups[$type][$group]['deps'];
+		$deps = array_unique(array_merge($deps, $new_deps));
 	}
 
 	/**
