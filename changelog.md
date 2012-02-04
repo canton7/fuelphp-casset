@@ -3,6 +3,19 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.12
+-----
+ - `<link>` and `<script>` tags now respect whether document is HTML5
+ - New hook: filepath_callback. Allows you to modify the URL, as used by Casset, of js/css files, and images. See the readme.
+ - New function: group_exists.
+ - set_group_option changes default group options (for add future groups) when used with '*' as the group name.
+ - Lots of private methods are now protected.
+ - CSS URIs are rewritten when the stylesheet is inlined and not minified.
+ - Update to minification libraries.
+ - Any non-string assets names are ignored.
+ - Fix bug with generating stylesheet tags.
+ - Various documentation additions and fixes.
+
 v1.11
 -----
  - Asset URLs can be obtained, see "Getting asset paths / urls".
