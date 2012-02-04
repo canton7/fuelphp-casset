@@ -1,10 +1,9 @@
 <?php
-
 /**
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.11
+ * @version    v1.12
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -120,12 +119,12 @@ return array(
 	'deps_max_depth' => 5,
 
 	/**
-	 * Here you can define a callback that is called after a while is loaded from
+	 * Here you can pass the name of a callback that is called after a while is loaded from
 	 * disk, and before it is stored in a cache file.
 	 * This set of circumstances only occurs when 'combine' is true -- the callback
 	 * will *not* be called if 'combine' is false.
 	 *
-	 * This parameter expects a closure (or other function reference), with the
+	 * This parameter expects a string, which is the name of a closure, with the
 	 * following prototype:
 	 * function($content, $filename, $type, $group_name)
 	 * and should return the content after being processed.
@@ -134,10 +133,29 @@ return array(
 	 * $type = 'js' or 'css'
 	 * $group_name = the name of the group to which the file belongs
 	 *
-	 * You are allowed to define functions in this config file, or you can use
+	 * Alternatively, or you can use
 	 * Casset::set_post_load_callback(function($content,  ...) { ... }); instead
 	 */
 	'post_load_callback' => null,
+
+	/**
+	 * This config key specifies the name of a callback which is called when Casset
+	 * wants to create a <script> or <link> tag pointing at a remote asset path,
+	 * or you've called img() and Casset is about to return the image path to you.
+	 * The callback allows you to overwrite / modify that path.
+	 *
+	 * As with the post_load_callback, this parameter expects a string.
+	 * The function prototype for the function named is:
+	 * function($filepath, $type, $remote);
+	 * and should return the modified filepath after being processed.
+	 * $filepath = the path to the file
+	 * $type = 'js' / 'css' / 'img'
+	 * $remote = true if the file is located on another server, false otherwise
+	 *
+	 * Alternatively, you can use
+	 * Casset::set_filepath_callback(function($filepath, ...) { ... }); instead
+	 */
+	'filepath_callback' => null,
 
 	/**
 	 * Groups of scripts.

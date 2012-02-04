@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.11
+ * @version    v1.12
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2011 Antony Male
@@ -65,25 +65,17 @@ class Casset {
 	);
 
 	/**
-	 * @var bool Whether to minfy.
-	 */
-	protected static $min_default = true;
-
-	/**
-	 * @var bool Whether to combine
-	 */
-	protected static $combine_default = true;
-
-	/**
-	 * @var bool Whether to render files inline by default.
-	 */
-	protected static $inline_default = false;
-
-	/**
 	 *
-	 * @var array The default attributes when creating the asset's tag.
+	 * @var array Defaults for a group
 	 */
-	protected static $attr_default = array();
+	protected static $default_options = array(
+		'enabled' => true,
+		'combine' => true,
+		'min' => true,
+		'inline' => false,
+		'attr' => array(),
+		'deps' => array(),
+	);
 
 	/**
 	 * @var int How deep to go when resolving deps
@@ -109,6 +101,14 @@ class Casset {
 	 * Prototype: callback(content, filename, type, group_name);
 	 */
 	protected static $post_load_callback = null;
+
+	/*
+	 * @var function If given, the function to call when we've decided on the name
+	 * for a file, but want to allow the user to tweak it before we write it to the
+	 * page.
+	 * Prototype: callback($filepath, $type, $remote);
+	 */
+	protected static $filepath_callback = null;
 
 	/**
 	 * @var array Keeps a record of which groups have been rendered.
@@ -151,11 +151,10 @@ class Casset {
 
 		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
 
-		static::$min_default = \Config::get('casset.min', static::$min_default);
-		static::$combine_default = \Config::get('casset.combine', static::$combine_default);
+		static::$default_options['min'] = \Config::get('casset.min', static::$default_options['min']);
+		static::$default_options['combine'] = \Config::get('casset.combine', static::$default_options['combine']);
 
 		static::$deps_max_depth = \Config::get('casset.deps_max_depth', static::$deps_max_depth);
-
 
 		$group_sets = \Config::get('casset.groups', array());
 
@@ -163,26 +162,48 @@ class Casset {
 		{
 			foreach ($groups as $group_name => $group)
 			{
-				$options = array(
-					'enabled' => array_key_exists('enabled', $group) ? $group['enabled'] : true,
-					'combine' => array_key_exists('combine', $group) ? $group['combine'] : static::$combine_default,
-					'min' => array_key_exists('min', $group) ? $group['min'] : static::$min_default,
-					'inline' => array_key_exists('inline', $group) ? $group['inline'] : static::$inline_default,
-					'attr' => array_key_exists('attr', $group) ? $group['attr'] : static::$attr_default,
-					'deps' => array_key_exists('deps', $group) ? $group['deps'] : array(),
-				);
+				$options = static::prep_new_group_options($group);
 				static::add_group($group_type, $group_name, $group['files'], $options);
 			}
 		}
+
+		// Add the global group if it doesn't already exist.
+		// This is so that set_group_option() can be used on it. This function will
+		// throw an exception if the named group doesn't exist.
+		if (!static::group_exists('js', 'global'))
+			static::add_group_base('js', 'global');
+		if (!static::group_exists('css', 'global'))
+			static::add_group_base('css', 'global');
 
 		static::$show_files = \Config::get('casset.show_files', static::$show_files);
 		static::$show_files_inline = \Config::get('casset.show_files_inline', static::$show_files_inline);
 
 		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
 
+		static::$filepath_callback = \Config::get('casset.filepath_callback', static::$filepath_callback);
+
 		static::$initialized = true;
 	}
 
+
+	/**
+	 * Sets up options for new groups setup via casset/config.php.
+	 * Abstracts away from _init method. Also easier if options are
+	 * added in future as iterates through defaults to do checking.
+	 *
+	 * @param array $options Options as defined in group in config.php
+	 * @return void
+	 */
+	protected static function prep_new_group_options($group_options)
+	{
+		$options = array();
+		foreach (static::$default_options as $key => $option_val) {
+			if (array_key_exists($key, $group_options)) {
+				$options[$key] = $group_options[$key];
+			}
+		}
+		return $options;
+	}
 
 
 	/**
@@ -245,17 +266,10 @@ class Casset {
 	 *	 'deps' => array(),
 	 * );
 	 */
-	private static function add_group_base($group_type, $group_name, $options = array())
+	protected static function add_group_base($group_type, $group_name, $options = array())
 	{
 		// Insert defaults
-		$options = array_merge(array(
-			'enabled' => true,
-			'combine' => static::$combine_default,
-			'min' => static::$min_default,
-			'inline' => static::$inline_default,
-			'attr' => static::$attr_default,
-			'deps' => array(),
-		), $options);
+		$options += static::$default_options;
 		if (!is_array($options['deps']))
 			$options['deps'] = array($options['deps']);
 		$options['files'] = array();
@@ -302,6 +316,17 @@ class Casset {
 				$file = array($file, false);
 			static::add_asset($group_type, $file[0], $file[1], $group_name);
 		}
+	}
+
+	/**
+	 * Returns true if the given group exists
+	 *
+	 * @param string $group_type 'js' or 'css
+	 * @param type $group_name the nam eof the group
+	 */
+	public static function group_exists($group_type, $group_name)
+	{
+		return array_key_exists($group_name, static::$groups[$group_type]);
 	}
 
 	/**
@@ -373,7 +398,7 @@ class Casset {
 	 * @param string $group The group to enable/disable, or array of groups
 	 * @param bool $enabled True to enabel to group, false odisable
 	 */
-	private static function asset_enabled($type, $groups, $enabled)
+	protected static function asset_enabled($type, $groups, $enabled)
 	{
 		if (!is_array($groups))
 			$groups = array($groups);
@@ -400,7 +425,11 @@ class Casset {
 		if ($group_names == '')
 			$group_names = array('global');
 		else if ($group_names == '*')
+		{
+			// Change the default
+			static::$default_options[$option_key] = $option_value;
 			$group_names = array_keys(static::$groups[$type]);
+		}
 		else if (!is_array($group_names))
 			$group_names = array($group_names);
 
@@ -409,7 +438,12 @@ class Casset {
 			$option_value = array($option_value);
 
 		foreach ($group_names as $group_name)
+		{
+			// If the group doesn't exist, throw a fuss
+			if (!static::group_exists($type, $group_name))
+				throw new Casset_Exception("Can't set option for group '$group_name' ($type), as it doesn't exist.");
 			static::$groups[$type][$group_name][$option_key] = $option_value;
+		}
 	}
 
 	/**
@@ -473,8 +507,13 @@ class Casset {
 	 *        If omitted, $script will be minified internally
 	 * @param string $group The group to add this asset to
 	 */
-	private static function add_asset($type, $script, $script_min, $group)
+	protected static function add_asset($type, $script, $script_min, $group)
 	{
+		// Allow the user to specify any non-string value for an asset, and it
+		// will be ignore. This can be handy when using ternary operators
+		// in the groups config.
+		if (!is_string($script))
+			return;
 		// Don't force the user to remember that 'false' is used when not supplying
 		// a pre-minified file.
 		if (!is_string($script_min))
@@ -523,7 +562,7 @@ class Casset {
 	 * @param string $type 'css' / 'js'
 	 * @param string $content The css / js to add
 	 */
-	private static function add_asset_inline($type, $content)
+	protected static function add_asset_inline($type, $content)
 	{
 		array_push(static::$inline_assets[$type], $content);
 	}
@@ -586,14 +625,14 @@ class Casset {
 		if (strpos($filename, '::') === false)
 			$filename = static::$default_path_key.'::'.$filename;
 		$files = static::find_files($filename, $type);
-		if ($add_url)
+		foreach ($files as &$file)
 		{
-			foreach ($files as &$file)
-			{
-				if (strpos($file, '//') !== false)
-					continue;
+			$remote = (strpos($file, '//') !== false);
+			$file = static::process_filepath($file, $type, $remote);
+			if ($remote)
+				continue;
+			if ($add_url)
 				$file = static::$asset_url.$file;
-			}
 		}
 		if (count($files) == 1 && !$force_array)
 			return $files[0];
@@ -607,13 +646,15 @@ class Casset {
 	 * @param string $group The group name to add deps to
 	 * @param array $deps An array of group names to add as deps.
 	 */
-	public static function add_deps($type, $group, $deps)
+	public static function add_deps($type, $group, $new_deps)
 	{
-		if (!is_array($deps))
-			$deps = array($deps);
+		if (!is_array($new_deps))
+			$new_deps = array($new_deps);
 		if (!array_key_exists($group, static::$groups[$type]))
 			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
-		array_push(static::$groups[$type][$group]['deps'], $deps);
+		// Avoid duplicates in deps array
+		$deps = &static::$groups[$type][$group]['deps'];
+		$deps = array_unique(array_merge($deps, $new_deps));
 	}
 
 	/**
@@ -634,6 +675,26 @@ class Casset {
 	public static function add_css_deps($group, $deps)
 	{
 		static::add_deps('css', $group, $deps);
+	}
+
+
+	/**
+	 * Sticks the given filename through the filepath callback, if given.
+	 *
+	 * @param string $filepath The filepath to process
+	 * @param string $type The type of asset, passed to the callback
+	 * @param bool $remote Whether the asset is on another machine, passed to the callback
+	 */
+	protected static function process_filepath($filepath, $type, $remote = null)
+	{
+		if (static::$filepath_callback)
+		{
+			if ($remote === null)
+				$remote = (strpos($filepath, '//') !== false);
+			$func = static::$filepath_callback;
+			$filepath = $func($filepath, $type, $remote);
+		}
+		return $filepath;
 	}
 
 	/**
@@ -661,13 +722,13 @@ class Casset {
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render_js($group = false, $inline = null, $attr = array())
+	public static function render_js($group = false, $inline_dep = null, $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
-		if (!is_array($attr))
-			$attr = array();
+		if (!is_array($attr_dep))
+			$attr_dep = array();
 
 		$file_groups = static::files_to_render('js', $group);
 
@@ -677,11 +738,15 @@ class Casset {
 		{
 			// We used to take $inline as 2nd argument. However, we now use a group option.
 			// It's easiest if we let $inline override this group option, though.
-			if ($inline === null)
-				$inline = static::$groups['js'][$group_name]['inline'];
+			$inline = ($inline_dep === null) ? static::$groups['js'][$group_name]['inline'] : $inline_dep;
+
 			// $attr is also deprecated. If specified, entirely overrides the group option.
-			if (!count($attr))
-				$attr = static::$groups['js'][$group_name]['attr'];
+			$attr = (!count($attr_dep)) ? static::$groups['js'][$group_name]['attr'] : $attr_dep;
+
+			// the type attribute is not required for script elements under html5
+			// @link http://www.w3.org/TR/html5/scripting-1.html#attr-script-type
+			if (!\Html::$html5)
+				$attr = array( 'type' => 'text/javascript' ) + $attr;
 
 			if (static::$groups['js'][$group_name]['combine'])
 			{
@@ -693,25 +758,28 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
+				{
+					$filepath = static::process_filepath(static::$cache_path.$filename, 'js');
 					$ret .= html_tag('script', array(
-						'type' => 'text/javascript',
-						'src' => static::$asset_url.static::$cache_path.$filename,
+						'src' => static::$asset_url.$filepath,
 					)+$attr, '').PHP_EOL;
+				}
 			}
 			else
 			{
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('script', array('type' => 'text/javascript')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+						$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
 					else
 					{
-						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
+						$remote = (strpos($file['file'], '//') !== false);
+						$base = ($remote) ? '' : static::$asset_url;
+						$filepath = static::process_filepath($file['file'], 'js', $remote);
 						$ret .= html_tag('script', array(
-							'type' => 'text/javascript',
-							'src' => $base.$file['file'],
+							'src' => $base.$filepath,
 						)+$attr, '').PHP_EOL;
 					}
 				}
@@ -729,13 +797,13 @@ class Casset {
 	 *        a cache file to be written for speed purposes
 	 * @return string The css tags to be written to the page
 	 */
-	public static function render_css($group = false, $inline = null, $attr = array())
+	public static function render_css($group = false, $inline_dep = null, $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
-		if (!is_array($attr))
-			$attr = array();
+		if (!is_array($attr_dep))
+			$attr_dep = array();
 
 		$file_groups = static::files_to_render('css', $group);
 
@@ -745,15 +813,19 @@ class Casset {
 		{
 			// We used to take $inline as 2nd argument. However, we now use a group option.
 			// It's easiest if we let $inline override this group option, though.
-			if ($inline === null)
-				$inline = static::$groups['css'][$group_name]['inline'];
+			$inline = ($inline_dep === null) ? static::$groups['css'][$group_name]['inline'] : $inline_dep;
+
 			// $attr is also deprecated. If specified, entirely overrides the group option.
-			if (!count($attr))
-				$attr = static::$groups['css'][$group_name]['attr'];
+			$attr = (!count($attr_dep)) ? static::$groups['css'][$group_name]['attr'] : $attr_dep;
+
+			// the type attribute is not required for style or link[rel="stylesheet"] elements under html5
+			// @link http://www.w3.org/TR/html5/links.html#link-type-stylesheet
+			// @link http://www.w3.org/TR/html5/semantics.html#attr-style-type
+			if (!\Html::$html5)
+				$attr = array( 'type' => 'text/css' ) + $attr;
 
 			if (static::$groups['css'][$group_name]['combine'])
 			{
-
 				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
 				if (!$inline && static::$show_files)
 				{
@@ -762,27 +834,33 @@ class Casset {
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
+					$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
 				else
+				{
+					$filepath = static::process_filepath(static::$cache_path.$filename, 'css');
 					$ret .= html_tag('link', array(
 						'rel' => 'stylesheet',
-						'type' => 'text/css',
-						'href' => static::$asset_url.static::$cache_path.$filename,
+						'href' => static::$asset_url.$filepath,
 					)+$attr).PHP_EOL;
+				}
 			}
 			else
 			{
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('style', array('type' => 'text/css')+$attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+					{
+						$content = static::load_file($file['file'], 'css');
+						$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
+					}
 					else
 					{
-						$base = (strpos($file['file'], '//') === false) ? static::$asset_url : '';
+						$remote = (strpos($file['file'], '//') !== false);
+						$base = ($remote) ? '' : static::$asset_url;
+						$filepath = static::process_filepath($file['file'], 'css', $remote);
 						$ret .= html_tag('link', array(
 							'rel' => 'stylesheet',
-							'type' => 'text/css',
-							'href' => $base.$file['file'],
+							'href' => $base.$filepath,
 						)+$attr).PHP_EOL;
 					}
 				}
@@ -798,7 +876,7 @@ class Casset {
 	 * @param string $asset_type 'css', 'js' or 'img'
 	 * @return string The path to the asset, relative to $asset_url
 	 */
-	private static function find_files($file, $asset_type)
+	protected static function find_files($file, $asset_type)
 	{
 		$parts = explode('::', $file, 2);
 		if (!array_key_exists($parts[0], static::$asset_paths))
@@ -841,7 +919,7 @@ class Casset {
 	 * @return array List of group names with deps resolved
 	 */
 
-	private static function resolve_deps($type, $group_names, $depth=0)
+	protected static function resolve_deps($type, $group_names, $depth=0)
 	{
 		if ($depth > static::$deps_max_depth)
 		{
@@ -877,7 +955,7 @@ class Casset {
 	 * @param array $group The groups to render. If false, takes all groups
 	 * @return array An array of array('file' => file_name, 'minified' => whether_minified)
 	 */
-	private static function files_to_render($type, $group)
+	protected static function files_to_render($type, $group)
 	{
 		// If no group specified, print all groups.
 		if ($group == false)
@@ -938,7 +1016,7 @@ class Casset {
 	 * @param type $filename
 	 * @return type
 	 */
-	private static function load_file($filename, $type, $file_group)
+	protected static function load_file($filename, $type, $file_group = false)
 	{
 		$content = file_get_contents($filename);
 		if (static::$post_load_callback != null)
@@ -947,6 +1025,8 @@ class Casset {
 			$func = static::$post_load_callback;
 			$content = $func($content, $filename, $type, $file_group);
 		}
+		if ($type == 'css')
+			$content = Casset_Cssurirewriter::rewrite($content, dirname($filename));
 		return $content;
 	}
 
@@ -961,12 +1041,8 @@ class Casset {
 	 * @param bool $minify whether to minify the files, as well as combining them
 	 * @return string The path to the cache file which was written.
 	 */
-	private static function combine($type, $file_group, $minify, $inline)
+	protected static function combine($type, $file_group, $minify, $inline)
 	{
-		$filename = md5(implode('', array_map(function($a) {
-			return $a['file'];
-		}, $file_group)).($minify ? 'min' : '')).'.'.$type;
-
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
 		foreach ($file_group as $file)
@@ -981,8 +1057,12 @@ class Casset {
 				$last_mod = $mod;
 		}
 
+		$filename = md5(implode('', array_map(function($a) {
+			return $a['file'];
+		}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
+
 		$filepath = DOCROOT.static::$cache_path.'/'.$filename;
-		$needs_update = (!file_exists($filepath) || ($mtime = filemtime($filepath)) < $last_mod);
+		$needs_update = (!file_exists($filepath));
 
 		if ($needs_update)
 		{
@@ -992,13 +1072,7 @@ class Casset {
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'] || !$minify)
-				{
-					$content_temp = static::load_file($file['file'], $type, $file_group).PHP_EOL;
-					if ($type == 'css')
-						$content .= Casset_Cssurirewriter::rewrite($content_temp, dirname($file['file']));
-					else
-						$content .= $content_temp;
-				}
+					$content = static::load_file($file['file'], $type, $file_group).PHP_EOL;
 				else
 				{
 					$file_content = static::load_file($file['file'], $type, $file_group);
@@ -1010,16 +1084,14 @@ class Casset {
 					}
 					elseif ($type == 'css')
 					{
-						$css = Casset_Csscompressor::process($file_content).PHP_EOL;
-						$content .= Casset_Cssurirewriter::rewrite($css, dirname($file['file']));
+						$content .= Casset_Csscompressor::process($file_content).PHP_EOL;
 					}
 				}
 			}
 			file_put_contents($filepath, $content, LOCK_EX);
 			$mtime = time();
 		}
-		if (!$inline)
-			$filename .= '?'.$mtime;
+
 		return $filename;
 	}
 
@@ -1030,10 +1102,18 @@ class Casset {
 	 */
 	public static function render_js_inline()
 	{
+
+		// the type attribute is not required for script elements under html5
+		// @link http://www.w3.org/TR/html5/scripting-1.html#attr-script-type
+		if (!\Html::$html5)
+			$attr = array( 'type' => 'text/javascript' );
+		else
+			$attr = array();
+
 		$ret = '';
 		foreach (static::$inline_assets['js'] as $content)
 		{
-			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+			$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
 	}
@@ -1045,10 +1125,18 @@ class Casset {
 	 */
 	public static function render_css_inline()
 	{
+
+		// the type attribute is not required for style elements under html5
+		// @link http://www.w3.org/TR/html5/semantics.html#attr-style-type
+		if (!\Html::$html5)
+			$attr = array( 'type' => 'text/css' );
+		else
+			$attr = array();
+
 		$ret = '';
 		foreach (static::$inline_assets['css'] as $content)
 		{
-			$ret .= html_tag('script', array('type' => 'text/javascript'), PHP_EOL.$content.PHP_EOL).PHP_EOL;
+			$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 		}
 		return $ret;
 	}
@@ -1060,6 +1148,14 @@ class Casset {
 	 */
 	public static function set_post_load_callback($callback) {
 		static::$post_load_callback = $callback;
+	}
+
+	/**
+	 * Sets the filepath callback
+	 * @param function The function to set
+	 */
+	public static function set_filepath_callback($callback) {
+		static::$filepath_callback = $callback;
 	}
 
 	/**
@@ -1083,7 +1179,9 @@ class Casset {
 			$image_paths = static::find_files($image, 'img');
 			foreach ($image_paths as $image_path)
 			{
-				$base = (strpos($image_path, '//') === false) ? static::$asset_url : '';
+				$remote = (strpos($image_path, '//') !== false);
+				$image_path = static::process_filepath($image_path, 'img', $remote);
+				$base = ($remote) ? '' : static::$asset_url;
 				$attr['src'] = $base.$image_path;
 				$ret .= html_tag('img', $attr);
 			}
@@ -1131,7 +1229,7 @@ class Casset {
 	 * @param type $before Time before which to delete files. Defaults to 'now'.
 	 *        Uses strtotime.
 	 */
-	private static function clear_cache_base($filter = '*', $before = 'now')
+	protected static function clear_cache_base($filter = '*', $before = 'now')
 	{
 		$before = strtotime($before);
 		$files = glob(DOCROOT.static::$cache_path.$filter);

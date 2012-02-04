@@ -12,7 +12,7 @@ If you have any comments/queries, either send me a message on github, post to th
 Installation
 ------------
 
-### Using oil (linux or daring windows users only)
+### Using oil
 1. cd to your fuel project's root
 2. Run `php oil package install casset`
 3. Optionally edit fuel/packages/casset/config/casset.php (the defaults are sensible)
@@ -154,6 +154,9 @@ array element.
 **attr**: Optional, allows you to specify extra attributes to be added to the script/css/link tag generated. See the section on attributes below.  
 **deps**: (Optional) Specifies other groups to be rendered whenever this group is rendered, see the section below.
 
+Aside: You can specify any non-string value for the asset name, and it will be ignored.
+This can be handy if you're doing something like `'files' => array(($var == $val) ? false : 'file.js')`.
+
 Groups can be enabled using `Casset::enable_js('group_name')`, and disabled using `Casset::disable_js('group_name')`. CSS equivalents also exist.  
 The shortcuts `Casset::enable('group_name')` and `Casset::disable('group_name')` also exist, which will enable/disable both the js and css groups of the given name, if they are defined.  
 You can also pass an array of groups to enable/disable.
@@ -211,7 +214,7 @@ Casset::set_js_option('my_plugin', 'deps', 'jquery');
 Casset::set_css_option('', 'inline', true);
 
 // Turn off minification for all groups, regardless of per-group settings, for the current page:
-CassetLLset_js_option('*', 'min', false);
+Casset::set_js_option('*', 'min', false);
 ```
 
 When you call `Casset::render()` (or the js- and css-specific varients), the order that groups are rendered is determined by the order in which they were created, with groups present in the config file appearing first.
@@ -253,7 +256,7 @@ For the above example, you can specify the following in your config file:
 ),
 ```
 
-You can also add paths on-the-flow using `Casset::add_path($key, $path)`, eg.
+You can also add paths on-the-fly using `Casset::add_path($key, $path)`, eg.
 
 ```php
 Casset::add_path('admin', 'assets/admin/');
@@ -300,7 +303,6 @@ array (
 		'js_dir' => 'javascript/',
 		'css_dir' => 'styles/',
 		'img_dir' => 'images/',
-		),
 	),
 ),
 ```
@@ -450,7 +452,7 @@ For example:
 // In your config
 'groups' => array(
 	'css' => array(
-		'my_print => array(
+		'my_print' => array(
 			'files' => array('file.css'),
 			'attr' => array('media' => 'print'),
 		),
@@ -460,6 +462,21 @@ For example:
 // Render the 'my_print' group, along with the others
 echo Casset::render_css();
 // <link rel="stylesheet" type="text/css" href="http://...somefile.css" media="print" />
+```
+
+You can also pass them in the `$options` argument to `Casset::add_group()`, for example:
+
+```php
+Casset::add_group('js', 'my_deferred_js', array(
+	'file.js',
+	), array(
+	'attr' => array(
+		'defer' => 'defer',
+	),
+);
+
+echo Casset::render_js();
+// <script type="text/javascript" src="http://...somefile.js" defer="defer"></script>
 ```
 
 NOTE: You used to be able to pass an `$attr` argument to `Casset::render()`.
@@ -628,11 +645,11 @@ Casset::clear_cache('yesterday');
 Callbacks
 ---------
 
+### post_load_callback
+
 Quick thanks to [ShonM](https://github.com/shonm) for pushing so hard to get this feature implemented :)
 
-There is currently a single callback, `post_load`, and it is likely that it will stay this way.
-
-Callbacks allow you the flexibility to do you own processing on the files that Casset loads.
+The post_load callback allows you the flexibility to do you own processing on the files that Casset loads.
 This means that you can use SASS, CoffeeScript, etc, then configure Casset to call the appropriate compiler when it loads the asset.
 
 Note that the `post_load` is *only* called when the 'combine' config key is set to true.
@@ -645,8 +662,9 @@ There is a single callback, which is called for all files, regardless of group, 
 The callback is passed the name of the file, the type (js or css) and the group to which it belongs,as well as the file content of course.
 It is then up to you to decide how, if at all, you want to process this content, based on the other parameters passed.
 
-The callback is set either in the config file (the `post_load_callback` key), or using `Casset::set_post_load_callback()`.
-Both expect an anonymous function (closure), although I daresay you could bind it straight to some other library's method.
+You can either define your callback using `Casset::set_post_load_callback()`, or you can pass the name of a function to call to the config key `post_load_callback`.
+`Casset::set_post_load_callback()` expects an anonymous function (closure), although I daresay you could bind it straight to some other library's method.
+Unfortunately, fuel doesn't allow you to define closues in your config (it tries to evaluate them to get a value to assign to the config key).
 
 The callback itself has the following prototype, although you can miss out the latter arguments if you want: PHP won't complain.
 
@@ -666,14 +684,6 @@ When testing, therefore, it is recommended that you stick a `Casset::clear_cache
 Time for a few examples:
 
 ```php
-// In the config file:
-'post_load_callback' => function($content, $filename, $type) {
-	// We don't want to process JS files
-	if ($type == 'js')
-		return $content;
-	return SomeLibrary::some_method($content);
-},
-
 // In a controller somewhere
 Casset::set_post_load_callback(function($content, $filename) {
 	$ext = pathinfo($filename, PATHINFO_EXTENSION);
@@ -681,11 +691,82 @@ Casset::set_post_load_callback(function($content, $filename) {
 		return $content;
 	return SomeSassLibrary::some_method($content);
 });
+
+// In the config file:
+'post_load_callback' => 'my_callback_name',
 ```
 
 Note that Casset is pretty lazy, so the callback won't be called under you call `Casset::render()` (or one of its variants).
 Therefore feel free to define your callback after telling Casset to include the files you want the callback to process.
 
+### filepath_callback
+
+Thanks to [leekudos](https://github.com/leekudos) for pushing for this one, and for numerous suggestions and comments.
+
+This callback was implenented to solve one particular problem. However, it has been generalised in case you manage to find another use.
+
+The original problem was this: There are some very large images on the server, so have been cached for a very long time.
+This means that the url of the image has to be changed every time the image changes.
+Now what if we could get Casset to do this url changing for us....
+
+The filepath callback is called, basically, whenever Casset has generated a URL, but has not yet committed to using it.
+This allows you to modify that URL.
+
+More specifically:
+
+ - `img()` calls it just before writing the <img> tag.
+ - `render_css()` and `render_js()` call it just before writing a \<script src=".."\> or \<link href="..."\> tag to the page.
+
+The callback itself has the following prototype:
+
+```php
+function($filepath, $type, $remote) { ... }
+```
+
+Where:  
+`$filepath`: The path to the asset. Doesn't include the part of the URL specified by the 'url' config key, although will be a full URL if the asset is located on another server.  
+`$type`: The type of asset: 'js', 'css' or 'img' currently.  
+`$remote`: True if the asset is located on another server, false otherwise.
+
+As with the post_local callback, this callback can either be specified directly using `Casset::set_filepath_callback()`, or the name of a function to call can be specified in the config, under the 'filepath_callback' key.
+
+A trivial example:
+
+```php
+// Adds the string '?query=hello' to the end of all local js urls
+Casset::set_filepath_callback(function($filepath, $type, $remote) {
+	if ($remote || $type != 'js')
+		return $filepath;
+	return $filepath.'?query=hello';
+});
+```
+
+Back to addressing the original problem (large cached images).
+Appending the last modified time of the file to the end of the URL is one option, but this doesn't necessarily work in all browsers.
+However, inserting the mtime into the middle of the filename will certainly work.
+This needs some .htaccess magic, but that's OK.
+
+Somewhere in your project:
+
+```php
+// Rewrite e.g. assets/img/file.jpeg to assets/img/file.1298892196.jpg
+Casset::set_filepath_callback($filepath, $type, $remote) {
+	if ($remote || $type != 'img')
+		return $filepath;
+
+	$pathinfo = pathinfo($filepath);
+	$mtime = filemtime(DOCROOT.$filepath);
+	return $pathinfo['dirname'].$pathinfo['basename'].'.'.$mtime.'.'.$pathinfo['extension'];
+});
+```
+
+In your .htaccess:
+
+```
+# Rewrite e.g. http://example.com/assets/img/test.1298892196.jpg to http://example.com/assets/img/test.jpg
+# Needs to be ABOVE the lines for removing index.php, if they exist.
+RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png)$ $1/$2.$4 [L]
+```
 
 Comparison to Assetic
 ---------------------
