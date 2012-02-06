@@ -1088,7 +1088,7 @@ class Casset {
 					}
 				}
 			}
-			file_put_contents($filepath, $content, LOCK_EX);
+			\File::update(DOCROOT.static::$cache_path, $filename, $content);
 			$mtime = time();
 		}
 
