@@ -851,6 +851,18 @@ Casset::enable('jquery-ui');
 ...
 ```
 
+Thanks
+------
+
+The following people have helped Casset become what it is, so thank you!
+
+ - [Peter Wigger](http://fuelphp.com/user/383)
+ - [ShonM](https://github.com/shonm)
+ - [Lee Overy](https://github.com/leekudos)
+ - [Chris Meller](https://github.com/chrismeller)
+ - [monsonis](https://github.com/monsonis)
+ - [Anton Stoychev](https://github.com/antitoxic)
+
 Contributing
 ------------
 
