@@ -717,22 +717,35 @@ class Casset {
 	 * Renders the specific javascript group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
+	 * @param array $options An array of options to use. Only supported option is 'gen_tags'
 	 * @param bool $inline_dep DEPRECATED. If true, the result is printed inline. If false, is
 	 *        written to a file and linked to. In fact, $inline = true also causes
 	 *        a cache file to be written for speed purposes
 	 * @return string The javascript tags to be written to the page
 	 */
-	public static function render_js($group = false, $inline_dep = null, $attr_dep = array())
+	public static function render_js($group = false, $options = array(), $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
 		if (!is_array($attr_dep))
 			$attr_dep = array();
+		// Backwards compat: We used to have $inline where $options currently sits
+		// So, if $options isn't an array, then assume they're still passing $inline
+		$inline_dep = null;
+		if (!is_array($options))
+		{
+			$inline_dep = $options;
+			$options = array();
+		}
+		$options += array(
+			'gen_tags' => true,
+		);
 
 		$file_groups = static::files_to_render('js', $group);
 
-		$ret = '';
+		// If not generating tags, return an array of content
+		$ret = ($options['gen_tags']) ? '' : array();
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
@@ -751,20 +764,28 @@ class Casset {
 			if (static::$groups['js'][$group_name]['combine'])
 			{
 				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
-				if (!$inline && static::$show_files)
+				if (!$inline && static::$show_files && $options['gen_tags'])
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
 						return "\t".$a['file'].PHP_EOL;
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
+				{
+					$content = file_get_contents(DOCROOT.static::$cache_path.$filename);
+					if ($options['gen_tags'])
+						$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
+					else
+						$ret[] = $content;
+				}
+
 				else
 				{
-					$filepath = static::process_filepath(static::$cache_path.$filename, 'js');
-					$ret .= html_tag('script', array(
-						'src' => static::$asset_url.$filepath,
-					)+$attr, '').PHP_EOL;
+					$filepath = static::$asset_url.static::process_filepath(static::$cache_path.$filename, 'js');
+					if ($options['gen_tags'])
+						$ret .= html_tag('script', array('src' => $filepath,)+$attr, '').PHP_EOL;
+					else
+						$ret[] = $filepath;
 				}
 			}
 			else
@@ -772,15 +793,22 @@ class Casset {
 				foreach ($file_group as $file)
 				{
 					if ($inline)
-						$ret .= html_tag('script', $attr, PHP_EOL.file_get_contents($file['file']).PHP_EOL).PHP_EOL;
+					{
+						$content = static::load_file($file['file'], 'js');
+						if ($options['gen_tags'])
+							$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
+						else
+							$ret[] = $content;
+					}
 					else
 					{
 						$remote = (strpos($file['file'], '//') !== false);
 						$base = ($remote) ? '' : static::$asset_url;
-						$filepath = static::process_filepath($file['file'], 'js', $remote);
-						$ret .= html_tag('script', array(
-							'src' => $base.$filepath,
-						)+$attr, '').PHP_EOL;
+						$filepath = $base.static::process_filepath($file['file'], 'js', $remote);
+						if ($options['gen_tags'])
+							$ret .= html_tag('script', array('src' => $filepath,)+$attr, '').PHP_EOL;
+						else
+							$ret[] = $filepath;
 					}
 				}
 			}
@@ -792,22 +820,32 @@ class Casset {
 	 * Renders the specific css group, or all groups if no group specified.
 	 *
 	 * @param string $group Which group to render. If omitted renders all groups
-	 * @param bool $inline DEPRECATED. If true, the result is printed inline. If false, is
-	 *        written to a file and linked to. In fact, $inline = true also causes
-	 *        a cache file to be written for speed purposes
+	 * @param array $options ANnarray of options to use. Only supported option is 'gen_tags'
 	 * @return string The css tags to be written to the page
 	 */
-	public static function render_css($group = false, $inline_dep = null, $attr_dep = array())
+	public static function render_css($group = false, $options = array(), $attr_dep = array())
 	{
 		// Don't force the user to remember that false is used for ommitted non-bool arguments
 		if (!is_string($group))
 			$group = false;
 		if (!is_array($attr_dep))
 			$attr_dep = array();
+		// Backwards compat: We used to have $inline where $options currently sits
+		// So, if $options isn't an array, then assume they're still passing $inline
+		$inline_dep = null;
+		if (!is_array($options))
+		{
+			$inline_dep = $options;
+			$options = array();
+		}
+		$options += array(
+			'gen_tags' => true,
+		);
 
 		$file_groups = static::files_to_render('css', $group);
 
-		$ret = '';
+		// If not generating tags, return an array of content
+		$ret = ($options['gen_tags']) ? '' : array();
 
 		foreach ($file_groups as $group_name => $file_group)
 		{
@@ -827,21 +865,27 @@ class Casset {
 			if (static::$groups['css'][$group_name]['combine'])
 			{
 				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
-				if (!$inline && static::$show_files)
+				if (!$inline && static::$show_files && $options['gen_tags'])
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
 						return "\t".$a['file'].PHP_EOL;
 					}, $file_group)).'-->'.PHP_EOL;
 				}
 				if ($inline)
-					$ret .= html_tag('style', $attr, PHP_EOL.file_get_contents(DOCROOT.static::$cache_path.$filename).PHP_EOL).PHP_EOL;
+				{
+					$content = file_get_contents(DOCROOT.static::$cache_path.$filename);
+					if ($options['gen_tags'])
+						$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
+					else
+						$ret[] = $content;
+				}
 				else
 				{
-					$filepath = static::process_filepath(static::$cache_path.$filename, 'css');
-					$ret .= html_tag('link', array(
-						'rel' => 'stylesheet',
-						'href' => static::$asset_url.$filepath,
-					)+$attr).PHP_EOL;
+					$filepath = static::$asset_url.static::process_filepath(static::$cache_path.$filename, 'css');
+					if ($options['gen_tags'])
+						$ret .= html_tag('link', array('rel' => 'stylesheet', 'href' => $filepath)+$attr).PHP_EOL;
+					else
+						$ret[] = $filepath;
 				}
 			}
 			else
@@ -851,17 +895,20 @@ class Casset {
 					if ($inline)
 					{
 						$content = static::load_file($file['file'], 'css');
-						$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
+						if ($options['gen_tags'])
+							$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
+						else
+							$ret[] = $content;
 					}
 					else
 					{
 						$remote = (strpos($file['file'], '//') !== false);
 						$base = ($remote) ? '' : static::$asset_url;
-						$filepath = static::process_filepath($file['file'], 'css', $remote);
-						$ret .= html_tag('link', array(
-							'rel' => 'stylesheet',
-							'href' => $base.$filepath,
-						)+$attr).PHP_EOL;
+						$filepath = $base.static::process_filepath($file['file'], 'css', $remote);
+						if ($options['gen_tags'])
+							$ret .= html_tag('link', array('rel' => 'stylesheet', 'href' => $filepath)+$attr).PHP_EOL;
+						else
+							$ret[] = $filepath;
 					}
 				}
 			}
