@@ -314,6 +314,17 @@ This can be particularly useful when you're using some third-party code, and don
 Note also that you can add an asset which uses a path which isn't yet defined.
 Casset only requires that the path is defined by the time the file is rendered.
 
+If you add an asset whose path starts with a leading slash, the folder specified by 'js_dir', 'css_dir', etc (either in the config or in the namespace), is ignored.
+This can be handy if you have a third-party module which, for example, puts css inside the js/ folder.
+For example:
+
+```php
+Casset::js('some_key::file.js')
+// Adds more_assets/javascript/file.js
+Casset::js('some_key::/file.js')
+// Adds more_assets/file.js
+```
+
 Globbing
 --------
 
