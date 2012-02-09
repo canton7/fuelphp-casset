@@ -3,6 +3,12 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.13
+-----
+ - Add quickref.md -- ideal for quickly accessing the API, assuming you know roughly what you're looking for.
+ - Fix bug where the js_dir, etc, config settings made no difference to the core namespace.
+ - Script paths prefixed with a leading slash will ignore the path specified by js_dir, etc.
+
 v1.12
 -----
  - `<link>` and `<script>` tags now respect whether document is HTML5
