@@ -869,3 +869,24 @@ Contributing
 If you've got any issues/complaints/suggestions, please tell me and I'll do my best!
 
 Pull requests are also gladly accepted. This project uses [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so please base your work on the tip of the `develop` branch, and rebase onto `develop` again before submitting the pull request.
+For example:
+
+```bash
+# Fork canton7/fuelphp-casset on github
+# Clone your new repo
+$ git clone git@github.com:your_user/fuelphp-casset.git
+# Add my repo as a remote, so you can pull in new changes
+$ git remote add upstream git://github.com/canton7/fuelphp-casset.git
+# Create a new feature branch based off my develop branch
+$ git checkout -b feature/my_feature_name upstream/develop
+# Push this branch to origin
+$ git push -u origin feature/my_feature_name
+# Work work work... Git add, commit, etc, as normal
+# Update your copy of my develop branch
+$ git fetch upstream
+# Rebase your feature branch back on top of my develop branch
+$ git rebase upstream/develop
+# Force-push just this up to origin (as the rebase will have rewritten it)
+$ git push -f origin feature/my_feature_branch
+# Submit the pull request to github!
+```
