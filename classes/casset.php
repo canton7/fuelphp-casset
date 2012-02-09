@@ -134,13 +134,6 @@ class Casset {
 
 		\Config::load('casset', true);
 
-		$paths = \Config::get('casset.paths', static::$asset_paths);
-
-		foreach($paths as $key => $path)
-		{
-			static::add_path($key, $path);
-		}
-
 		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
 
 		static::$default_folders = array(
@@ -148,6 +141,13 @@ class Casset {
 			'js' => \Config::get('casset.js_dir', static::$default_folders['js']),
 			'img' => \Config::get('casset.img_dir', static::$default_folders['img']),
 		);
+
+		$paths = \Config::get('casset.paths', static::$asset_paths);
+
+		foreach($paths as $key => $path)
+		{
+			static::add_path($key, $path);
+		}
 
 		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
 
