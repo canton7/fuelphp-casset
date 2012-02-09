@@ -9,6 +9,8 @@ Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libr
 
 If you have any comments/queries, either send me a message on github, post to the fuelphp [forum thread](http://fuelphp.com/forums/topics/view/2187), catch me on #fuelphp, or open an issue.
 
+If you're just after a quick reference, or a reminder of the API, see the the file `quickref.md`.
+
 Installation
 ------------
 
@@ -311,6 +313,17 @@ This can be particularly useful when you're using some third-party code, and don
 
 Note also that you can add an asset which uses a path which isn't yet defined.
 Casset only requires that the path is defined by the time the file is rendered.
+
+If you add an asset whose path starts with a leading slash, the folder specified by 'js_dir', 'css_dir', etc (either in the config or in the namespace), is ignored.
+This can be handy if you have a third-party module which, for example, puts css inside the js/ folder.
+For example:
+
+```php
+Casset::js('some_key::file.js')
+// Adds more_assets/javascript/file.js
+Casset::js('some_key::/file.js')
+// Adds more_assets/file.js
+```
 
 Globbing
 --------
@@ -851,9 +864,42 @@ Casset::enable('jquery-ui');
 ...
 ```
 
+Thanks
+------
+
+The following people have helped Casset become what it is, so thank you!
+
+ - [Peter Wigger](http://fuelphp.com/user/383)
+ - [ShonM](https://github.com/shonm)
+ - [Lee Overy](https://github.com/leekudos)
+ - [Chris Meller](https://github.com/chrismeller)
+ - [monsonis](https://github.com/monsonis)
+ - [Anton Stoychev](https://github.com/antitoxic)
+
 Contributing
 ------------
 
 If you've got any issues/complaints/suggestions, please tell me and I'll do my best!
 
 Pull requests are also gladly accepted. This project uses [git flow](http://nvie.com/posts/a-successful-git-branching-model/), so please base your work on the tip of the `develop` branch, and rebase onto `develop` again before submitting the pull request.
+For example:
+
+```bash
+# Fork canton7/fuelphp-casset on github
+# Clone your new repo
+$ git clone git@github.com:your_user/fuelphp-casset.git
+# Add my repo as a remote, so you can pull in new changes
+$ git remote add upstream git://github.com/canton7/fuelphp-casset.git
+# Create a new feature branch based off my develop branch
+$ git checkout -b feature/my_feature_name upstream/develop
+# Push this branch to origin
+$ git push -u origin feature/my_feature_name
+# Work work work... Git add, commit, etc, as normal
+# Update your copy of my develop branch
+$ git fetch upstream
+# Rebase your feature branch back on top of my develop branch
+$ git rebase upstream/develop
+# Force-push just this up to origin (as the rebase will have rewritten it)
+$ git push -f origin feature/my_feature_branch
+# Submit the pull request to github!
+```
