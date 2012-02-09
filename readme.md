@@ -9,6 +9,8 @@ Thanks to Stephen Clay (and Douglas Crockford) for writing the minification libr
 
 If you have any comments/queries, either send me a message on github, post to the fuelphp [forum thread](http://fuelphp.com/forums/topics/view/2187), catch me on #fuelphp, or open an issue.
 
+If you're just after a quick reference, or a reminder of the API, see the the file `quickref.md`.
+
 Installation
 ------------
 
