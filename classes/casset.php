@@ -1119,7 +1119,7 @@ class Casset {
 				if (static::$show_files_inline)
 					$content .= PHP_EOL.'/* '.$file['file'].' */'.PHP_EOL.PHP_EOL;
 				if ($file['minified'] || !$minify)
-					$content = static::load_file($file['file'], $type, $file_group).PHP_EOL;
+					$content .= static::load_file($file['file'], $type, $file_group).PHP_EOL;
 				else
 				{
 					$file_content = static::load_file($file['file'], $type, $file_group);
