@@ -3,6 +3,11 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.14
+-----
+ - Add gen_tags option to render_js and render_css.
+ - Fix bug with combine() and groups containing pre-minified files.
+
 v1.13
 -----
  - Add quickref.md -- ideal for quickly accessing the API, assuming you know roughly what you're looking for.

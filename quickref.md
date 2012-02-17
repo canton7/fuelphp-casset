@@ -298,27 +298,33 @@ A shortcut for `get_filepath`, with the type set to 'img'.
 Renders all enabled js/css groups, or just the named groups (provided that they are enabled).
 Returns a set of `<script>`/`<link>` tag(s), as required.
 
-`string render($group = false)`.
+`string render($group = false, $options = array())`.
 
 `$group`: If false/null, render all groups. If a string, render just the named group.
+
+`$options': A set of options to control how/if the tags are rendered. See the docs for details.
 
 <a name="qr-render-js"></a>
 ### render_js
 Renders all enabled js groups, or just the named groups (provided that they are enabled).
 Returns a set of `<script>` tag(s), as required.
 
-`string render($group = false)`.
+`string render($group = false, $options = array())`.
 
 `$group`: If false/null, render all groups. If a string, render just the named group.
+
+`$options': A set of options to control how/if the tags are rendered. See the docs for details.
 
 <a name="qr-render-css"></a>
 ### render_css
 Renders all enabled css groups, or just the named groups (provided that they are enabled).
 Returns a set of `<link>` tag(s), as required.
 
-`string render($group = false)`.
+`string render($group = false, $options = array())`.
 
 `$group`: If false/null, render all groups. If a string, render just the named group.
+
+`$options': A set of options to control how/if the tags are rendered. See the docs for details.
 
 <a name="qr-render-js-inline"></a>
 ### render_js_inline

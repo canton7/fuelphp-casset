@@ -638,6 +638,39 @@ Casset::get_filepath($name, $type, $add_url = false, $force_array = false);
 `$name`, `$add_url` and `$force_array` are the same as for `Casset::get_filepath_js()`, while the `$type` argument is one of 'js', 'css', or 'img'.
 In the future there are plans to let you specify your own types, hence why this is exposed :)
 
+Controlling whether tags are generated
+--------------------------------------
+
+Thanks to antitoxic for motivating this feature.
+
+The `get_filepath_*` functions are useful if you want to link directly to an asset.
+However, this doesn't cover the case where you want to, for whatever reason, generate your own `<script>` or `<link>` tags, while still keeping Casset's minification/combining functionality.
+
+The solution to this is to passed `array('gen_tags' => false)` as the second argument of `render_css()`/`render_js()`.
+This will make `render_*` return an array of filenames / file contents (depending on whether you've turned on inlining for that group), rather then a string of tags (and maybe content).
+
+For example:
+
+```php
+Casset::js('test_file.js');
+Casset::render_js(false);
+// Returns <script type="text/javascript" src="http://....test_file.js"></script>
+Casset::render_js(false, array('gen_tags' => false));
+// Returns Array (
+//   [0] => "http://....test_file.js"
+// )
+
+Casset::set_group_option('js', 'global', 'inline', true);
+Casset::render_js(false);
+// Returns <script type="text/javascript>Some javascript file content</script>
+Casset::render_js(false, array('gen_tags' => false));
+// Returns Array (
+//   [0] => "Some javascript file content"
+// )
+```
+
+If more than one `<script>`/`<link>` tag would normally be generated, the array return will contain more than one element.
+
 Clearing the cache
 ------------------
 Since cache files are not automatically removed (Casset has no way of knowing whether a cache file might be needed again), a few methods have been provided to remove cache files.
@@ -875,6 +908,7 @@ The following people have helped Casset become what it is, so thank you!
  - [Chris Meller](https://github.com/chrismeller)
  - [monsonis](https://github.com/monsonis)
  - [Anton Stoychev](https://github.com/antitoxic)
+ - [gnodeb](https://github.com/gnodeb)
 
 Contributing
 ------------
