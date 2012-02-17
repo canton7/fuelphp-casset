@@ -908,6 +908,7 @@ The following people have helped Casset become what it is, so thank you!
  - [Chris Meller](https://github.com/chrismeller)
  - [monsonis](https://github.com/monsonis)
  - [Anton Stoychev](https://github.com/antitoxic)
+ - [gnodeb](https://github.com/gnodeb)
 
 Contributing
 ------------
