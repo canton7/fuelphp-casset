@@ -917,6 +917,7 @@ The following people have helped Casset become what it is, so thank you!
  - [monsonis](https://github.com/monsonis)
  - [Anton Stoychev](https://github.com/antitoxic)
  - [gnodeb](https://github.com/gnodeb)
+ - [Derek Myers](https://github.com/dmyers)
 
 Contributing
 ------------
