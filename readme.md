@@ -202,7 +202,7 @@ Casset::add_group('test_group', array(
 This method is provided merely for convenience when adding lots of files to a group at once.
 You don't have to create a group before adding files to it -- the group will be created it it doesn't exist.
 
-You can change any of these options on-the-fly using `Casset::set_group_option($type, $group, $key, $value)`, or the CSS- and JS- specific versions, `Caset::set_js_option($group, $key, $value)` and `Casset::set_css_option($group, $key, $value)`.
+You can change any of these options on-the-fly using `Casset::set_group_option($type, $group, $key, $value)`, or the CSS- and JS- specific versions, `Casset::set_js_option($group, $key, $value)` and `Casset::set_css_option($group, $key, $value)`.
 `$group` has some special values: an empty string is a shortcut to the 'global' group (to which files are added if a group is not specified), and '*' is a shortcut to all groups.
 Multiple group names can also be specified, using an array.
 
@@ -391,7 +391,7 @@ You can also define dependencies when you call `Casset::add_group()`, by using t
  Eg:
  
  ```php
-Caset::add_group('js', 'my_plugin', array('jquery.my_plugin.js'), array(
+Casset::add_group('js', 'my_plugin', array('jquery.my_plugin.js'), array(
 	'deps' => 'jquery',
 ));
  ```
@@ -662,7 +662,7 @@ Casset::render_js(false, array('gen_tags' => false));
 
 Casset::set_group_option('js', 'global', 'inline', true);
 Casset::render_js(false);
-// Returns <script type="text/javascript>Some javascript file content</script>
+// Returns <script type="text/javascript">Some javascript file content</script>
 Casset::render_js(false, array('gen_tags' => false));
 // Returns Array (
 //   [0] => "Some javascript file content"
