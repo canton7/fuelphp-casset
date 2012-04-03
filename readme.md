@@ -814,6 +814,14 @@ In your .htaccess:
 RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png)$ $1/$2.$4 [L]
 ```
 
+Addons
+------
+
+Casset also ships with the following addons, to easy integration wit third-party frameworks.
+For more details, see `classes/casset/addons/readme.md`.
+
+ - **Twig** - Adds the `render`, `render_js`, `render_css`, and `img` functions to Twig.
+
 Comparison to Assetic
 ---------------------
 
@@ -909,6 +917,7 @@ The following people have helped Casset become what it is, so thank you!
  - [monsonis](https://github.com/monsonis)
  - [Anton Stoychev](https://github.com/antitoxic)
  - [gnodeb](https://github.com/gnodeb)
+ - [Derek Myers](https://github.com/dmyers)
 
 Contributing
 ------------
