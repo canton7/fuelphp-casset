@@ -302,7 +302,7 @@ Returns a set of `<script>`/`<link>` tag(s), as required.
 
 `$group`: If false/null, render all groups. If a string, render just the named group.
 
-`$options': A set of options to control how/if the tags are rendered. See the docs for details.
+`$options`: A set of options to control how/if the tags are rendered. See the docs for details.
 
 <a name="qr-render-js"></a>
 ### render_js
@@ -313,7 +313,7 @@ Returns a set of `<script>` tag(s), as required.
 
 `$group`: If false/null, render all groups. If a string, render just the named group.
 
-`$options': A set of options to control how/if the tags are rendered. See the docs for details.
+`$options`: A set of options to control how/if the tags are rendered. See the docs for details.
 
 <a name="qr-render-css"></a>
 ### render_css
@@ -324,7 +324,7 @@ Returns a set of `<link>` tag(s), as required.
 
 `$group`: If false/null, render all groups. If a string, render just the named group.
 
-`$options': A set of options to control how/if the tags are rendered. See the docs for details.
+`$options`: A set of options to control how/if the tags are rendered. See the docs for details.
 
 <a name="qr-render-js-inline"></a>
 ### render_js_inline
