@@ -1213,7 +1213,7 @@ class Casset {
 	 * @param array $attr Attributes to apply to each image (eg width)
 	 * @return string The resulting <img> tag(s)
 	 */
-	public static function img($images, $alt, $attr = array())
+	public static function img($images, $alt = '', $attr = array())
 	{
 		if (!is_array($images))
 			$images = array($images);
