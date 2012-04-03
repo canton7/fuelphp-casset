@@ -3,6 +3,11 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.15
+----
+ - Add `render`, `render_js`, `render_css` and `img` to a new Twig extension. See `classes/casset/addons/readme.md`.
+ - Fix various typos.
+
 v1.14
 -----
  - Add gen_tags option to render_js and render_css.
