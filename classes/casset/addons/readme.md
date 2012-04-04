@@ -9,7 +9,16 @@ However, this will change if people require other addons.
 Twig
 ----
 
-This extension adds the `Caset::render`, `Casset::render_js`, `Casset::render_css`, and `Casset::img` methods as twig functions (`render_assets`, `render_js`, `render_css`, and `img` respectively).
+This extension adds the following Casset functions to Twig:
+
+ - `Casset::render`: `render_assets`
+ - `Casset::render_js`: `render_js`
+ - `Casset::render_css`: `render_css`
+ - `Casset::img`: `img`
+ - `Casset::get_filepath_img`: `img_url`
+
+This list is somewhat arbitrary.
+Please ask if you want others added to it.
 
 To enable this extension, edit `config/parser.php`, and add `Casset_Addons_Twig` to the `extensions` key under 'View_Twig', like so:
 

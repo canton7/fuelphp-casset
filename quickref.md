@@ -366,7 +366,7 @@ Images
 ### img
 Locates the given image(s), and returns the resulting `<img>` tag(s).
 
-`string function img($images, $alt, $attr = array()`.
+`string function img($images, $alt = '', $attr = array()`.
 
 `$images`: Either a string of an image, or an array of such images. Namespaces are allowed.
 

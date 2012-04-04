@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.15
+ * @version    v1.16
  * @author     Antony Male
  * @author     Derek Myers
  * @license    MIT License
@@ -38,6 +38,7 @@ class Casset_Addons_Twig extends \Twig_Extension
 			'render_css'    => new \Twig_Function_Function('Casset::render_css'),
 			'render_js'     => new \Twig_Function_Function('Casset::render_js'),
 			'img'           => new \Twig_Function_Function('Casset::img'),
+			'img_url'       => new \Twig_Function_Function('Casset::get_filepath_img')
 		);
 	}
 }
