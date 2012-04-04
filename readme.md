@@ -931,8 +931,9 @@ For example:
 # Fork canton7/fuelphp-casset on github
 # Clone your new repo
 $ git clone git@github.com:your_user/fuelphp-casset.git
-# Add my repo as a remote, so you can pull in new changes
+# Add my repo as a remote, so you can pull in new changes, then fetch from it
 $ git remote add upstream git://github.com/canton7/fuelphp-casset.git
+$ git fetch upstream
 # Create a new feature branch based off my develop branch
 $ git checkout -b feature/my_feature_name upstream/develop
 # Push this branch to origin
