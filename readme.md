@@ -817,7 +817,7 @@ RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png)$ $1/$2.$4 [L]
 Addons
 ------
 
-Casset also ships with the following addons, to easy integration wit third-party frameworks.
+Casset also ships with the following addons, to ease integration with third-party frameworks.
 For more details, see `classes/casset/addons/readme.md`.
 
  - **Twig** - Adds the `render`, `render_js`, `render_css`, and `img` functions to Twig.
