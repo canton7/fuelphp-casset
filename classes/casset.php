@@ -1157,12 +1157,7 @@ class Casset {
 		else
 			$attr = array();
 
-		$ret = '';
-		foreach (static::$inline_assets['js'] as $content)
-		{
-			$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
-		}
-		return $ret;
+		return html_tag('script', $attr, PHP_EOL.implode(PHP_EOL, static::$inline_assets['js']).PHP_EOL).PHP_EOL;
 	}
 
 	/**
@@ -1180,12 +1175,7 @@ class Casset {
 		else
 			$attr = array();
 
-		$ret = '';
-		foreach (static::$inline_assets['css'] as $content)
-		{
-			$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
-		}
-		return $ret;
+		return html_tag('style', $attr, PHP_EOL.implode(PHP_EOL, static::$inline_assets['css']).PHP_EOL).PHP_EOL;
 	}
 
 	/**
