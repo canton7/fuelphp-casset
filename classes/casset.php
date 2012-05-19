@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.16
+ * @version    v1.17
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2012 Antony Male
@@ -651,7 +651,7 @@ class Casset {
 		if (!is_array($new_deps))
 			$new_deps = array($new_deps);
 		if (!array_key_exists($group, static::$groups[$type]))
-			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
+			throw new Casset_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
 		// Avoid duplicates in deps array
 		$deps = &static::$groups[$type][$group]['deps'];
 		$deps = array_unique(array_merge($deps, $new_deps));
@@ -1157,12 +1157,7 @@ class Casset {
 		else
 			$attr = array();
 
-		$ret = '';
-		foreach (static::$inline_assets['js'] as $content)
-		{
-			$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
-		}
-		return $ret;
+		return html_tag('script', $attr, PHP_EOL.implode(PHP_EOL, static::$inline_assets['js']).PHP_EOL).PHP_EOL;
 	}
 
 	/**
@@ -1180,12 +1175,7 @@ class Casset {
 		else
 			$attr = array();
 
-		$ret = '';
-		foreach (static::$inline_assets['css'] as $content)
-		{
-			$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
-		}
-		return $ret;
+		return html_tag('style', $attr, PHP_EOL.implode(PHP_EOL, static::$inline_assets['css']).PHP_EOL).PHP_EOL;
 	}
 
 	/**
@@ -1289,7 +1279,7 @@ class Casset {
 
 }
 
-class Casset_Exception extends \Fuel_Exception {
+class Casset_Exception extends \FuelException {
 }
 
 /* End of file casset.php */

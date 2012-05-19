@@ -817,7 +817,7 @@ RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png)$ $1/$2.$4 [L]
 Addons
 ------
 
-Casset also ships with the following addons, to easy integration wit third-party frameworks.
+Casset also ships with the following addons, to ease integration with third-party frameworks.
 For more details, see `classes/casset/addons/readme.md`.
 
  - **Twig** - Adds the `render`, `render_js`, `render_css`, and `img` functions to Twig.
@@ -918,6 +918,8 @@ The following people have helped Casset become what it is, so thank you!
  - [Anton Stoychev](https://github.com/antitoxic)
  - [gnodeb](https://github.com/gnodeb)
  - [Derek Myers](https://github.com/dmyers)
+ - [Ian Turgeon](https://github.com/iturgeon)
+ - [Peter Wiggers](https://github.com/pwwebdev)
 
 Contributing
 ------------
@@ -931,8 +933,9 @@ For example:
 # Fork canton7/fuelphp-casset on github
 # Clone your new repo
 $ git clone git@github.com:your_user/fuelphp-casset.git
-# Add my repo as a remote, so you can pull in new changes
+# Add my repo as a remote, so you can pull in new changes, then fetch from it
 $ git remote add upstream git://github.com/canton7/fuelphp-casset.git
+$ git fetch upstream
 # Create a new feature branch based off my develop branch
 $ git checkout -b feature/my_feature_name upstream/develop
 # Push this branch to origin
