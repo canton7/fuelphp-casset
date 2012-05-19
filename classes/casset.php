@@ -651,7 +651,7 @@ class Casset {
 		if (!is_array($new_deps))
 			$new_deps = array($new_deps);
 		if (!array_key_exists($group, static::$groups[$type]))
-			throw new \Fuel_Exception("Group $group ($type) doesn't exist, so can't add deps to it.");
+			throw new \FuelException("Group $group ($type) doesn't exist, so can't add deps to it.");
 		// Avoid duplicates in deps array
 		$deps = &static::$groups[$type][$group]['deps'];
 		$deps = array_unique(array_merge($deps, $new_deps));
@@ -1279,7 +1279,7 @@ class Casset {
 
 }
 
-class Casset_Exception extends \Fuel_Exception {
+class Casset_Exception extends \FuelException {
 }
 
 /* End of file casset.php */
