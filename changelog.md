@@ -3,6 +3,12 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.17
+-----
+ - `js_inline` and `css_inline` won't spit out lots of consecutive tags.
+ - Casset_Exception inherits from FuelException instead of the (deprecated) Fuel_Exception.
+ - Various documentation fixes.
+
 v1.16
 -----
  - Add 'img_url' to twig extension, and improve twig docs slightly.
