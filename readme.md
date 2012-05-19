@@ -919,6 +919,7 @@ The following people have helped Casset become what it is, so thank you!
  - [gnodeb](https://github.com/gnodeb)
  - [Derek Myers](https://github.com/dmyers)
  - [Ian Turgeon](https://github.com/iturgeon)
+ - [Peter Wiggers](https://github.com/pwwebdev)
 
 Contributing
 ------------
