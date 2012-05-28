@@ -1072,7 +1072,8 @@ class Casset {
 			$func = static::$post_load_callback;
 			$content = $func($content, $filename, $type, $file_group);
 		}
-		if ($type == 'css')
+		
+		if ($type == 'css' && \Config::get('casset.rewrite_css_uris', true))
 			$content = Casset_Cssurirewriter::rewrite($content, dirname($filename));
 		return $content;
 	}

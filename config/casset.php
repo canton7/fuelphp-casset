@@ -117,6 +117,11 @@ return array(
 	 * circular ones.
 	 */
 	'deps_max_depth' => 5,
+	
+	/**
+	 * Whether to rewrite URIs (such as images) in CSS files.
+	 */
+	'rewrite_css_uris' => true,
 
 	/**
 	 * Here you can pass the name of a callback that is called after a while is loaded from
