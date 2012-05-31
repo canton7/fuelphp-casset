@@ -881,6 +881,8 @@ class Casset {
 				if ($inline)
 				{
 					$content = file_get_contents(DOCROOT.static::$cache_path.$filename);
+					// We'll need to fix the uris, unless they were rewritten absolutely to start with
+					$content = static::css_rewrite_uris($content, static::$cache_path.$filename, \Uri::string());
 					if ($options['gen_tags'])
 						$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 					else
