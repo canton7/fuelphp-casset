@@ -19,6 +19,7 @@ Autoloader::add_classes(array(
 	'Casset\\Casset_JSMin'          => __DIR__.'/classes/casset/jsmin.php',
 	'Casset\\Casset_Csscompressor'  => __DIR__.'/classes/casset/csscompressor.php',
 	'Casset\\Casset_Cssurirewriter' => __DIR__.'/classes/casset/cssurirewriter.php',
+	'Casset\\Casset_Cssurirewriterrelative' => __DIR__.'/classes/casset/cssurirewriterrelative.php',
 	'Casset\\Casset_Addons_Twig'    => __DIR__.'/classes/casset/addons/twig.php',
 ));
 

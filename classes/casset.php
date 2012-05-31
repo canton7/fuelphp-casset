@@ -117,6 +117,11 @@ class Casset {
 	protected static $rendered_groups = array('js' => array(), 'css' => array());
 
 	/**
+	 * @var string which css uri rewriter we want to use. Options are 'absolute', 'relative', 'none'
+	*/
+	protected static $css_uri_rewriter = 'absolute';
+
+	/**
 	 * @var bool Wether we've been initialized.
 	 */
 	public static $initialized = false;
@@ -181,6 +186,8 @@ class Casset {
 		static::$post_load_callback = \Config::get('casset.post_load_callback', static::$post_load_callback);
 
 		static::$filepath_callback = \Config::get('casset.filepath_callback', static::$filepath_callback);
+
+		static::$css_uri_rewriter = \Config::get('casset.css_uri_rewriter', static::$css_uri_rewriter);
 
 		static::$initialized = true;
 	}
@@ -1073,8 +1080,34 @@ class Casset {
 			$content = $func($content, $filename, $type, $file_group);
 		}
 		if ($type == 'css')
-			$content = Casset_Cssurirewriter::rewrite($content, dirname($filename));
+			$content = static::css_rewrite_uris($content, $filename);
 		return $content;
+	}
+
+	/**
+	 * Selects the correct css uri rewriter, and applies it
+	 *
+	 * @param string $content the contents of the file to rewrite
+	 * @param string $filename the original location of the file
+	 * @return string The re-written content
+	*/
+	protected static function css_rewrite_uris($content, $filename) {
+		switch (static::$css_uri_rewriter) {
+			case 'absolute':
+				$rewritten = Casset_Cssurirewriter::rewrite($content, dirname($filename));
+				break;
+			case 'relative':
+				$rewritten = Casset_Cssurirewriterrelative::rewrite($content);
+				break;
+			case 'none':
+				$rewritten = $content;
+				break;
+			default:
+				throw new Casset_Exception('Unknown CSS URI rewriter: '.static::$css_uri_rewriter);
+				break;
+		}
+
+		return $rewritten;
 	}
 
 	/**
