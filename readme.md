@@ -814,6 +814,43 @@ In your .htaccess:
 RewriteRule ^(.*)\/(.+)\.([0-9]+)\.(js|css|jpg|jpeg|gif|png)$ $1/$2.$4 [L]
 ```
 
+CSS URI Rewriting Algorithms
+----------------------------
+
+You probably only need to read this section if you've noticed URLs in your css files being broken by Casset.
+
+A bit of background: when a css file is rewritten, the rewritten css is stored in a cache file.
+This cache file is (probably) stored in a different location to the original file, so all relative urls will be broken.
+Therefore Casset rewrites all of your urls for you.
+
+Casset supplies a number of algorithms, which are listed below.
+None of them are entirely foolproof.
+
+### Absolute Rewriter
+
+The default algorithm, this rewrites all urls to be absolute, so they start with a /.
+It was written by Stephen Clay as part of his Minify package, is well tested, and works for 99% of cases.
+
+Where it fails is when your document root is a symlink, in which case the algorithm is unable to determine the correct document root, and ends up garbling the urls.
+There is a workaround (providing an array of symlinks) but this is not yet supported by Casset.
+
+### Relative Rewriter
+
+This algorithm takes the current location of the cache file, and the original location of the css file, and constructs a relative url between the two paths.
+It's newer than the absolute rewriter, and hasn't been as extensively tested.
+It therefore might have some corner cases it break in -- if you find one, please create an issue!
+However, it should be able to handle the symlink problem which the absolute rewriter fails at.
+
+### No rewriting
+
+The other option is to turn off rewriting completely.
+Some people may decide they simply don't need it.
+In addition, the post_load callback allows you to do your own rewriting -- or should: I've never tried it, so you might not be given enough information; raise an issue if this is the case.
+If you decide to do this, you'll probably want to turn off Casset's rewriting.
+
+The algorithm is specified using the `css_uri_rewriter` config key.
+This can take values of 'absolute', 'relative', or 'none'.
+
 Addons
 ------
 
