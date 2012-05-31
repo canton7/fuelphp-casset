@@ -903,8 +903,7 @@ class Casset {
 				{
 					if ($inline)
 					{
-						// TODO: Add destination_filepath
-						$content = static::load_file($file['file'], 'css');
+						$content = static::load_file($file['file'], 'css', false, \Uri::string());
 						if ($options['gen_tags'])
 							$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 						else
