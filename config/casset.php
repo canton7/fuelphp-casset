@@ -3,7 +3,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.17
+ * @version    v1.18
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2012 Antony Male
@@ -156,6 +156,31 @@ return array(
 	 * Casset::set_filepath_callback(function($filepath, ...) { ... }); instead
 	 */
 	'filepath_callback' => null,
+
+	/**
+	 * Which CSS URI rewriter to use.
+	 * When the location of a CSS file is changed (which happens when the file is rewritten,
+	 * combined, inlined, etc), all uris inside of that file (e.g. url(....)) have to be rewritten,
+	 * otherwise they would break.
+	 *
+	 * Casset provides a number of different rewriting algorithms, each with their own advantages
+	 * and disadvantages.
+	 * The options are absolute, relative, and none.
+	 *
+	 * Absolute:
+	 * This algorithm, written by Stephen Clay as part of his JSMin library, rewrites all relative
+	 * uris to be absolute, relative to DOCUMENT_ROOT.
+	 * However, this algorithm gets confused when you symlinkyour document root.
+	 *
+	 * Relative:
+	 * This algorithm rewrites relative uris to take account of the changed position of the css
+	 * file, while keeping the uri relative. This can handle symlinked document roots, but is not
+	 * as extensively tested.
+	 *
+	 * None:
+	 * This option turns off all uri rewriting.
+	 */
+	'css_uri_rewriter' => 'absolute',
 
 	/**
 	 * Groups of scripts.

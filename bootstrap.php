@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.17
+ * @version    v1.18
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2012 Antony Male
@@ -19,6 +19,7 @@ Autoloader::add_classes(array(
 	'Casset\\Casset_JSMin'          => __DIR__.'/classes/casset/jsmin.php',
 	'Casset\\Casset_Csscompressor'  => __DIR__.'/classes/casset/csscompressor.php',
 	'Casset\\Casset_Cssurirewriter' => __DIR__.'/classes/casset/cssurirewriter.php',
+	'Casset\\Casset_Cssurirewriterrelative' => __DIR__.'/classes/casset/cssurirewriterrelative.php',
 	'Casset\\Casset_Addons_Twig'    => __DIR__.'/classes/casset/addons/twig.php',
 ));
 

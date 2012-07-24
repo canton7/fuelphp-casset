@@ -3,6 +3,10 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.18
+-----
+ - Add a new CSS URI rewriting algorithm ('relative'), which should fix the problems with using the (original) absolute rewriting with a symlinked docroot.
+
 v1.17
 -----
  - `js_inline` and `css_inline` won't spit out lots of consecutive tags.
