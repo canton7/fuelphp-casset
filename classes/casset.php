@@ -139,7 +139,10 @@ class Casset {
 
 		\Config::load('casset', true);
 
-		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
+		static::$asset_url = \Config::get('casset.url');
+		if (!static::$asset_url)
+			static::$asset_url = preg_replace('#^https?://#','//', \Uri::base(false));
+		static::$asset_url = rtrim(static::$asset_url, '/') . '/';
 
 		static::$default_folders = array(
 			'css' => \Config::get('casset.css_dir', static::$default_folders['css']),
