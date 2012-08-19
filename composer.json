@@ -1,0 +1,18 @@
+{
+    "name": "canton7/fuel-casset",
+    "type": "package",
+    "description": "Better asset management for FuelPHP (with minification and other cool stuff)",
+    "keywords": ["fuelphp", "assets", "casset", "minify", "minification"],
+    "homepage": "http://github.com/canton7/fuelphp-casset",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Antony Male",
+            "email": "antony.male@gmail.com",
+            "homepage": "http://antonymale.co.uk"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.0"
+    }
+}
