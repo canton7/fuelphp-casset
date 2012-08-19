@@ -39,8 +39,6 @@ class Casset_Cssurirewriterrelative {
 		// then back into the dir the file was in before
 		$rel = str_repeat('../', substr_count($after_dir, '/')) . $before_dir;
 
-		// return $css;
-
 		$css = preg_replace_callback(static::PATTERN, function($m) use ($rel) {
 			list($match, $type, $quote, $url) = $m;
 			if (strpos($url, 'data:') === 0 || strpos($url, '://') !== false)
