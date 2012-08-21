@@ -956,7 +956,7 @@ class Casset {
 		}
 		else
 		{
-			$glob_files = glob($path.$folder.$file);
+			$glob_files = array_filter(glob($path.$folder.$file), 'is_file');
 			if (!$glob_files || !count($glob_files))
 				throw new Casset_Exception("Found no files matching $path$folder$file");
 			return $glob_files;
