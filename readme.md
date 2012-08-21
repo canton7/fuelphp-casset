@@ -956,6 +956,7 @@ The following people have helped Casset become what it is, so thank you!
  - [Derek Myers](https://github.com/dmyers)
  - [Ian Turgeon](https://github.com/iturgeon)
  - [Peter Wiggers](https://github.com/pwwebdev)
+ - [Katsuma Ito](katsumai@gmail.com)
 
 Contributing
 ------------
