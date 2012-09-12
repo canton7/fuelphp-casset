@@ -195,6 +195,15 @@ class Casset {
 		static::$initialized = true;
 	}
 
+	/**
+	 * Getter for cache_path
+	 *
+	 * @return string
+	 */
+	public static function get_cache_path() {
+		return static::$cache_path;
+	}
+
 
 	/**
 	 * Sets up options for new groups setup via casset/config.php.
