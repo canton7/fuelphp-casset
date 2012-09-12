@@ -3,6 +3,12 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.19
+-----
+ - Prevent globs from matching folders
+ - $asset_url is, by default, scheme-relative. You'll have to update your config/casset.php to benefit though (see the new default)
+ - More twig extension functions (add_css, add_js)
+
 v1.18
 -----
  - Add a new CSS URI rewriting algorithm ('relative'), which should fix the problems with using the (original) absolute rewriting with a symlinked docroot.

@@ -947,7 +947,6 @@ Thanks
 
 The following people have helped Casset become what it is, so thank you!
 
- - [Peter Wigger](http://fuelphp.com/user/383)
  - [ShonM](https://github.com/shonm)
  - [Lee Overy](https://github.com/leekudos)
  - [Chris Meller](https://github.com/chrismeller)
@@ -957,6 +956,7 @@ The following people have helped Casset become what it is, so thank you!
  - [Derek Myers](https://github.com/dmyers)
  - [Ian Turgeon](https://github.com/iturgeon)
  - [Peter Wiggers](https://github.com/pwwebdev)
+ - [Katsuma Ito](katsumai@gmail.com)
 
 Contributing
 ------------

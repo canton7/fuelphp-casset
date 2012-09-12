@@ -4,7 +4,7 @@
  * This library is used as part of Casset.
  *
  * @package    Casset
- * @version    v1.18
+ * @version    v1.19
  * @author     Antony Male
  * @license    MIT License
  * @link       http://github.com/canton7/fuelphp-casset
@@ -38,8 +38,6 @@ class Casset_Cssurirewriterrelative {
 		// Move back out of the dir that the file ends up in
 		// then back into the dir the file was in before
 		$rel = str_repeat('../', substr_count($after_dir, '/')) . $before_dir;
-
-		// return $css;
 
 		$css = preg_replace_callback(static::PATTERN, function($m) use ($rel) {
 			list($match, $type, $quote, $url) = $m;

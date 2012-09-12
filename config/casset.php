@@ -3,7 +3,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.18
+ * @version    v1.19
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2012 Antony Male
@@ -42,12 +42,10 @@ return array(
 	),
 
 	/**
-	 * URL to your Fuel root. Typically this will be your base URL,
-	 * WITH a trailing slash:
-	 *
-	 * Config::get('base_url')
+	 * URL to your Fuel root. If null/falsy, this will default to Uri::base(false),
+	 * but will be scheme-relative (starts with '//').
 	 */
-	'url' => Config::get('base_url'),
+	'url' => null,
 
 	/**
 	 * Asset Sub-folders

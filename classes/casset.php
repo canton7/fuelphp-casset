@@ -4,7 +4,7 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.18
+ * @version    v1.19
  * @author     Antony Male
  * @license    MIT License
  * @copyright  2012 Antony Male
@@ -139,7 +139,10 @@ class Casset {
 
 		\Config::load('casset', true);
 
-		static::$asset_url = \Config::get('casset.url', \Config::get('base_url'));
+		static::$asset_url = \Config::get('casset.url');
+		if (!static::$asset_url)
+			static::$asset_url = preg_replace('#^https?://#','//', \Uri::base(false));
+		static::$asset_url = rtrim(static::$asset_url, '/') . '/';
 
 		static::$default_folders = array(
 			'css' => \Config::get('casset.css_dir', static::$default_folders['css']),
@@ -190,6 +193,15 @@ class Casset {
 		static::$css_uri_rewriter = \Config::get('casset.css_uri_rewriter', static::$css_uri_rewriter);
 
 		static::$initialized = true;
+	}
+
+	/**
+	 * Getter for cache_path
+	 *
+	 * @return string
+	 */
+	public static function get_cache_path() {
+		return static::$cache_path;
 	}
 
 
@@ -956,7 +968,7 @@ class Casset {
 		}
 		else
 		{
-			$glob_files = glob($path.$folder.$file);
+			$glob_files = array_filter(glob($path.$folder.$file), 'is_file');
 			if (!$glob_files || !count($glob_files))
 				throw new Casset_Exception("Found no files matching $path$folder$file");
 			return $glob_files;
