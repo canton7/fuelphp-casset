@@ -49,6 +49,11 @@ class Casset {
 	protected static $cache_path = 'assets/cache/';
 
 	/**
+	 * @var string The url path where cached minified files are served
+	 */
+	protected static $retrieve_path = null;
+
+	/**
 	 * @var array Holds groups of assets. Is documenented fully in the config file.
 	 */
 	protected static $groups = array(
@@ -156,8 +161,10 @@ class Casset {
 		{
 			static::add_path($key, $path);
 		}
-
-		static::$cache_path = \Config::get('casset.cache_path', static::$cache_path);
+		
+		static::$cache_path    = \Config::get('casset.cache_path', static::$cache_path);
+		static::$retrieve_path = \Config::get('casset.retrieve_path', static::$retrieve_path);
+		static::$retrieve_path or static::$retrieve_path = static::$cache_path;
 
 		static::$default_options['min'] = \Config::get('casset.min', static::$default_options['min']);
 		static::$default_options['combine'] = \Config::get('casset.combine', static::$default_options['combine']);
@@ -791,7 +798,7 @@ class Casset {
 				}
 				if ($inline)
 				{
-					$content = file_get_contents(DOCROOT.static::$cache_path.$filename);
+					$content = file_get_contents(DOCROOT.static::$retrieve_path.$filename);
 					if ($options['gen_tags'])
 						$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 					else
@@ -800,7 +807,7 @@ class Casset {
 
 				else
 				{
-					$filepath = static::$asset_url.static::process_filepath(static::$cache_path.$filename, 'js');
+					$filepath = static::$asset_url.static::process_filepath(static::$retrieve_path.$filename, 'js');
 					if ($options['gen_tags'])
 						$ret .= html_tag('script', array('src' => $filepath,)+$attr, '').PHP_EOL;
 					else
@@ -892,9 +899,9 @@ class Casset {
 				}
 				if ($inline)
 				{
-					$content = file_get_contents(DOCROOT.static::$cache_path.$filename);
+					$content = file_get_contents(DOCROOT.static::$retrieve_path.$filename);
 					// We'll need to fix the uris, unless they were rewritten absolutely to start with
-					$content = static::css_rewrite_uris($content, static::$cache_path.$filename, \Uri::string());
+					$content = static::css_rewrite_uris($content, static::$retrieve_path.$filename, \Uri::string());
 					if ($options['gen_tags'])
 						$ret .= html_tag('style', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 					else
@@ -902,7 +909,7 @@ class Casset {
 				}
 				else
 				{
-					$filepath = static::$asset_url.static::process_filepath(static::$cache_path.$filename, 'css');
+					$filepath = static::$asset_url.static::process_filepath(static::$retrieve_path.$filename, 'css');
 					if ($options['gen_tags'])
 						$ret .= html_tag('link', array('rel' => 'stylesheet', 'href' => $filepath)+$attr).PHP_EOL;
 					else
