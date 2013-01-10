@@ -48,6 +48,11 @@ return array(
 	'url' => null,
 
 	/**
+	 * Absolute path to your Fuel root. If null/falsy, this will default to DOCROOT
+	 */
+	'root_path' => null,
+	
+	/**
 	 * Asset Sub-folders
 	 *
 	 * Names for the js and css folders (inside the asset path).
