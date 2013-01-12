@@ -51,7 +51,7 @@ return array(
 	 * Absolute path to your Fuel root. If null/falsy, this will default to DOCROOT
 	 */
 	'root_path' => null,
-	
+
 	/**
 	 * Asset Sub-folders
 	 *

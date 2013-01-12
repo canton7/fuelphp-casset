@@ -3,7 +3,7 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
-v1.19
+v1.20
 -----
  - Prevent globs from matching folders
  - $asset_url is, by default, scheme-relative. You'll have to update your config/casset.php to benefit though (see the new default)
