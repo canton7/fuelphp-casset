@@ -4,11 +4,11 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.19
+ * @version    v1.20
  * @author     Antony Male
  * @author     Derek Myers
  * @license    MIT License
- * @copyright  2012 Antony Male
+ * @copyright  2013 Antony Male
  * @link       http://github.com/canton7/fuelphp-casset
  */
 

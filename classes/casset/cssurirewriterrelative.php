@@ -4,7 +4,7 @@
  * This library is used as part of Casset.
  *
  * @package    Casset
- * @version    v1.19
+ * @version    v1.20
  * @author     Antony Male
  * @license    MIT License
  * @link       http://github.com/canton7/fuelphp-casset
