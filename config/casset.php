@@ -6,7 +6,7 @@
  * @version    v1.19
  * @author     Antony Male
  * @license    MIT License
- * @copyright  2012 Antony Male
+ * @copyright  2013 Antony Male
  * @link       http://github.com/canton7/fuelphp-casset
  */
 
@@ -46,6 +46,11 @@ return array(
 	 * but will be scheme-relative (starts with '//').
 	 */
 	'url' => null,
+
+	/**
+	 * Absolute path to your Fuel root. If null/falsy, this will default to DOCROOT
+	 */
+	'root_path' => null,
 
 	/**
 	 * Asset Sub-folders

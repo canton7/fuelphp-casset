@@ -4,10 +4,10 @@
  * Casset: Convenient asset library for FuelPHP.
  *
  * @package    Casset
- * @version    v1.19
+ * @version    v1.20
  * @author     Antony Male
  * @license    MIT License
- * @copyright  2012 Antony Male
+ * @copyright  2013 Antony Male
  * @link       http://github.com/canton7/fuelphp-casset
  */
 
@@ -32,6 +32,11 @@ class Casset {
 	 * @var string The URL to be prepanded to all assets.
 	 */
 	protected static $asset_url = null;
+
+	/**
+	 * @var string The URL to be prepanded to all assets.
+	 */
+	protected static $root_path = null;
 
 	/**
 	 * @var array The folders in which css, js, and images can be found.
@@ -143,6 +148,8 @@ class Casset {
 		if (!static::$asset_url)
 			static::$asset_url = preg_replace('#^https?://#','//', \Uri::base(false));
 		static::$asset_url = rtrim(static::$asset_url, '/') . '/';
+
+		static::$root_path = \Config::get('casset.root_path', DOCROOT);
 
 		static::$default_folders = array(
 			'css' => \Config::get('casset.css_dir', static::$default_folders['css']),
@@ -791,7 +798,7 @@ class Casset {
 				}
 				if ($inline)
 				{
-					$content = file_get_contents(DOCROOT.static::$cache_path.$filename);
+					$content = file_get_contents(static::$root_path.static::$cache_path.$filename);
 					if ($options['gen_tags'])
 						$ret .= html_tag('script', $attr, PHP_EOL.$content.PHP_EOL).PHP_EOL;
 					else
@@ -892,7 +899,7 @@ class Casset {
 				}
 				if ($inline)
 				{
-					$content = file_get_contents(DOCROOT.static::$cache_path.$filename);
+					$content = file_get_contents(static::$root_path.static::$cache_path.$filename);
 					// We'll need to fix the uris, unless they were rewritten absolutely to start with
 					$content = static::css_rewrite_uris($content, static::$cache_path.$filename, \Uri::string());
 					if ($options['gen_tags'])
@@ -1147,7 +1154,7 @@ class Casset {
 			if (strpos($file['file'], '//') !== false)
 				continue;
 
-			$mod = filemtime(DOCROOT.$file['file']);
+			$mod = filemtime(static::$root_path.$file['file']);
 			if ($mod > $last_mod)
 				$last_mod = $mod;
 		}
@@ -1157,7 +1164,7 @@ class Casset {
 		}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
 
 		$rel_filepath = static::$cache_path.'/'.$filename;
-		$abs_filepath = DOCROOT.$rel_filepath;
+		$abs_filepath = static::$root_path.$rel_filepath;
 		$needs_update = (!file_exists($abs_filepath));
 
 		if ($needs_update)
@@ -1318,7 +1325,7 @@ class Casset {
 	protected static function clear_cache_base($filter = '*', $before = 'now')
 	{
 		$before = strtotime($before);
-		$files = glob(DOCROOT.static::$cache_path.$filter);
+		$files = glob(static::$root_path.static::$cache_path.$filter);
 		foreach ($files as $file)
 		{
 			if (filemtime($file) < $before)
