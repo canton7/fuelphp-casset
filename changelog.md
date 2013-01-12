@@ -5,6 +5,11 @@ This file lists the important changes between versions. For a list of minor chan
 
 v1.20
 -----
+ - Update addons/readme.md to document more twig functions
+ - Add customisable root path
+
+v1.19
+-----
  - Prevent globs from matching folders
  - $asset_url is, by default, scheme-relative. You'll have to update your config/casset.php to benefit though (see the new default)
  - More twig extension functions (add_css, add_js)
