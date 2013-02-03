@@ -107,7 +107,7 @@ class Casset {
 	 */
 	protected static $post_load_callback = null;
 
-	/*
+	/**
 	 * @var function If given, the function to call when we've decided on the name
 	 * for a file, but want to allow the user to tweak it before we write it to the
 	 * page.
@@ -125,6 +125,11 @@ class Casset {
 	 * @var string which css uri rewriter we want to use. Options are 'absolute', 'relative', 'none'
 	*/
 	protected static $css_uri_rewriter = 'absolute';
+
+	/**
+	 * @var Whether to move @import lines to the top
+	 */
+	protected static $move_imports_to_top = true;
 
 	/**
 	 * @var bool Wether we've been initialized.
@@ -198,6 +203,8 @@ class Casset {
 		static::$filepath_callback = \Config::get('casset.filepath_callback', static::$filepath_callback);
 
 		static::$css_uri_rewriter = \Config::get('casset.css_uri_rewriter', static::$css_uri_rewriter);
+
+		static::$move_imports_to_top = \Config::get('casset.move_imports_to_top', static::$move_imports_to_top);
 
 		static::$initialized = true;
 	}
@@ -1191,6 +1198,17 @@ class Casset {
 					}
 				}
 			}
+			if ($type == 'css' && static::$move_imports_to_top) {
+				// Remove @import lines, and record them
+				$imports = array();
+				$content = preg_replace_callback('/@import.*?;/', function($match) use (&$imports) {
+					$imports[] = $match[0];
+					return '';
+				}, $content);
+				if (count($imports))
+					$content = implode(PHP_EOL, $imports).PHP_EOL.$content;
+			}
+
 			file_put_contents($abs_filepath, $content, LOCK_EX);
 			$mtime = time();
 		}

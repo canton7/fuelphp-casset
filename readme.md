@@ -851,6 +851,14 @@ If you decide to do this, you'll probably want to turn off Casset's rewriting.
 The algorithm is specified using the `css_uri_rewriter` config key.
 This can take values of 'absolute', 'relative', or 'none'.
 
+CSS @import rewriting
+---------------------
+
+CSS `@import` statements need to come at the beginning of the file in which they appear.
+Combining files obviously screws this up, as lines which were at the beginning of a file could now be somewhere in the middle of the combined file.
+If the config key `move_imports_to_top` is true (the default) then casser will take all `@import` lines and move them to the top of the combined file.
+If this is causing problems, you can disable this feature.
+
 Addons
 ------
 
