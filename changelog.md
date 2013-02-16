@@ -3,6 +3,10 @@ Changelog
 
 This file lists the important changes between versions. For a list of minor changes, check the log.
 
+v1.21
+-----
+ - Move CSS @import statements to top of combined files
+
 v1.20
 -----
  - Update addons/readme.md to document more twig functions
