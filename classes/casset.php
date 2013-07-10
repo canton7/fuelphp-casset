@@ -1069,6 +1069,7 @@ class Casset {
 			// Add it to the list of rendered groups
 			array_push(static::$rendered_groups[$type], $group_name);
 
+			$added = array();
 			foreach (static::$groups[$type][$group_name]['files'] as $file_set)
 			{
 				if (static::$groups[$type][$group_name]['min'])
@@ -1081,10 +1082,14 @@ class Casset {
 					$assets = static::find_files($file_set[0], $type);
 				}
 				foreach ($assets as $file) {
-					array_push($files[$group_name], array(
-						'file' => $file,
-						'minified' => $minified,
-					));
+					if (!in_array($file, $added))
+					{
+						array_push($files[$group_name], array(
+							'file' => $file,
+							'minified' => $minified,
+						));
+						$added[] = $file;
+					}
 				}
 			}
 		}
