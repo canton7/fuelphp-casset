@@ -285,7 +285,7 @@ echo Casset::img('admin::test.png', 'An image');
 If you wish, you can change the current default path key using `Casset::set_path('path_key')`. This can be useful if you know that all of the assets in a given file will be from a given path. For example:
 
 ```php
-Casset::set_path('admin);
+Casset::set_path('admin');
 Casset::js('index.js');
 // Will add assets/admin/js/index.js
 ```
