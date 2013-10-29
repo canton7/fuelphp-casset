@@ -1170,7 +1170,7 @@ class Casset {
 			return $a['file'];
 		}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
 
-		$rel_filepath = static::$cache_path.'/'.$filename;
+		$rel_filepath = static::$cache_path.$filename;
 		$abs_filepath = static::$root_path.$rel_filepath;
 		$needs_update = (!file_exists($abs_filepath));
 
