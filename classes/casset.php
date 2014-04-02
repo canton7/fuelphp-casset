@@ -80,6 +80,7 @@ class Casset {
 		'inline' => false,
 		'attr' => array(),
 		'deps' => array(),
+		'rename' => false,
 	);
 
 	/**
@@ -175,6 +176,8 @@ class Casset {
 		static::$default_options['combine'] = \Config::get('casset.combine', static::$default_options['combine']);
 
 		static::$deps_max_depth = \Config::get('casset.deps_max_depth', static::$deps_max_depth);
+
+		static::$default_options['rename'] = \Config::get('casset.rename', static::$default_options['rename']);
 
 		$group_sets = \Config::get('casset.groups', array());
 
@@ -796,7 +799,7 @@ class Casset {
 
 			if (static::$groups['js'][$group_name]['combine'])
 			{
-				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline);
+				$filename = static::combine('js', $file_group, static::$groups['js'][$group_name]['min'], $inline, $group_name);
 				if (!$inline && static::$show_files && $options['gen_tags'])
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -897,7 +900,7 @@ class Casset {
 
 			if (static::$groups['css'][$group_name]['combine'])
 			{
-				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline);
+				$filename = static::combine('css', $file_group, static::$groups['css'][$group_name]['min'], $inline, $group_name);
 				if (!$inline && static::$show_files && $options['gen_tags'])
 				{
 					$ret .= '<!--'.PHP_EOL.'Group: '.$group_name.PHP_EOL.implode('', array_map(function($a){
@@ -1150,7 +1153,7 @@ class Casset {
 	 * @param bool $minify whether to minify the files, as well as combining them
 	 * @return string The path to the cache file which was written.
 	 */
-	protected static function combine($type, $file_group, $minify, $inline)
+	protected static function combine($type, $file_group, $minify, $inline, $group_name = null)
 	{
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
@@ -1166,10 +1169,17 @@ class Casset {
 				$last_mod = $mod;
 		}
 
-		$filename = md5(implode('', array_map(function($a) {
-			return $a['file'];
-		}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
-
+		$filename = '';
+		if (static::$groups[$type][$group_name]['rename'] && $group_name)
+		{
+			$filename = $group_name.'.'.($minify ? 'min' : '').'.'.$type;
+		}
+		else
+		{
+			$filename = md5(implode('', array_map(function($a) {
+				return $a['file'];
+			}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
+		}
 		$rel_filepath = static::$cache_path.'/'.$filename;
 		$abs_filepath = static::$root_path.$rel_filepath;
 		$needs_update = (!file_exists($abs_filepath));
