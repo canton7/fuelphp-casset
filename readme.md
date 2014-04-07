@@ -127,6 +127,15 @@ To define a group in the config file, use the 'groups' key, eg:
 			'min' => false,
 			'inline' => true
 		),
+		'sample_group_name' => array(
+			'files' => array(
+				array('sample.js', 'sample.min.js'),
+				'sample2.js'
+			),
+			'combine' => true,
+			'min' => false,
+			'rename' => true
+		),
 		'group_name_2' => array(.....),
 	),
 	'css' => array(
@@ -154,7 +163,8 @@ array element.
 **min**: This optional key allows you to override the 'min' config key on a per-group basis.  
 **inline**: Optional, allows you to render the group 'inline' -- that is, show the CSS directly in the file, rather than including a separate .css file. See the section on inling below.  
 **attr**: Optional, allows you to specify extra attributes to be added to the script/css/link tag generated. See the section on attributes below.  
-**deps**: (Optional) Specifies other groups to be rendered whenever this group is rendered, see the section below.
+**deps**: (Optional) Specifies other groups to be rendered whenever this group is rendered, see the section below.  
+**rename**: This optional key allows you to override the 'rename' config key on a per-group basis. (default false)
 
 Aside: You can specify any non-string value for the asset name, and it will be ignored.
 This can be handy if you're doing something like `'files' => array(($var == $val) ? false : 'file.js')`.
@@ -187,10 +197,11 @@ $options = array(
 	'inline' => true/false,
 	'attr' => array(),
 	'deps' => array(),
+	'rename' => true/false,
 );
 ```
 
-The arguments are the same as for the config key -- if `'enabled'`, `'combine'` or `'min'` are omitted, the value specified in the config file are used. Eg:
+The arguments are the same as for the config key -- if `'enabled'`, `'combine'` , `'min'` or `'rename'` are omitted, the value specified in the config file are used. Eg:
 
 ```php
 Casset::add_group('test_group', array(
