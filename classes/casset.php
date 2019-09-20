@@ -1170,9 +1170,7 @@ class Casset {
 		$filename = static::get_file_name($type, $file_group, $minify);
 		$rel_filepath = static::$cache_path.'/'.$filename;
 		$abs_filepath = static::$root_path.$rel_filepath;
-		$needs_update = (!file_exists($abs_filepath));
-
-		if ($needs_update)
+		if (!is_file($abs_filepath) || \Config::get('casset.hash_method')==='fixed_hash')
 		{
 			$content = '';
 			foreach ($file_group as $file)
@@ -1208,7 +1206,6 @@ class Casset {
 			}
 
 			file_put_contents($abs_filepath, $content, LOCK_EX);
-			$mtime = time();
 		}
 
 		return $filename;
