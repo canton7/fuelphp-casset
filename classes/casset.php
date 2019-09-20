@@ -811,7 +811,6 @@ class Casset {
 					else
 						$ret[] = $content;
 				}
-
 				else
 				{
 					$filepath = static::$asset_url.static::process_filepath(static::$cache_path.$filename, 'js');
@@ -1152,24 +1151,7 @@ class Casset {
 	 */
 	protected static function combine($type, $file_group, $minify, $inline)
 	{
-		// Get the last modified time of all of the component files
-		$last_mod = 0;
-		foreach ($file_group as $file)
-		{
-			// If it's a remote file just assume it isn't modified, otherwise
-			// we're stuck making a ton of HTTP requests
-			if (strpos($file['file'], '//') !== false)
-				continue;
-
-			$mod = filemtime(static::$root_path.$file['file']);
-			if ($mod > $last_mod)
-				$last_mod = $mod;
-		}
-
-		$filename = md5(implode('', array_map(function($a) {
-			return $a['file'];
-		}, $file_group)).($minify ? 'min' : '').$last_mod).'.'.$type;
-
+		$filename = static::get_file_name($type, $file_group, $minify);
 		$rel_filepath = static::$cache_path.'/'.$filename;
 		$abs_filepath = static::$root_path.$rel_filepath;
 		$needs_update = (!file_exists($abs_filepath));
@@ -1216,6 +1198,70 @@ class Casset {
 		return $filename;
 	}
 
+	private static function get_file_name($type, $file_group, $minify)
+	{
+		if(\Config::get('casset.hash_method')==='md5_file')
+		{
+			$hash = array();
+			foreach ($file_group as $file)
+			{
+				if (strpos($file['file'], '//') !== false)
+				{
+					continue;
+				}
+				$hash[] = md5_file(static::$root_path.$file['file']);
+			}
+			return md5(implode('', array_map(function($a) {
+						return $a['file'];
+					}, $file_group)).($minify ? 'min' : '').implode(',', $hash)).'.'.$type;
+		}
+
+
+		// Get the last modified time of all of the component files
+		$last_mod = 0;
+		foreach ($file_group as $file)
+		{
+			// If it's a remote file just assume it isn't modified, otherwise
+			// we're stuck making a ton of HTTP requests
+			if (strpos($file['file'], '//') !== false)
+			{
+				continue;
+			}
+
+			$mod = filemtime(static::$root_path.$file['file']);
+			if ($mod > $last_mod)
+			{
+				$last_mod = $mod;
+			}
+		}
+		return md5(
+				implode(
+					''
+					, array_map(
+						function($a) {
+							return $a['file'];
+						}
+						, $file_group
+					)
+				) . ($minify ? 'min' : '') . $last_mod
+			) . '.' . $type;
+	}
+
+	private static function get_last_mod($file_group)
+	{
+		$last_mod = 0;
+		foreach ($file_group as $file)
+		{
+			if (strpos($file['file'], '//') !== false) {
+				continue;
+			}
+			$mod = filemtime(static::$root_path.$file['file']);
+			if ($mod > $last_mod) {
+				$last_mod = $mod;
+			}
+		}
+		return $last_mod;
+	}
 	/**
 	 * Renders the javascript added through js_inline().
 	 *

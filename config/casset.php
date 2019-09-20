@@ -246,6 +246,7 @@ return array(
 	 */
 	'groups' => array(
 	),
+    'hash_method' => 'filemtime', // filemtime | md5_file
 );
 
 /* End of file config/casset.php */
