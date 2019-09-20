@@ -814,6 +814,10 @@ class Casset {
 				else
 				{
 					$filepath = static::$asset_url.static::process_filepath(static::$cache_path.$filename, 'js');
+					if(\Config::get('casset.hash_method')==='fixed_hash')
+					{
+						$filepath .= '?' . static::get_last_mod($file_group);
+					}
 					if ($options['gen_tags'])
 						$ret .= html_tag('script', array('src' => $filepath,)+$attr, '').PHP_EOL;
 					else
@@ -837,6 +841,10 @@ class Casset {
 						$remote = (strpos($file['file'], '//') !== false);
 						$base = ($remote) ? '' : static::$asset_url;
 						$filepath = $base.static::process_filepath($file['file'], 'js', $remote);
+						if(\Config::get('casset.hash_method')==='fixed_hash')
+						{
+							$filepath .= '?' . filemtime(static::$root_path.$file['file']);
+						}
 						if ($options['gen_tags'])
 							$ret .= html_tag('script', array('src' => $filepath,)+$attr, '').PHP_EOL;
 						else
@@ -916,6 +924,10 @@ class Casset {
 				else
 				{
 					$filepath = static::$asset_url.static::process_filepath(static::$cache_path.$filename, 'css');
+					if(\Config::get('casset.hash_method')==='fixed_hash')
+					{
+						$filepath .= '?' . static::get_last_mod($file_group);
+					}
 					if ($options['gen_tags'])
 						$ret .= html_tag('link', array('rel' => 'stylesheet', 'href' => $filepath)+$attr).PHP_EOL;
 					else
@@ -939,6 +951,10 @@ class Casset {
 						$remote = (strpos($file['file'], '//') !== false);
 						$base = ($remote) ? '' : static::$asset_url;
 						$filepath = $base.static::process_filepath($file['file'], 'css', $remote);
+						if(\Config::get('casset.hash_method')==='fixed_hash')
+						{
+							$filepath .= '?' . filemtime(static::$root_path.$file['file']);
+						}
 						if ($options['gen_tags'])
 							$ret .= html_tag('link', array('rel' => 'stylesheet', 'href' => $filepath)+$attr).PHP_EOL;
 						else
@@ -1216,6 +1232,24 @@ class Casset {
 					}, $file_group)).($minify ? 'min' : '').implode(',', $hash)).'.'.$type;
 		}
 
+		if(\Config::get('casset.hash_method')==='fixed_hash')
+		{
+			$files = array();
+			foreach ($file_group as $file)
+			{
+				if (strpos($file['file'], '//') !== false)
+				{
+					continue;
+				}
+				$files[] = $file['file'];
+			}
+			return md5(
+					implode(
+						','
+						, $files
+					) . ($minify ? 'min' : '')
+				) . '.' . $type;
+		}
 
 		// Get the last modified time of all of the component files
 		$last_mod = 0;
